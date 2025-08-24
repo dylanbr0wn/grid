@@ -1,7 +1,7 @@
 'use client'
 import "client-only"
 
-import React, {ReactNode, useEffect, useMemo, useRef, useState} from 'react';
+import React, {FunctionComponent, ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import {
@@ -45,7 +45,7 @@ type SortableProps = {
   adjustScale?: boolean;
   collisionDetection?: CollisionDetection;
   coordinateGetter?: KeyboardCoordinateGetter;
-  Container?: any; // To-do: Fix me
+  Container?: (props: { children: ReactNode }) => ReactNode;
   dropAnimation?: DropAnimation | null;
   getNewIndex?: NewIndexGetter;
   handle?: boolean;
@@ -58,7 +58,6 @@ type SortableProps = {
   }[];
   measuring?: MeasuringConfiguration;
   modifiers?: Modifiers;
-  renderItem?: any;
   removable?: boolean;
   reorderItems?: typeof arrayMove;
   strategy?: SortingStrategy;
@@ -108,7 +107,6 @@ export function Sortable({
   collisionDetection = closestCenter,
   coordinateGetter = sortableKeyboardCoordinates,
   dropAnimation = dropAnimationConfig,
-  getItemStyles = () => ({}),
   getNewIndex,
   handle = false,
   itemCount = 16,
@@ -117,7 +115,6 @@ export function Sortable({
   measuring,
   modifiers,
   removable,
-  renderItem,
   reorderItems = arrayMove,
   strategy = rectSortingStrategy,
   style,
@@ -198,9 +195,7 @@ export function Sortable({
                 value={value}
                 handle={handle}
                 index={index}
-                style={getItemStyles}
                 wrapperStyle={wrapperStyle}
-                renderItem={renderItem}
                 onRemove={onRemove}
                 animateLayoutChanges={animateLayoutChanges}
                 useDragOverlay={useDragOverlay}
@@ -220,21 +215,20 @@ export function Sortable({
                 <Album
                   value={items[activeIndex]}
                   handle={handle}
-                  renderItem={renderItem}
                   wrapperStyle={wrapperStyle({
                     active: {id: activeId},
                     index: activeIndex,
                     isDragging: true,
                     id: items[activeIndex].id,
                   })}
-                  style={getItemStyles({
-                    id: items[activeIndex].id,
-                    index: activeIndex,
-                    isSorting: activeId !== null,
-                    isDragging: true,
-                    overIndex: -1,
-                    isDragOverlay: true,
-                  })}
+                  // style={getItemStyles({
+                  //   id: items[activeIndex].id,
+                  //   index: activeIndex,
+                  //   isSorting: activeId !== null,
+                  //   isDragging: true,
+                  //   overIndex: -1,
+                  //   isDragOverlay: true,
+                  // })}
                   dragOverlay
                 />
               ) : null}
@@ -259,9 +253,7 @@ interface SortableItemProps {
   index: number;
   handle: boolean;
   useDragOverlay?: boolean;
-  onRemove?(id: UniqueIdentifier): void;
-  style(values: any): React.CSSProperties;
-  renderItem?(args: any): React.ReactElement;
+  onRemove(id: UniqueIdentifier): void;
   wrapperStyle: SortableProps['wrapperStyle'];
 }
 
@@ -269,12 +261,10 @@ export function SortableItem({
   disabled,
   animateLayoutChanges,
   getNewIndex,
-  handle,
   value,
   index,
   onRemove,
-  style,
-  renderItem,
+  // style,
   useDragOverlay,
   wrapperStyle,
 }: SortableItemProps) {
@@ -286,7 +276,6 @@ export function SortableItem({
     listeners,
     overIndex,
     setNodeRef,
-    setActivatorNodeRef,
     transform,
     transition,
   } = useSortable({
@@ -303,23 +292,15 @@ export function SortableItem({
       disabled={disabled}
       dragging={isDragging}
       sorting={isSorting}
-      handle={handle}
-      handleProps={
-        handle
-          ? {
-              ref: setActivatorNodeRef,
-            }
-          : undefined
-      }
-      renderItem={renderItem}
       index={index}
-      style={style({
-        index,
-        id: value.id,
-        isDragging,
-        isSorting,
-        overIndex,
-      })}
+      onRemove={() => onRemove(value.id as UniqueIdentifier)}
+      // style={style({
+      //   index,
+      //   id: value.id,
+      //   isDragging,
+      //   isSorting,
+      //   overIndex,
+      // })}
       transform={transform}
       transition={transition}
       wrapperStyle={wrapperStyle?.({index, isDragging, active, id: value.id})}
@@ -366,7 +347,7 @@ type GridProps = {
 
 const props: Partial<SortableProps> = {
   adjustScale: true,
-  Container: (props: any) => <GridContainer {...props} columns={5} />,
+  Container: (props: { children: ReactNode }) => <GridContainer {...props} columns={5} />,
   strategy: rectSortingStrategy,
   wrapperStyle: () => ({
     width: 140,

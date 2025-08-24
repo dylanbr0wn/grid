@@ -28,3 +28,4 @@ export const List = forwardRef<HTMLUListElement, Props>(
     );
   }
 );
+List.displayName = 'List';

@@ -14,7 +14,6 @@ export interface Props {
   disabled?: boolean;
   dragging?: boolean;
   handle?: boolean;
-  handleProps?: any;
   height?: number;
   index?: number;
   fadeIn?: boolean;
@@ -56,7 +55,6 @@ export const Album = React.memo(
         disabled,
         fadeIn,
         handle,
-        handleProps,
         height,
         index,
         listeners,
