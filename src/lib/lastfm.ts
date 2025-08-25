@@ -47,7 +47,6 @@ export async function fetchWeeklyAlbumChart(user: string) {
     console.error('Last.fm API response not ok:', response.status, await response.text(), `${apiURL}?method=user.getweeklyalbumchart&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json`)
 		throw new Error('Failed to fetch data from Last.fm')
 	}
-	// console.log(await response.json())
 
 	const out = weeklyAlbumChart(await response.json())
 

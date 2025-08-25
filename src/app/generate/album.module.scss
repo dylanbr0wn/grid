@@ -1,7 +1,6 @@
 $font-weight: 400;
 $background-color: #fff;
 $border-color: #efefef;
-$text-color: #333;
 $handle-color: rgba(0, 0, 0, 0.25);
 $box-shadow-border: 0 0 0 calc(1px / var(--scale-x, 1)) rgba(63, 63, 68, 0.05);
 $box-shadow-common: 0 1px calc(3px / var(--scale-x, 1)) 0 rgba(34, 33, 81, 0.15);
@@ -50,28 +49,9 @@ $focused-outline-color: #4c9ffe;
   }
 }
 
-.Item {
-  display: flex;
-  flex-grow: 1;
-  align-items: center;
-  outline: none;
-  box-sizing: border-box;
-  list-style: none;
-  transform-origin: 50% 50%;
+.album {
 
-  -webkit-tap-highlight-color: transparent;
-
-  color: $text-color;
-  font-weight: $font-weight;
-  font-size: 1rem;
-  white-space: nowrap;
-
-  transform: scale(var(--scale, 1));
-  transition: box-shadow 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
-
-  &:focus-visible {
-    box-shadow: 0 0px 4px 1px $focused-outline-color, $box-shadow;
-  }
+  
 
   &:not(.withHandle) {
     touch-action: manipulation;

@@ -8,7 +8,7 @@ import type {Transform} from '@dnd-kit/utilities';
 import styles from './album.module.scss';
 import { cn } from '@/lib/util';
 
-export interface Props {
+export interface AlbumProps {
   dragOverlay?: boolean;
   color?: string;
   disabled?: boolean;
@@ -20,7 +20,6 @@ export interface Props {
   transform?: Transform | null;
   listeners?: DraggableSyntheticListeners;
   sorting?: boolean;
-  style?: React.CSSProperties;
   transition?: string | null;
   wrapperStyle?: React.CSSProperties;
   value: {
@@ -30,23 +29,10 @@ export interface Props {
     id: string
   };
   onRemove?(): void;
-  renderItem?(args: {
-    dragOverlay: boolean;
-    dragging: boolean;
-    sorting: boolean;
-    index: number | undefined;
-    fadeIn: boolean;
-    listeners: DraggableSyntheticListeners;
-    ref: React.Ref<HTMLElement>;
-    style: React.CSSProperties | undefined;
-    transform: Props['transform'];
-    transition: Props['transition'];
-    value: Props['value'];
-  }): React.ReactElement;
 }
 
 export const Album = React.memo(
-  React.forwardRef<HTMLLIElement, Props>(
+  React.forwardRef<HTMLLIElement, AlbumProps>(
     (
       {
         color,
@@ -59,9 +45,7 @@ export const Album = React.memo(
         index,
         listeners,
         onRemove,
-        renderItem,
         sorting,
-        style,
         transition,
         transform,
         value,
@@ -82,22 +66,7 @@ export const Album = React.memo(
         };
       }, [dragOverlay]);
 
-      return renderItem ? (
-        renderItem({
-          dragOverlay: Boolean(dragOverlay),
-          dragging: Boolean(dragging),
-          sorting: Boolean(sorting),
-          index,
-          fadeIn: Boolean(fadeIn),
-          listeners,
-          ref,
-          style,
-          transform,
-          transition,
-          value,
-        })
-      ) : (
-        <li
+      return <li
           className={cn(
             styles.Wrapper,
             fadeIn && styles.fadeIn,
@@ -130,17 +99,16 @@ export const Album = React.memo(
         >
           <div
             className={cn(
-              "w-32 aspect-square relative",
-              styles.Item,
+              "flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 aspect-square relative transform-[scale(var(--scale,1))] transition-[box-shadow_200ms_cubic-bezier(0.18,0.67,0.6,1.22)] z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500 ]",
+              styles.album,
               dragging && styles.dragging,
               dragOverlay && styles.dragOverlay,
               disabled && styles.disabled,
               color && styles.color
             )}
-            style={style}
-            {...(!handle ? listeners : undefined)}
+            {...listeners}
             {...props}
-            tabIndex={!handle ? 0 : undefined}
+            tabIndex={0}
           >
             <img src={value.img} className="w-full h-full object-cover" />
             <p className='absolute top-0 left-0 text-[7px] leading-[7px] line  text-white max-w-full text-wrap font-mono mix-blend-hard-light'>
@@ -148,7 +116,6 @@ export const Album = React.memo(
             </p>
           </div>
         </li>
-      );
     }
   )
 );

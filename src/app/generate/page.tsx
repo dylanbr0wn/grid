@@ -1,7 +1,5 @@
 import { fetchGridData } from "@/lib/lastfm"
-import Grid from "./grid"
-
-
+import Editor from "./editor"
 
 export default async function Page({
   searchParams,
@@ -24,8 +22,6 @@ export default async function Page({
 
   
   return (
-    <div>
-      <Grid items={data} size={parseInt(params.gridSize)} />
-    </div>
+    <Editor data={data} gridSize={params.gridSize} />
   )
 }
