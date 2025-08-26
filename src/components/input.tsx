@@ -11,6 +11,7 @@ type InputProps = {
 	label?: string
   value?: string
   onChange?(value: string): void
+  name?: string
 }
 
 export default function Input({
@@ -20,7 +21,8 @@ export default function Input({
 	description,
 	label,
   value,
-  onChange
+  onChange,
+  name
 }: InputProps) {
 	return (
 		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
@@ -31,10 +33,11 @@ export default function Input({
 			)}
 			<Field.Control
         value={value}
+        name={name}
         onChange={e => onChange?.(e.target.value)}
 				required={required}
 				placeholder={placeholder}
-				className="h-10 w-full rounded-md border border-gray-200 pl-3.5 text-base text-neutral-300 focus:outline-2 focus:-outline-offset-1 focus:outline-teal-400 selection:bg-teal-300/30"
+				className="h-10 w-full rounded-md border border-neutral-200 pl-3.5 text-base text-neutral-300 focus:outline-2 focus:-outline-offset-1 focus:outline-teal-400 selection:bg-teal-300/30"
 			/>
 			<Field.Error className="text-sm text-red-800" match="valueMissing">
 				{missingError || 'This field is required'}

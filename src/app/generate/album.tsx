@@ -99,7 +99,7 @@ export const Album = React.memo(
         >
           <div
             className={cn(
-              "flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 aspect-square relative transform-[scale(var(--scale,1))] transition-[box-shadow_200ms_cubic-bezier(0.18,0.67,0.6,1.22)] z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500 ]",
+              "flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 h-32 aspect-square relative transform-[scale(var(--scale,1))] transition-[box-shadow_200ms_cubic-bezier(0.18,0.67,0.6,1.22)] z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500 ]",
               styles.album,
               dragging && styles.dragging,
               dragOverlay && styles.dragOverlay,

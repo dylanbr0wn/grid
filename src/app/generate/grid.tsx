@@ -1,19 +1,11 @@
 'use client'
 import 'client-only'
+import { ScrollArea } from '@base-ui-components/react/scroll-area'
 
-import React, {
-	FunctionComponent,
-	ReactNode,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import {
-	Active,
-	Announcements,
 	closestCenter,
 	CollisionDetection,
 	DragOverlay,
@@ -45,6 +37,8 @@ import {
 import { Album } from './album'
 import { cn } from '@/lib/util'
 
+import Toolbar, { useToolbar } from './toolbar'
+
 type SortableProps = {
 	activationConstraint?: PointerActivationConstraint
 	animateLayoutChanges?: AnimateLayoutChanges
@@ -54,7 +48,6 @@ type SortableProps = {
 	dropAnimation?: DropAnimation | null
 	getNewIndex?: NewIndexGetter
 	handle?: boolean
-	columns: number
 	items?: {
 		album: string
 		img: string
@@ -65,7 +58,6 @@ type SortableProps = {
 	modifiers?: Modifiers
 	removable?: boolean
 	reorderItems?: typeof arrayMove
-	strategy?: SortingStrategy
 	style?: React.CSSProperties
 	useDragOverlay?: boolean
 	isDisabled?(id: UniqueIdentifier): boolean
@@ -89,7 +81,7 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 }
 
-export function Sortable({
+export default function Grid({
 	activationConstraint,
 	animateLayoutChanges,
 	adjustScale = false,
@@ -98,17 +90,18 @@ export function Sortable({
 	dropAnimation = dropAnimationConfig,
 	getNewIndex,
 	handle = false,
-	columns = 5,
 	items: initialItems,
 	measuring,
 	modifiers,
 	removable,
 	reorderItems = arrayMove,
-	strategy = rectSortingStrategy,
 	useDragOverlay = true,
 }: SortableProps) {
 	const [items, setItems] = useState(initialItems || [])
+	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
+	const { columns } = useToolbar()
+
 	const sensors = useSensors(
 		useSensor(MouseSensor, {
 			activationConstraint,
@@ -143,7 +136,17 @@ export function Sortable({
 	}, [activeId])
 
 	const trimmedItems = useMemo(
-		() => items.slice(0, columns * columns),
+		() => items.slice(0, Math.min(columns * columns, items.length)),
+		[items, columns]
+	)
+
+	const extraItems = useMemo(
+		() => {
+      if (items.length > columns * columns) {
+        return items.slice(columns * columns)
+      }
+      return []
+    },
 		[items, columns]
 	)
 
@@ -160,6 +163,9 @@ export function Sortable({
 				}
 
 				setActiveId(active.id as string)
+				if (trimmedItems.find((item) => item.id === active.id)) {
+					strategy.current = rectSortingStrategy
+				}
 			}}
 			onDragEnd={({ over }) => {
 				setActiveId(null)
@@ -175,22 +181,67 @@ export function Sortable({
 			measuring={measuring}
 			modifiers={modifiers}
 		>
-			<div className={cn('flex w-full box-border p-5 justify-center')}>
-				<SortableContext id="" items={trimmedItems} strategy={strategy}>
-					<GridContainer {...props} columns={columns} >
-						{trimmedItems.map((value, index) => (
-							<SortableItem
-								key={value.id}
-								value={value}
-								handle={handle}
-								index={index}
-								onRemove={onRemove}
-								animateLayoutChanges={animateLayoutChanges}
-								useDragOverlay={useDragOverlay}
-								getNewIndex={getNewIndex}
-							/>
-						))}
-					</GridContainer>
+			<div
+				className={cn('h-full flex w-full box-border justify-center relative')}
+			>
+				<SortableContext items={items} strategy={rectSortingStrategy}>
+					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
+						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
+							<h5 className="h-10 text-lg/loose mb-0 uppercase">extras</h5>
+						</div>
+						<ScrollArea.Root className="h-[calc(100%-40px)] relative">
+							<ScrollArea.Viewport className="h-full mr-2">
+								<div className="grid grid-cols-3 p-2">
+									{extraItems.map((value, index) => (
+										<SortableItem
+											key={value.id}
+											value={value}
+											handle={handle}
+											index={index}
+											onRemove={onRemove}
+											animateLayoutChanges={animateLayoutChanges}
+											useDragOverlay={useDragOverlay}
+											getNewIndex={getNewIndex}
+										/>
+									))}
+								</div>
+							</ScrollArea.Viewport>
+							<ScrollArea.Scrollbar className="m-2 flex w-1 justify-center rounded bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+								<ScrollArea.Thumb className="w-full rounded bg-neutral-500" />
+							</ScrollArea.Scrollbar>
+						</ScrollArea.Root>
+					</div>
+					<div className="w-full h-full">
+						<div className='h-[calc(100%-80px)] flex justify-center items-center'>
+							<ul
+								id="fm-grid"
+								className={
+									'grid grid-cols-[repeat(var(--col-count),1fr)]'
+								}
+								style={
+									{
+										'--col-count': columns,
+										width: columns * 128,
+										height: columns * 128,
+									} as React.CSSProperties
+								}
+							>
+								{trimmedItems.map((value, index) => (
+									<SortableItem
+										key={value.id}
+										value={value}
+										handle={handle}
+										index={index}
+										onRemove={onRemove}
+										animateLayoutChanges={animateLayoutChanges}
+										useDragOverlay={useDragOverlay}
+										getNewIndex={getNewIndex}
+									/>
+								))}
+							</ul>
+						</div>
+						<Toolbar />
+					</div>
 				</SortableContext>
 			</div>
 			{useDragOverlay && typeof document !== 'undefined'
@@ -200,11 +251,7 @@ export function Sortable({
 							dropAnimation={dropAnimation}
 						>
 							{activeId != null ? (
-								<Album
-									value={items[activeIndex]}
-									handle={handle}
-									dragOverlay
-								/>
+								<Album value={items[activeIndex]} handle={handle} dragOverlay />
 							) : null}
 						</DragOverlay>,
 						document.body
@@ -273,51 +320,6 @@ export function SortableItem({
 			data-id={value.id}
 			dragOverlay={!useDragOverlay && isDragging}
 			// {...attributes}
-		/>
-	)
-}
-
-type GridContainerProps = {
-	children: React.ReactNode
-	columns: number
-}
-
-export function GridContainer({ children, columns }: GridContainerProps) {
-	return (
-		<ul
-      id="fm-grid"
-			className={'w-fit grid grid-cols-[repeat(var(--col-count),1fr)]'}
-			style={
-				{
-					'--col-count': columns,
-				} as React.CSSProperties
-			}
-		>
-			{children}
-		</ul>
-	)
-}
-
-type GridProps = {
-	items: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}[]
-	size: number
-}
-
-const props: Partial<SortableProps> = {
-	adjustScale: true,
-	strategy: rectSortingStrategy,
-}
-
-export default function Grid({ items, size }: GridProps) {
-	return (
-		<Sortable
-			items={items}
-			columns={size}
 		/>
 	)
 }

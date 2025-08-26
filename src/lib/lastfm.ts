@@ -41,7 +41,8 @@ const weeklyAlbumChart = type({
 
 export async function fetchWeeklyAlbumChart(user: string) {
 	const response = await fetch(
-		`${apiURL}?method=user.getweeklyalbumchart&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json`
+		`${apiURL}?method=user.getweeklyalbumchart&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json`,
+    { cache: 'no-store'}
 	)
 	if (!response.ok) {
     console.error('Last.fm API response not ok:', response.status, await response.text(), `${apiURL}?method=user.getweeklyalbumchart&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json`)

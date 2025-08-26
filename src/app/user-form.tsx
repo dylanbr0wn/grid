@@ -9,18 +9,20 @@ export default function UserForm() {
 	const [username, setUsername] = useState('')
 
 	return (
-		<div className='text-white flex flex-col gap-4 items-center'>
-      <Input
-        value={username}
-        onChange={setUsername}
-				label="Last.fm Username"
-				required
-				description="Your Last.fm username to fetch your top albums."
-				placeholder="Enter your Last.fm username"
-			/>
-      <Link href={`/generate?user=${username}`} className=' block rounded-md border border-gray-200 p-2 w-32 text-base text-neutral-300 text-center'>
-        Go
-      </Link>
+		<div className='flex flex-col gap-4 items-center'>
+      <h1 className='text-4xl font-bold text-white uppercase'>grid</h1>
+      <div className='h-32'/>
+      <form method='GET' action="/generate" className='text-white flex flex-col gap-4 items-center'>
+        <Input
+          name="user"
+          label="Last.fm Username"
+          required
+          placeholder="Somebody123"
+        />
+        <button className=' block rounded-md border border-gray-200 p-2 w-32 text-base text-neutral-300 text-center'>
+          Generate
+        </button>
+      </form> 
     </div>
 	)
 }
