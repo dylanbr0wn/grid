@@ -89,7 +89,6 @@ export async function fetchGridData(user: string) {
     if (album.mbid !== "") {
       mbidMap.set(album.mbid, album)
     }
-		
 	})
 
 	const albumInfoPromises = Array.from(mbidMap.keys()).map((mbid) =>

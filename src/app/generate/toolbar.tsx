@@ -60,7 +60,7 @@ export default function Toolbar() {
   }
 
 	return (
-		<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800">
+		<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950">
 			<div className="w-1/3"></div>
 			<div className="w-1/3 flex items-center justify-center">
 				<Select
@@ -73,8 +73,8 @@ export default function Toolbar() {
 				<button
           disabled={loading}
 					onClick={download}
-					className="rounded-md border border-gray-200 p-2 w-32 text-base text-neutral-300 disabled:opacity-50"
-
+					className=" border border-gray-200 p-2 w-32 text-base text-neutral-300 disabled:opacity-50 bg-neutral-950 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900"
+          data-loading={loading}
 				>
 					{loading ? 'Loading...' : 'Download'}
 				</button>

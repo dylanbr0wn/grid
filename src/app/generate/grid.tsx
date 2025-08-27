@@ -187,7 +187,7 @@ export default function Grid({
 				<SortableContext items={items} strategy={rectSortingStrategy}>
 					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
 						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
-							<h5 className="h-10 text-lg/loose mb-0 uppercase">extras</h5>
+							<h5 className="h-10 text-lg/loose mb-0 uppercase font-code">extras</h5>
 						</div>
 						<ScrollArea.Root className="h-[calc(100%-40px)] relative">
 							<ScrollArea.Viewport className="h-full mr-2">
@@ -206,8 +206,8 @@ export default function Grid({
 									))}
 								</div>
 							</ScrollArea.Viewport>
-							<ScrollArea.Scrollbar className="m-2 flex w-1 justify-center rounded bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
-								<ScrollArea.Thumb className="w-full rounded bg-neutral-500" />
+							<ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+								<ScrollArea.Thumb className="w-full bg-neutral-500" />
 							</ScrollArea.Scrollbar>
 						</ScrollArea.Root>
 					</div>

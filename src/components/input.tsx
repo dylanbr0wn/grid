@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Field } from '@base-ui-components/react/field'
+import { cn } from '@/lib/util'
 
 type InputProps = {
 	missingError?: string
@@ -12,6 +13,7 @@ type InputProps = {
   value?: string
   onChange?(value: string): void
   name?: string
+  error?: string
 }
 
 export default function Input({
@@ -22,7 +24,8 @@ export default function Input({
 	label,
   value,
   onChange,
-  name
+  name,
+  error
 }: InputProps) {
 	return (
 		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
@@ -37,10 +40,10 @@ export default function Input({
         onChange={e => onChange?.(e.target.value)}
 				required={required}
 				placeholder={placeholder}
-				className="h-10 w-full rounded-md border border-neutral-200 pl-3.5 text-base text-neutral-300 focus:outline-2 focus:-outline-offset-1 focus:outline-teal-400 selection:bg-teal-300/30"
+				className={cn("h-10 w-full border border-neutral-200 pl-3.5 text-base text-neutral-300 focus:outline-2 focus:-outline-offset-1 focus:outline-teal-400 selection:bg-teal-300/30 bg-neutral-950", error && 'border-red-800 focus:outline-red-800 text-red-800 ')}
 			/>
-			<Field.Error className="text-sm text-red-800" match="valueMissing">
-				{missingError || 'This field is required'}
+			<Field.Error className="text-sm text-red-800" match={!!error}>
+				{error}
 			</Field.Error>
 
 			{description && (
