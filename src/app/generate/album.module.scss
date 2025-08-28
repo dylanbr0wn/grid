@@ -1,7 +1,3 @@
-$font-weight: 400;
-$background-color: #fff;
-$border-color: #efefef;
-$handle-color: rgba(0, 0, 0, 0.25);
 $box-shadow-border: 0 0 0 calc(1px / var(--scale-x, 1)) rgba(63, 63, 68, 0.05);
 $box-shadow-common: 0 1px calc(3px / var(--scale-x, 1)) 0 rgba(34, 33, 81, 0.15);
 $box-shadow: $box-shadow-border, $box-shadow-common;
@@ -79,25 +75,10 @@ $focused-outline-color: #4c9ffe;
   &.dragOverlay {
     cursor: inherit;
     /* box-shadow: 0 0px 6px 2px $focused-outline-color; */
-    animation: pop 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
-    transform: scale(var(--scale));
+    animation: pop 200ms linear forwards;
     box-shadow: var(--box-shadow-picked-up);
     opacity: 1;
-  }
-
-  &.color:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
-    height: 100%;
-    width: 3px;
-    display: block;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-    background-color: var(--color);
-  }
+  };
 
   &:hover {
     .Remove {

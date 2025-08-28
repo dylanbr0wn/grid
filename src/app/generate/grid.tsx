@@ -2,7 +2,7 @@
 import 'client-only'
 import { ScrollArea } from '@base-ui-components/react/scroll-area'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import {
@@ -81,10 +81,24 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 }
 
+
+
+function MakeItems(items: {
+    album: string;
+    img: string;
+    artist: string;
+    id: string;
+}[]) {
+    return items.map((item) => ({
+        ...item,
+        textColor: 'white',
+        textBackground: false,
+    }));
+}
+
 export default function Grid({
 	activationConstraint,
 	animateLayoutChanges,
-	adjustScale = false,
 	collisionDetection = closestCenter,
 	coordinateGetter = sortableKeyboardCoordinates,
 	dropAnimation = dropAnimationConfig,
@@ -97,7 +111,7 @@ export default function Grid({
 	reorderItems = arrayMove,
 	useDragOverlay = true,
 }: SortableProps) {
-	const [items, setItems] = useState(initialItems || [])
+	const [items, setItems] = useState<Album[]>(MakeItems(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
 	const { columns } = useToolbar()
@@ -150,6 +164,31 @@ export default function Grid({
 		[items, columns]
 	)
 
+  function setTextColor(index: number, color: string) {
+    setItems((items) => {
+      console.log('setting text color', index, color )
+      if (index === -1) return items
+      const newItems = [...items]
+      newItems[index] = {
+        ...newItems[index],
+        textColor: color,
+      }
+      return newItems
+    })
+  }
+
+  const  setTextBackground = useCallback((index: number, background: boolean) => {
+    setItems((items) => {
+      if (index === -1) return items
+      const newItems = [...items]
+      newItems[index] = {
+        ...newItems[index],
+        textBackground: background,
+      }
+      return newItems
+    })
+  }, [])
+
 	return (
 		<DndContext
 			accessibility={{
@@ -189,19 +228,21 @@ export default function Grid({
 						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
 							<h5 className="h-10 text-lg/loose mb-0 uppercase font-code">extras</h5>
 						</div>
-						<ScrollArea.Root className="h-[calc(100%-40px)] relative">
-							<ScrollArea.Viewport className="h-full mr-2">
-								<div className="grid grid-cols-3 p-2">
+						<ScrollArea.Root className="h-[calc(100%-40px)] relative w-full">
+							<ScrollArea.Viewport className="h-full p-2">
+								<div className="grid grid-cols-3">
 									{extraItems.map((value, index) => (
 										<SortableItem
 											key={value.id}
 											value={value}
 											handle={handle}
-											index={index}
+											index={trimmedItems.length + index}
 											onRemove={onRemove}
 											animateLayoutChanges={animateLayoutChanges}
 											useDragOverlay={useDragOverlay}
 											getNewIndex={getNewIndex}
+                      setTextBackground={setTextBackground}
+                      setTextColor={setTextColor}
 										/>
 									))}
 								</div>
@@ -236,6 +277,8 @@ export default function Grid({
 										animateLayoutChanges={animateLayoutChanges}
 										useDragOverlay={useDragOverlay}
 										getNewIndex={getNewIndex}
+                    setTextBackground={setTextBackground}
+                    setTextColor={setTextColor}
 									/>
 								))}
 							</ul>
@@ -247,11 +290,11 @@ export default function Grid({
 			{useDragOverlay && typeof document !== 'undefined'
 				? createPortal(
 						<DragOverlay
-							adjustScale={adjustScale}
+							adjustScale={false}
 							dropAnimation={dropAnimation}
 						>
 							{activeId != null ? (
-								<Album value={items[activeIndex]} handle={handle} dragOverlay />
+								<Album value={items[activeIndex]} handle={handle} index={activeIndex} dragOverlay />
 							) : null}
 						</DragOverlay>,
 						document.body
@@ -261,7 +304,7 @@ export default function Grid({
 	)
 }
 
-interface SortableItemProps {
+type SortableItemProps = {
 	animateLayoutChanges?: AnimateLayoutChanges
 	disabled?: boolean
 	getNewIndex?: NewIndexGetter
@@ -271,6 +314,8 @@ interface SortableItemProps {
 		artist: string
 		id: string
 	}
+  setTextColor?(index: number, color: string): void
+  setTextBackground?(index: number, background: boolean): void
 	index: number
 	handle: boolean
 	useDragOverlay?: boolean
@@ -284,8 +329,8 @@ export function SortableItem({
 	value,
 	index,
 	onRemove,
-	// style,
 	useDragOverlay,
+  ...props
 }: SortableItemProps) {
 	const {
 		active,
@@ -319,6 +364,7 @@ export function SortableItem({
 			data-index={index}
 			data-id={value.id}
 			dragOverlay={!useDragOverlay && isDragging}
+      {...props}
 			// {...attributes}
 		/>
 	)
