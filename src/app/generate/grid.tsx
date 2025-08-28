@@ -200,6 +200,7 @@ export default function Grid({
 				if (!active) {
 					return
 				}
+        console.log('drag start', active)
 
 				setActiveId(active.id as string)
 				if (trimmedItems.find((item) => item.id === active.id)) {
@@ -230,7 +231,7 @@ export default function Grid({
 						</div>
 						<ScrollArea.Root className="h-[calc(100%-40px)] relative w-full">
 							<ScrollArea.Viewport className="h-full p-2">
-								<div className="grid grid-cols-3">
+								<div className="grid grid-cols-3" style={{ width: 128 * 3 }}>
 									{extraItems.map((value, index) => (
 										<SortableItem
 											key={value.id}
@@ -256,7 +257,7 @@ export default function Grid({
 							<ul
 								id="fm-grid"
 								className={
-									'grid grid-cols-[repeat(var(--col-count),1fr)]'
+									'grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min'
 								}
 								style={
 									{
