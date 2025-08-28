@@ -3,23 +3,23 @@ import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 
-const geistSans = Geist({
+export const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+export const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-const jetBrainsMono = JetBrains_Mono({
+export const jetBrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   weight: ["400", "800"],
 });
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: 'GRID',
   description: 'A Last.fm album grid generator',
   openGraph: {

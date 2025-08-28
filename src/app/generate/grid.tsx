@@ -235,7 +235,6 @@ export default function Grid({
 										<SortableItem
 											key={value.id}
 											value={value}
-											handle={handle}
 											index={trimmedItems.length + index}
 											onRemove={onRemove}
 											animateLayoutChanges={animateLayoutChanges}
@@ -271,7 +270,6 @@ export default function Grid({
 									<SortableItem
 										key={value.id}
 										value={value}
-										handle={handle}
 										index={index}
 										onRemove={onRemove}
 										animateLayoutChanges={animateLayoutChanges}
@@ -294,7 +292,7 @@ export default function Grid({
 							dropAnimation={dropAnimation}
 						>
 							{activeId != null ? (
-								<Album value={items[activeIndex]} handle={handle} index={activeIndex} dragOverlay />
+								<Album value={items[activeIndex]} index={activeIndex} dragOverlay />
 							) : null}
 						</DragOverlay>,
 						document.body
@@ -317,7 +315,6 @@ type SortableItemProps = {
   setTextColor?(index: number, color: string): void
   setTextBackground?(index: number, background: boolean): void
 	index: number
-	handle: boolean
 	useDragOverlay?: boolean
 	onRemove(id: UniqueIdentifier): void
 }

@@ -24,7 +24,6 @@ export interface AlbumProps {
 	color?: string
 	disabled?: boolean
 	dragging?: boolean
-	handle?: boolean
 	height?: number
 	index?: number
 	fadeIn?: boolean

@@ -4,6 +4,7 @@ import Select from '@/components/select'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import * as htmlToImage from 'html-to-image'
+import { jetBrainsMono } from '../layout'
 
 const gridSizes = [
 	{ label: '1 x 1', value: '1' },
@@ -20,8 +21,11 @@ async function downloadGrid(columns: number) {
 	const dataUrl = await htmlToImage.toPng(node, {
 		canvasHeight: columns * 128 * dpr,
 		canvasWidth: columns * 128 * dpr,
-		skipFonts: true,
 		backgroundColor: '#000000',
+    style: {
+      fontFamily: jetBrainsMono.style.fontFamily
+      
+    },
 		cacheBust: true,
 	})
 	const link = document.createElement('a')
