@@ -1,4 +1,4 @@
-import UserForm from './user-form'
+import UserForm from '@/components/user-form'
 
 export default async function Home() {
 	return (
