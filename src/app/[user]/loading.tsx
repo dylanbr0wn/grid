@@ -1,5 +1,4 @@
 import { cn } from '@/lib/util'
-import { IconLoader, IconLoader2 } from '@tabler/icons-react'
 
 export default function Loading() {
 	return (

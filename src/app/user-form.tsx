@@ -1,7 +1,7 @@
 'use client'
 import Input from '@/components/input'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { Suspense } from 'react'
 
 export default function UserForm() {
 	const router = useRouter()

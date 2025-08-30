@@ -4,7 +4,7 @@ import { cn } from '@/lib/util'
 import { IconX } from '@tabler/icons-react'
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as motion from 'motion/react-client'
 
 export default function NavLink({

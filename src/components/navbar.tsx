@@ -2,16 +2,9 @@
 
 import NavLink, { UserNavLink } from '@/components/navlink'
 import { cn } from '@/lib/util'
-import { QueryClientProvider } from '@tanstack/react-query'
-
-import { QueryClient } from '@tanstack/react-query'
-import { usePathname } from 'next/navigation'
-import { useEffect } from 'react'
-const queryClient = new QueryClient()
 
 export default function Navbar() {
 	return (
-    <QueryClientProvider client={queryClient}>
       <nav className="border-b border-neutral-800 flex items-center justify-between h-10">
 			{/* <LayoutGroup id="nav"> */}
 			<ul className="flex">
@@ -34,7 +27,5 @@ export default function Navbar() {
 			</ul>
 			{/* </LayoutGroup> */}
 		</nav>
-    </QueryClientProvider>
-		
 	)
 }
