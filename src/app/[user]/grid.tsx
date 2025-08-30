@@ -81,19 +81,63 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 }
 
+function getImageLightness(
+	imageSrc: string,
+	callback: (lightness: number) => void
+) {
+	var img = document.createElement('img')
+	img.crossOrigin = 'anonymous'
+	img.src = imageSrc
+	img.style.display = 'none'
+	document.body.appendChild(img)
 
+	var colorSum = 0
 
-function MakeItems(items: {
-    album: string;
-    img: string;
-    artist: string;
-    id: string;
-}[]) {
-    return items.map((item) => ({
-        ...item,
-        textColor: 'white',
-        textBackground: false,
-    }));
+	img.onload = function () {
+		// create canvas
+		var canvas = document.createElement('canvas')
+		canvas.width = img.width
+		canvas.height = img.height
+
+		var ctx = canvas.getContext('2d')
+		if (!ctx) {
+			return 0
+		}
+		ctx.drawImage(img, 0, 0)
+
+		var imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height)
+		var data = imageData.data
+		var r, g, b, avg
+
+		for (var x = 0, len = data.length; x < len; x += 4) {
+			r = data[x]
+			g = data[x + 1]
+			b = data[x + 2]
+
+			avg = Math.floor((r + g + b) / 3)
+			colorSum += avg
+		}
+
+		var brightness = Math.floor(colorSum / (img.width * img.height * 0.25))
+		callback(brightness)
+	}
+}
+
+function MakeItems(
+	items: {
+		album: string
+		img: string
+		artist: string
+		id: string
+	}[]
+) {
+	return items.map((item) => {
+		return {
+			...item,
+			textColor: 'white',
+			textBackground: false,
+		}
+	})
 }
 
 export default function Grid({
@@ -149,45 +193,62 @@ export default function Grid({
 		}
 	}, [activeId])
 
+	useEffect(() => {
+		items.forEach((item, index) => {
+			getImageLightness(item.img, (lightness) => {
+				if (lightness > 200) {
+					setTextColor(index, 'black')
+				} else if (lightness > 160) {
+          setTextBackground(index, true)
+					setTextColor(index, 'black')
+				} else if (lightness > 60) {
+          setTextBackground(index, true)
+          setTextColor(index, 'white')
+        } else {
+          setTextColor(index, 'white')
+        }
+			})
+		})
+	}, [])
+
 	const trimmedItems = useMemo(
 		() => items.slice(0, Math.min(columns * columns, items.length)),
 		[items, columns]
 	)
 
-	const extraItems = useMemo(
-		() => {
-      if (items.length > columns * columns) {
-        return items.slice(columns * columns)
-      }
-      return []
-    },
-		[items, columns]
+	const extraItems = useMemo(() => {
+		if (items.length > columns * columns) {
+			return items.slice(columns * columns)
+		}
+		return []
+	}, [items, columns])
+
+	function setTextColor(index: number, color: string) {
+		setItems((items) => {
+			if (index === -1) return items
+			const newItems = [...items]
+			newItems[index] = {
+				...newItems[index],
+				textColor: color,
+			}
+			return newItems
+		})
+	}
+
+	const setTextBackground = useCallback(
+		(index: number, background: boolean) => {
+			setItems((items) => {
+				if (index === -1) return items
+				const newItems = [...items]
+				newItems[index] = {
+					...newItems[index],
+					textBackground: background,
+				}
+				return newItems
+			})
+		},
+		[]
 	)
-
-  function setTextColor(index: number, color: string) {
-    setItems((items) => {
-      console.log('setting text color', index, color )
-      if (index === -1) return items
-      const newItems = [...items]
-      newItems[index] = {
-        ...newItems[index],
-        textColor: color,
-      }
-      return newItems
-    })
-  }
-
-  const  setTextBackground = useCallback((index: number, background: boolean) => {
-    setItems((items) => {
-      if (index === -1) return items
-      const newItems = [...items]
-      newItems[index] = {
-        ...newItems[index],
-        textBackground: background,
-      }
-      return newItems
-    })
-  }, [])
 
 	return (
 		<DndContext
@@ -225,7 +286,9 @@ export default function Grid({
 				<SortableContext items={items} strategy={rectSortingStrategy}>
 					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
 						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
-							<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">extras</h5>
+							<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">
+								extras
+							</h5>
 						</div>
 						<ScrollArea.Root className="h-[calc(100%-40px)] relative w-full">
 							<ScrollArea.Viewport className="h-full p-2">
@@ -239,8 +302,8 @@ export default function Grid({
 											animateLayoutChanges={animateLayoutChanges}
 											useDragOverlay={useDragOverlay}
 											getNewIndex={getNewIndex}
-                      setTextBackground={setTextBackground}
-                      setTextColor={setTextColor}
+											setTextBackground={setTextBackground}
+											setTextColor={setTextColor}
 										/>
 									))}
 								</div>
@@ -251,11 +314,14 @@ export default function Grid({
 						</ScrollArea.Root>
 					</div>
 					<div className="w-full h-full">
-						<div className='h-[calc(100%-80px)] flex justify-center items-center-safe overflow-scroll'
-            style={{
-              '--col-count': columns,
-            }as React.CSSProperties}
-            >
+						<div
+							className="h-[calc(100%-80px)] flex justify-center items-center-safe overflow-scroll"
+							style={
+								{
+									'--col-count': columns,
+								} as React.CSSProperties
+							}
+						>
 							<ul
 								id="fm-grid"
 								className={
@@ -263,7 +329,6 @@ export default function Grid({
 								}
 								style={
 									{
-										
 										width: columns * 128,
 										height: columns * 128,
 									} as React.CSSProperties
@@ -278,8 +343,8 @@ export default function Grid({
 										animateLayoutChanges={animateLayoutChanges}
 										useDragOverlay={useDragOverlay}
 										getNewIndex={getNewIndex}
-                    setTextBackground={setTextBackground}
-                    setTextColor={setTextColor}
+										setTextBackground={setTextBackground}
+										setTextColor={setTextColor}
 									/>
 								))}
 							</ul>
@@ -290,12 +355,13 @@ export default function Grid({
 			</div>
 			{useDragOverlay && typeof document !== 'undefined'
 				? createPortal(
-						<DragOverlay
-							adjustScale={false}
-							dropAnimation={dropAnimation}
-						>
+						<DragOverlay adjustScale={false} dropAnimation={dropAnimation}>
 							{activeId != null ? (
-								<Album value={items[activeIndex]} index={activeIndex} dragOverlay />
+								<Album
+									value={items[activeIndex]}
+									index={activeIndex}
+									dragOverlay
+								/>
 							) : null}
 						</DragOverlay>,
 						document.body
@@ -315,8 +381,8 @@ type SortableItemProps = {
 		artist: string
 		id: string
 	}
-  setTextColor?(index: number, color: string): void
-  setTextBackground?(index: number, background: boolean): void
+	setTextColor?(index: number, color: string): void
+	setTextBackground?(index: number, background: boolean): void
 	index: number
 	useDragOverlay?: boolean
 	onRemove(id: UniqueIdentifier): void
@@ -330,7 +396,7 @@ export function SortableItem({
 	index,
 	onRemove,
 	useDragOverlay,
-  ...props
+	...props
 }: SortableItemProps) {
 	const {
 		active,
@@ -364,7 +430,7 @@ export function SortableItem({
 			data-index={index}
 			data-id={value.id}
 			dragOverlay={!useDragOverlay && isDragging}
-      {...props}
+			{...props}
 			// {...attributes}
 		/>
 	)
