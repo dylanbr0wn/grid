@@ -36,25 +36,25 @@ async function downloadGrid(columns: number) {
 
 export function useToolbar() {
 	const searchParams = useSearchParams()
-	function updateGridSize(gridSize: string) {
+	function updateColumns(columns: string) {
 		const params = new URLSearchParams(searchParams.toString())
-		params.set('gridSize', gridSize)
+		params.set('cols', columns)
 		window.history.pushState(null, '', `?${params.toString()}`)
 	}
 
 	const columns = useMemo(() => {
 		const params = new URLSearchParams(searchParams.toString())
-		const size = params.get('gridSize')
+		const size = params.get('cols')
 		if (!size || isNaN(parseInt(size))) {
 			return 5
 		}
 		return parseInt(size)
 	}, [searchParams])
-	return { columns, updateGridSize }
+	return { columns, updateColumns }
 }
 
 export default function Toolbar() {
-	const { columns, updateGridSize } = useToolbar()
+	const { columns, updateColumns } = useToolbar()
   const [loading, setLoading] = useState(false)
 
   async function download() {
@@ -70,7 +70,7 @@ export default function Toolbar() {
 				<Select
 					value={columns.toString()}
 					items={gridSizes}
-					onChange={updateGridSize}
+					onChange={updateColumns}
 				/>
 			</div>
 			<div className="w-1/3 flex items-center justify-end">

@@ -1,25 +1,16 @@
 import { fetchGridData } from '@/lib/lastfm'
 import Grid from './grid'
-import Toolbar from './toolbar'
 import { redirect, RedirectType } from 'next/navigation'
 
 export default async function Page({
-	searchParams,
+	params,
 }: {
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+	params: Promise<{ user: string }>
 }) {
-	const params = await searchParams
+	const { user } = await params
 
-	if (!params.user || typeof params.user !== 'string') {
+	if (!user || typeof user !== 'string') {
 		return <div>problem</div>
-	}
-
-	if (
-		!params.gridSize ||
-		typeof params.gridSize !== 'string' ||
-		isNaN(parseInt(params.gridSize))
-	) {
-		params.gridSize = '5'
 	}
 
 	let data: {
@@ -29,7 +20,7 @@ export default async function Page({
 		id: string
 	}[] = []
 	try {
-		data = await fetchGridData(params.user)
+		data = await fetchGridData(user)
 	} catch (e) {
 		const error = e instanceof Error ? e.message : 'Unknown error'
     console.error(e)
@@ -37,7 +28,7 @@ export default async function Page({
 	}
 
 	return (
-		<div className="flex h-screen flex-col font-code">
+		<div className="flex h-full flex-col font-code relative">
 			<Grid items={data} />
 		</div>
 	)

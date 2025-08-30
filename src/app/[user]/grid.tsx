@@ -200,8 +200,6 @@ export default function Grid({
 				if (!active) {
 					return
 				}
-        console.log('drag start', active)
-
 				setActiveId(active.id as string)
 				if (trimmedItems.find((item) => item.id === active.id)) {
 					strategy.current = rectSortingStrategy
