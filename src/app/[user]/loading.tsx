@@ -1,4 +1,5 @@
 import { cn } from '@/lib/util'
+import { IconLoader, IconLoader2 } from '@tabler/icons-react'
 
 export default function Loading() {
 	return (
@@ -16,7 +17,7 @@ export default function Loading() {
 					<ul
 						id="fm-grid"
 						className={
-							'grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min'
+							'flex items-center justify-center'
 						}
 						style={
 							{
@@ -25,7 +26,9 @@ export default function Loading() {
 								height: 5 * 128,
 							} as React.CSSProperties
 						}
-					></ul>
+					>
+            <span className='animate-pulse duration-1000 uppercase tracking-widest text-sm'>Loading...</span> 
+          </ul>
 				</div>
 				<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950"></div>
 			</div>
