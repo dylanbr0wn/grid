@@ -225,7 +225,7 @@ export default function Grid({
 				<SortableContext items={items} strategy={rectSortingStrategy}>
 					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
 						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
-							<h5 className="h-10 text-lg/loose mb-0 uppercase font-code">extras</h5>
+							<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">extras</h5>
 						</div>
 						<ScrollArea.Root className="h-[calc(100%-40px)] relative w-full">
 							<ScrollArea.Viewport className="h-full p-2">

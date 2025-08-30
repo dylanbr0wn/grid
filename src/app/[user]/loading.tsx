@@ -7,10 +7,7 @@ export default function Loading() {
 		>
 			<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
 				<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
-					<h5 className="h-10 text-lg/loose mb-0 uppercase font-code">
-            
-						extras
-					</h5>
+					<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">extras</h5>
 				</div>
         <div style={{ width: 3*128 + 16 }}/>
 			</div>
