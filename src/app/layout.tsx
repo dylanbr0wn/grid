@@ -1,4 +1,4 @@
-import {Metadata} from 'next'
+import {Metadata, Viewport} from 'next'
 import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google'
 import AppWrapper from '@/components/app-wrapper'
 
@@ -22,12 +22,21 @@ const jetBrainsMono = JetBrains_Mono({
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://grid.dylanbrown.xyz'),
 	title: 'GRID',
 	description: 'A Last.fm album grid generator',
 	openGraph: {
 		title: 'GRID',
+    type: 'website',
+    url: 'https://grid.dylanbrown.xyz',
+    siteName: 'GRID',
 		description: 'A Last.fm album grid generator',
 	},
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  colorScheme: 'dark',
 }
 
 
