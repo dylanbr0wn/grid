@@ -85,7 +85,7 @@ function getImageLightness(
 	imageSrc: string,
 	callback: (lightness: number) => void
 ) {
-	let img = document.createElement('img')
+	const img = document.createElement('img')
 	img.crossOrigin = 'anonymous'
 	img.src = imageSrc
 	img.style.display = 'none'
@@ -95,11 +95,11 @@ function getImageLightness(
 
 	img.onload = function () {
 		// create canvas
-		let canvas = document.createElement('canvas')
+		const canvas = document.createElement('canvas')
 		canvas.width = img.width
 		canvas.height = img.height
 
-		let ctx = canvas.getContext('2d')
+		const ctx = canvas.getContext('2d')
 		if (!ctx) {
 			return 0
 		}
