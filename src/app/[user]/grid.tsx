@@ -39,30 +39,6 @@ import { cn } from '@/lib/util'
 
 import Toolbar, { useToolbar } from './toolbar'
 
-type SortableProps = {
-	activationConstraint?: PointerActivationConstraint
-	animateLayoutChanges?: AnimateLayoutChanges
-	adjustScale?: boolean
-	collisionDetection?: CollisionDetection
-	coordinateGetter?: KeyboardCoordinateGetter
-	dropAnimation?: DropAnimation | null
-	getNewIndex?: NewIndexGetter
-	handle?: boolean
-	items?: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}[]
-	measuring?: MeasuringConfiguration
-	modifiers?: Modifiers
-	removable?: boolean
-	reorderItems?: typeof arrayMove
-	style?: React.CSSProperties
-	useDragOverlay?: boolean
-	isDisabled?(id: UniqueIdentifier): boolean
-}
-
 const dropAnimationConfig: DropAnimation = {
 	sideEffects: defaultDropAnimationSideEffects({
 		styles: {
@@ -96,8 +72,8 @@ function getImageLightness(
 	img.onload = function () {
 		// create canvas
 		const canvas = document.createElement('canvas')
-		canvas.width = img.width
-		canvas.height = img.height
+		canvas.width = img.naturalWidth
+		canvas.height = img.naturalHeight
 
 		const ctx = canvas.getContext('2d')
 		if (!ctx) {
@@ -105,10 +81,9 @@ function getImageLightness(
 		}
 		ctx.drawImage(img, 0, 0)
 
-		const imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height)
+		const imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height * 0.25)
 		const data = imageData.data
 		let r, g, b, avg
-
 		for (let x = 0, len = data.length; x < len; x += 4) {
 			r = data[x]
 			g = data[x + 1]
@@ -118,7 +93,7 @@ function getImageLightness(
 			colorSum += avg
 		}
 
-		const brightness = Math.floor(colorSum / (img.width * img.height * 0.25))
+		const brightness = Math.floor(colorSum / (img.naturalWidth * img.naturalHeight * 0.25))
 		callback(brightness)
 	}
 }
@@ -140,6 +115,28 @@ function MakeItems(
 	})
 }
 
+type SortableProps = {
+	activationConstraint?: PointerActivationConstraint
+	animateLayoutChanges?: AnimateLayoutChanges
+	adjustScale?: boolean
+	collisionDetection?: CollisionDetection
+	coordinateGetter?: KeyboardCoordinateGetter
+	dropAnimation?: DropAnimation | null
+	getNewIndex?: NewIndexGetter
+	items?: {
+		album: string
+		img: string
+		artist: string
+		id: string
+	}[]
+	measuring?: MeasuringConfiguration
+	modifiers?: Modifiers
+	reorderItems?: typeof arrayMove
+	style?: React.CSSProperties
+	useDragOverlay?: boolean
+	isDisabled?(id: UniqueIdentifier): boolean
+}
+
 export default function Grid({
 	activationConstraint,
 	animateLayoutChanges,
@@ -147,11 +144,9 @@ export default function Grid({
 	coordinateGetter = sortableKeyboardCoordinates,
 	dropAnimation = dropAnimationConfig,
 	getNewIndex,
-	handle = false,
 	items: initialItems,
 	measuring,
 	modifiers,
-	removable,
 	reorderItems = arrayMove,
 	useDragOverlay = true,
 }: SortableProps) {
@@ -176,40 +171,18 @@ export default function Grid({
 	const getIndex = (id: string) => items.findIndex((item) => item.id === id)
 	const activeIndex = activeId != null ? getIndex(activeId) : -1
 
-	const onRemove = (id: UniqueIdentifier) => {
-		const index = getIndex(id as string)
-		if (index !== -1) {
-			setItems((items) => {
-				const newItems = [...items]
-				newItems.splice(index, 1)
-				return newItems
-			})
-		}
-	}
+	// const onRemove = (id: UniqueIdentifier) => {
+	// 	const index = getIndex(id as string)
+	// 	if (index !== -1) {
+	// 		setItems((items) => {
+	// 			const newItems = [...items]
+	// 			newItems.splice(index, 1)
+	// 			return newItems
+	// 		})
+	// 	}
+	// }
 
-	useEffect(() => {
-		if (activeId == null) {
-			isFirstAnnouncement.current = true
-		}
-	}, [activeId])
 
-	useEffect(() => {
-		items.forEach((item, index) => {
-			getImageLightness(item.img, (lightness) => {
-				if (lightness > 200) {
-					setTextColor(index, 'black')
-				} else if (lightness > 160) {
-          setTextBackground(index, true)
-					setTextColor(index, 'black')
-				} else if (lightness > 60) {
-          setTextBackground(index, true)
-          setTextColor(index, 'white')
-        } else {
-          setTextColor(index, 'white')
-        }
-			})
-		})
-	}, [])
 
 	const trimmedItems = useMemo(
 		() => items.slice(0, Math.min(columns * columns, items.length)),
@@ -223,7 +196,7 @@ export default function Grid({
 		return []
 	}, [items, columns])
 
-	function setTextColor(index: number, color: string) {
+	const setTextColor = useCallback((index: number, color: string) => {
 		setItems((items) => {
 			if (index === -1) return items
 			const newItems = [...items]
@@ -233,7 +206,7 @@ export default function Grid({
 			}
 			return newItems
 		})
-	}
+	}, [])
 
 	const setTextBackground = useCallback(
 		(index: number, background: boolean) => {
@@ -249,6 +222,30 @@ export default function Grid({
 		},
 		[]
 	)
+
+  useEffect(() => {
+		initialItems?.forEach((item, index) => {
+			getImageLightness(item.img, (lightness) => {
+				if (lightness > 200) {
+					setTextColor(index, 'black')
+				} else if (lightness > 160) {
+          setTextBackground(index, true)
+					setTextColor(index, 'black')
+				} else if (lightness > 60) {
+          setTextBackground(index, true)
+          setTextColor(index, 'white')
+        } else {
+          setTextColor(index, 'white')
+        }
+			})
+		})
+	}, [initialItems, setTextBackground, setTextColor])
+
+  useEffect(() => {
+		if (activeId == null) {
+			isFirstAnnouncement.current = true
+		}
+	}, [activeId])
 
 	return (
 		<DndContext
@@ -298,7 +295,6 @@ export default function Grid({
 											key={value.id}
 											value={value}
 											index={trimmedItems.length + index}
-											onRemove={onRemove}
 											animateLayoutChanges={animateLayoutChanges}
 											useDragOverlay={useDragOverlay}
 											getNewIndex={getNewIndex}
@@ -314,15 +310,13 @@ export default function Grid({
 						</ScrollArea.Root>
 					</div>
 					<div className="w-full h-full">
-						<div
-							className="h-[calc(100%-80px)] flex justify-center items-center-safe overflow-scroll"
-							style={
+            <ScrollArea.Root className="h-[calc(100%-80px)]  relative" style={
 								{
 									'--col-count': columns,
 								} as React.CSSProperties
-							}
-						>
-							<ul
+							}>
+							<ScrollArea.Viewport className="h-full flex justify-center items-center-safe">
+								<ul
 								id="fm-grid"
 								className={
 									'shrink-0 grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full'
@@ -339,7 +333,6 @@ export default function Grid({
 										key={value.id}
 										value={value}
 										index={index}
-										onRemove={onRemove}
 										animateLayoutChanges={animateLayoutChanges}
 										useDragOverlay={useDragOverlay}
 										getNewIndex={getNewIndex}
@@ -348,7 +341,17 @@ export default function Grid({
 									/>
 								))}
 							</ul>
-						</div>
+							</ScrollArea.Viewport>
+							<ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+								<ScrollArea.Thumb className="w-full bg-neutral-500" />
+							</ScrollArea.Scrollbar>
+						</ScrollArea.Root>
+						{/* <div
+							className="h-[calc(100%-80px)] flex justify-center items-center-safe overflow-auto"
+							
+						>
+							
+						</div> */}
 						<Toolbar />
 					</div>
 				</SortableContext>
@@ -385,7 +388,6 @@ type SortableItemProps = {
 	setTextBackground?(index: number, background: boolean): void
 	index: number
 	useDragOverlay?: boolean
-	onRemove(id: UniqueIdentifier): void
 }
 
 export function SortableItem({
@@ -394,17 +396,15 @@ export function SortableItem({
 	getNewIndex,
 	value,
 	index,
-	onRemove,
 	useDragOverlay,
+  setTextBackground,
 	...props
 }: SortableItemProps) {
 	const {
-		active,
 		attributes,
 		isDragging,
 		isSorting,
 		listeners,
-		overIndex,
 		setNodeRef,
 		transform,
 		transition,
@@ -423,15 +423,15 @@ export function SortableItem({
 			dragging={isDragging}
 			sorting={isSorting}
 			index={index}
-			onRemove={() => onRemove(value.id as UniqueIdentifier)}
 			transform={transform}
 			transition={transition}
 			listeners={listeners}
 			data-index={index}
 			data-id={value.id}
 			dragOverlay={!useDragOverlay && isDragging}
+      setTextBackground={setTextBackground}
 			{...props}
-			// {...attributes}
+			{...attributes}
 		/>
 	)
 }

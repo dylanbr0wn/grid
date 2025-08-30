@@ -22,7 +22,6 @@ export default function NavLink({
 	const [active, setActive] = useState(false)
 
 	useEffect(() => {
-		console.log({ pathname, href, activeOverride })
 		setActive(activeOverride !== undefined ? activeOverride : pathname === href)
 	}, [activeOverride, pathname, href])
 
@@ -65,7 +64,6 @@ export function UserNavLink(
   const [lastUser, setLastUser] = useState(user)
 
 	useEffect(() => {
-		// console.log(pathname, user)
 		setActive(!!user || pathname === `/`)
 	}, [user, pathname])
 

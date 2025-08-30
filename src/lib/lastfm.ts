@@ -43,7 +43,6 @@ export async function fetchWeeklyAlbumChart(user: string) {
 		throw new Error('Failed to fetch data from Last.fm')
 	}
 
-	// console.log(JSON.stringify(await response.clone().json(), null, 2))
 
 	const out = weeklyAlbumChart(await response.json())
 
@@ -51,7 +50,6 @@ export async function fetchWeeklyAlbumChart(user: string) {
 		// hover out.summary to see validation errors
 		throw new Error(out.summary)
 	}
-	// console.log(out)
 
 	return out.topalbums.album
 }
