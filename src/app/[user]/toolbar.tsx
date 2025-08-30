@@ -1,7 +1,7 @@
 'use client'
 
 import Select from '@/components/select'
-import { useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import * as htmlToImage from 'html-to-image'
 import { jetBrainsMono } from '../layout'
@@ -14,7 +14,7 @@ const gridSizes = [
 	{ label: '5 x 5', value: '5' },
 ]
 
-async function downloadGrid(columns: number) {
+async function downloadGrid(columns: number, user:string) {
 	const node = document.getElementById('fm-grid')
 	const dpr = window.devicePixelRatio
 	if (!node) return
@@ -24,18 +24,18 @@ async function downloadGrid(columns: number) {
 		backgroundColor: '#000000',
     style: {
       fontFamily: jetBrainsMono.style.fontFamily
-      
     },
-		cacheBust: true,
 	})
+  const date = new Date()
 	const link = document.createElement('a')
-	link.download = 'my-node.png'
+	link.download = `grid_${user}_${date.getDate().toString().padStart(2,'0')}${date.getMonth().toString().padStart(2,'0')}${date.getFullYear()}_${date.getHours().toString().padStart(2,'0')}${date.getMinutes().toString().padStart(2,'0')}${date.getSeconds().toString().padStart(2,'0')}.png`
 	link.href = dataUrl
 	link.click() // Triggers the download
 }
 
 export function useToolbar() {
 	const searchParams = useSearchParams()
+  const {user} = useParams()
 	function updateColumns(columns: string) {
 		const params = new URLSearchParams(searchParams.toString())
 		params.set('cols', columns)
@@ -50,16 +50,16 @@ export function useToolbar() {
 		}
 		return parseInt(size)
 	}, [searchParams])
-	return { columns, updateColumns }
+	return { columns, updateColumns, user }
 }
 
 export default function Toolbar() {
-	const { columns, updateColumns } = useToolbar()
+	const { columns, updateColumns, user } = useToolbar()
   const [loading, setLoading] = useState(false)
 
   async function download() {
     setLoading(true)
-    await downloadGrid(columns)
+    await downloadGrid(columns, user as string)
     setLoading(false)
   }
 
