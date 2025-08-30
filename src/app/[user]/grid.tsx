@@ -85,31 +85,31 @@ function getImageLightness(
 	imageSrc: string,
 	callback: (lightness: number) => void
 ) {
-	var img = document.createElement('img')
+	let img = document.createElement('img')
 	img.crossOrigin = 'anonymous'
 	img.src = imageSrc
 	img.style.display = 'none'
 	document.body.appendChild(img)
 
-	var colorSum = 0
+	let colorSum = 0
 
 	img.onload = function () {
 		// create canvas
-		var canvas = document.createElement('canvas')
+		let canvas = document.createElement('canvas')
 		canvas.width = img.width
 		canvas.height = img.height
 
-		var ctx = canvas.getContext('2d')
+		let ctx = canvas.getContext('2d')
 		if (!ctx) {
 			return 0
 		}
 		ctx.drawImage(img, 0, 0)
 
-		var imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height)
-		var data = imageData.data
-		var r, g, b, avg
+		const imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height)
+		const data = imageData.data
+		let r, g, b, avg
 
-		for (var x = 0, len = data.length; x < len; x += 4) {
+		for (let x = 0, len = data.length; x < len; x += 4) {
 			r = data[x]
 			g = data[x + 1]
 			b = data[x + 2]
@@ -118,7 +118,7 @@ function getImageLightness(
 			colorSum += avg
 		}
 
-		var brightness = Math.floor(colorSum / (img.width * img.height * 0.25))
+		const brightness = Math.floor(colorSum / (img.width * img.height * 0.25))
 		callback(brightness)
 	}
 }
