@@ -251,15 +251,19 @@ export default function Grid({
 						</ScrollArea.Root>
 					</div>
 					<div className="w-full h-full">
-						<div className='h-[calc(100%-80px)] flex justify-center items-center'>
+						<div className='h-[calc(100%-80px)] flex justify-center items-center-safe overflow-scroll'
+            style={{
+              '--col-count': columns,
+            }as React.CSSProperties}
+            >
 							<ul
 								id="fm-grid"
 								className={
-									'grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min'
+									'shrink-0 grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full'
 								}
 								style={
 									{
-										'--col-count': columns,
+										
 										width: columns * 128,
 										height: columns * 128,
 									} as React.CSSProperties

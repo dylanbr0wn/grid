@@ -64,7 +64,7 @@ export default function Toolbar() {
   }
 
 	return (
-		<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950">
+		<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950 z-20">
 			<div className="w-1/3"></div>
 			<div className="w-1/3 flex items-center justify-center">
 				<Select
