@@ -5,7 +5,6 @@ import { Field } from '@base-ui-components/react/field'
 import { cn } from '@/lib/util'
 
 type InputProps = {
-	missingError?: string
 	required?: boolean
 	placeholder?: string
 	description?: string
@@ -17,7 +16,6 @@ type InputProps = {
 }
 
 export default function Input({
-	missingError,
 	required,
 	placeholder,
 	description,

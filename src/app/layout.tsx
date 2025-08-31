@@ -1,52 +1,58 @@
-import type { Metadata } from 'next'
+import {Metadata, Viewport} from 'next'
 import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google'
-import './globals.css'
-import Navbar from '../components/navbar'
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/next"
+import AppWrapper from '@/components/app-wrapper'
 
-export const geistSans = Geist({
+import './globals.css'
+
+const geistSans = Geist({
 	variable: '--font-geist-sans',
 	subsets: ['latin'],
 })
 
-export const geistMono = Geist_Mono({
+const geistMono = Geist_Mono({
 	variable: '--font-geist-mono',
 	subsets: ['latin'],
 })
 
-export const jetBrainsMono = JetBrains_Mono({
+const jetBrainsMono = JetBrains_Mono({
 	variable: '--font-jetbrains-mono',
 	subsets: ['latin'],
 	weight: ['400', '800'],
 })
 
-const metadata: Metadata = {
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://grid.dylanbrown.xyz'),
 	title: 'GRID',
 	description: 'A Last.fm album grid generator',
 	openGraph: {
 		title: 'GRID',
+    type: 'website',
+    url: 'https://grid.dylanbrown.xyz',
+    siteName: 'GRID',
 		description: 'A Last.fm album grid generator',
 	},
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  colorScheme: 'dark',
 }
 
 
 
 export default function RootLayout({
 	children,
-}: LayoutProps<'/'>) {
+}: {
+  children: React.ReactNode
+}) {
 	return (
 		<html lang="en" className="font-code">
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} ${jetBrainsMono.variable} antialiased h-screen bg-neutral-950 text-neutral-300 overflow-hidden font-code relative`}
 			>
-				<Navbar />
-        <div className='h-[calc(100%-40px)]'>
-        	{children}
-        </div>
+				<AppWrapper>{children}</AppWrapper>
 			</body>
-      <SpeedInsights />
-      <Analytics />
 		</html>
 	)
 }
