@@ -38,6 +38,7 @@ import { Album } from './album'
 import { cn } from '@/lib/util'
 
 import Toolbar, { useToolbar } from './toolbar'
+import { useSessionStore } from '@/lib/session-store'
 
 const dropAnimationConfig: DropAnimation = {
 	sideEffects: defaultDropAnimationSideEffects({
@@ -57,16 +58,17 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 }
 
-function getImageLightness(
-	imageSrc: string,
-	callback: (lightness: number) => void
-) {
+async function getImageBrightness(src: string): Promise<number> {
+  const { promise, resolve, reject } = Promise.withResolvers<number>()
+  if (!src) {
+    reject('No src provided')
+    return promise
+  }
 	const img = document.createElement('img')
 	img.crossOrigin = 'anonymous'
-	img.src = imageSrc
+	img.src = src
 	img.style.display = 'none'
 	document.body.appendChild(img)
-
 	let colorSum = 0
 
 	img.onload = function () {
@@ -77,11 +79,17 @@ function getImageLightness(
 
 		const ctx = canvas.getContext('2d')
 		if (!ctx) {
-			return 0
+			reject('Could not get canvas context')
+			return
 		}
 		ctx.drawImage(img, 0, 0)
 
-		const imageData = ctx.getImageData(0, canvas.height * 0.75, canvas.width, canvas.height * 0.25)
+		const imageData = ctx.getImageData(
+			0,
+			canvas.height * 0.75,
+			canvas.width,
+			canvas.height * 0.25
+		)
 		const data = imageData.data
 		let r, g, b, avg
 		for (let x = 0, len = data.length; x < len; x += 4) {
@@ -93,12 +101,30 @@ function getImageLightness(
 			colorSum += avg
 		}
 
-		const brightness = Math.floor(colorSum / (img.naturalWidth * img.naturalHeight * 0.25))
-		callback(brightness)
+		const brightness = Math.floor(
+			colorSum / (img.naturalWidth * img.naturalHeight * 0.25)
+		)
+		canvas.remove()
+		resolve(brightness)
 	}
+	const res = await promise
+	document.body.removeChild(img)
+	console.count('getImageBrightness calls')
+	return res
 }
 
-function MakeItems(
+// async function getImageLightnessArray(
+//   imageSrcs: string[],
+// ): Promise<number[]> {
+//   const res = await Promise.all(imageSrcs.map(loadImage))
+
+// }
+
+// async function getImageBrightnessArray(images: string[]) {
+// 	return
+// }
+
+function MakeAlbums(
 	items: {
 		album: string
 		img: string
@@ -123,12 +149,7 @@ type SortableProps = {
 	coordinateGetter?: KeyboardCoordinateGetter
 	dropAnimation?: DropAnimation | null
 	getNewIndex?: NewIndexGetter
-	items?: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}[]
+	items?: Album[]
 	measuring?: MeasuringConfiguration
 	modifiers?: Modifiers
 	reorderItems?: typeof arrayMove
@@ -150,7 +171,8 @@ export default function Grid({
 	reorderItems = arrayMove,
 	useDragOverlay = true,
 }: SortableProps) {
-	const [items, setItems] = useState<Album[]>(MakeItems(initialItems ?? []))
+	// const [albums, setAlbums] = useSessionStore('user:albums', MakeAlbums(initialItems ?? []))
+	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
 	const { columns } = useToolbar()
@@ -168,7 +190,10 @@ export default function Grid({
 		})
 	)
 	const isFirstAnnouncement = useRef(true)
-	const getIndex = (id: string) => items.findIndex((item) => item.id === id)
+	const getIndex = useCallback(
+		(id: string) => albums?.findIndex((item) => item.id === id) ?? -1,
+		[albums]
+	)
 	const activeIndex = activeId != null ? getIndex(activeId) : -1
 
 	// const onRemove = (id: UniqueIdentifier) => {
@@ -182,24 +207,23 @@ export default function Grid({
 	// 	}
 	// }
 
-
-
 	const trimmedItems = useMemo(
-		() => items.slice(0, Math.min(columns * columns, items.length)),
-		[items, columns]
+		() => albums?.slice(0, Math.min(columns * columns, albums.length)) ?? [],
+		[albums, columns]
 	)
 
 	const extraItems = useMemo(() => {
-		if (items.length > columns * columns) {
-			return items.slice(columns * columns)
+		if (!albums) return []
+		if (albums.length > columns * columns) {
+			return albums.slice(columns * columns)
 		}
 		return []
-	}, [items, columns])
+	}, [albums, columns])
 
 	const setTextColor = useCallback((index: number, color: string) => {
-		setItems((items) => {
-			if (index === -1) return items
-			const newItems = [...items]
+		setAlbums((albums) => {
+			if (index === -1) return albums
+			const newItems = [...(albums ?? [])]
 			newItems[index] = {
 				...newItems[index],
 				textColor: color,
@@ -210,9 +234,9 @@ export default function Grid({
 
 	const setTextBackground = useCallback(
 		(index: number, background: boolean) => {
-			setItems((items) => {
-				if (index === -1) return items
-				const newItems = [...items]
+			setAlbums((albums) => {
+				if (index === -1) return albums
+				const newItems = [...(albums ?? [])]
 				newItems[index] = {
 					...newItems[index],
 					textBackground: background,
@@ -223,29 +247,47 @@ export default function Grid({
 		[]
 	)
 
-  useEffect(() => {
-		initialItems?.forEach((item, index) => {
-			getImageLightness(item.img, (lightness) => {
-				if (lightness > 200) {
-					setTextColor(index, 'black')
-				} else if (lightness > 160) {
-          setTextBackground(index, true)
-					setTextColor(index, 'black')
-				} else if (lightness > 60) {
-          setTextBackground(index, true)
-          setTextColor(index, 'white')
-        } else {
-          setTextColor(index, 'white')
-        }
-			})
+	const adustBrightness = useCallback(async (albums: Album[]) => {
+		const items = MakeAlbums(albums)
+		const brightnessArray =  await Promise.allSettled(
+			items.map((i) => getImageBrightness(i.img))
+		)
+		brightnessArray.forEach((brightness, index) => {
+			if (brightness.status === 'rejected') {
+				console.warn(`album ${albums[index].album} image was not loaded`, brightness.reason)
+			} else {
+				console.log(items[index].album, brightness)
+				if (brightness.value > 200) {
+					items[index].textBackground = false
+					items[index].textColor = 'black'
+				} else if (brightness.value > 160) {
+					items[index].textBackground = true
+					items[index].textColor = 'black'
+				} else if (brightness.value > 60) {
+					items[index].textBackground = true
+					items[index].textColor = 'white'
+				} else {
+					items[index].textBackground = false
+					items[index].textColor = 'white'
+				}
+			}
 		})
-	}, [initialItems, setTextBackground, setTextColor])
+		return items
+	}, [])
 
-  useEffect(() => {
+	useEffect(() => {
+		if (!initialItems) return
+    console.log('initialItems', initialItems)
+		adustBrightness(initialItems).then(setAlbums)
+	}, [initialItems, adustBrightness])
+
+	useEffect(() => {
 		if (activeId == null) {
 			isFirstAnnouncement.current = true
 		}
 	}, [activeId])
+
+	if (!albums) return null
 
 	return (
 		<DndContext
@@ -269,7 +311,9 @@ export default function Grid({
 				if (over) {
 					const overIndex = getIndex(over.id as string)
 					if (activeIndex !== overIndex) {
-						setItems((items) => reorderItems(items, activeIndex, overIndex))
+						setAlbums((albums) =>
+							reorderItems(albums ?? [], activeIndex, overIndex)
+						)
 					}
 				}
 			}}
@@ -280,7 +324,7 @@ export default function Grid({
 			<div
 				className={cn('h-full flex w-full box-border justify-center relative')}
 			>
-				<SortableContext items={items} strategy={rectSortingStrategy}>
+				<SortableContext items={albums} strategy={rectSortingStrategy}>
 					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
 						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
 							<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">
@@ -310,37 +354,40 @@ export default function Grid({
 						</ScrollArea.Root>
 					</div>
 					<div className="w-full h-full">
-            <ScrollArea.Root className="h-[calc(100%-80px)]  relative" style={
+						<ScrollArea.Root
+							className="h-[calc(100%-80px)]  relative"
+							style={
 								{
 									'--col-count': columns,
 								} as React.CSSProperties
-							}>
+							}
+						>
 							<ScrollArea.Viewport className="h-full flex justify-center items-center-safe">
 								<ul
-								id="fm-grid"
-								className={
-									'shrink-0 grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full'
-								}
-								style={
-									{
-										width: columns * 128,
-										height: columns * 128,
-									} as React.CSSProperties
-								}
-							>
-								{trimmedItems.map((value, index) => (
-									<SortableItem
-										key={value.id}
-										value={value}
-										index={index}
-										animateLayoutChanges={animateLayoutChanges}
-										useDragOverlay={useDragOverlay}
-										getNewIndex={getNewIndex}
-										setTextBackground={setTextBackground}
-										setTextColor={setTextColor}
-									/>
-								))}
-							</ul>
+									id="fm-grid"
+									className={
+										'shrink-0 grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full'
+									}
+									style={
+										{
+											width: columns * 128,
+											height: columns * 128,
+										} as React.CSSProperties
+									}
+								>
+									{trimmedItems.map((value, index) => (
+										<SortableItem
+											key={value.id}
+											value={value}
+											index={index}
+											animateLayoutChanges={animateLayoutChanges}
+											useDragOverlay={useDragOverlay}
+											getNewIndex={getNewIndex}
+											setTextBackground={setTextBackground}
+											setTextColor={setTextColor}
+										/>
+									))}
+								</ul>
 							</ScrollArea.Viewport>
 							<ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
 								<ScrollArea.Thumb className="w-full bg-neutral-500" />
@@ -361,7 +408,7 @@ export default function Grid({
 						<DragOverlay adjustScale={false} dropAnimation={dropAnimation}>
 							{activeId != null ? (
 								<Album
-									value={items[activeIndex]}
+									value={albums[activeIndex]}
 									index={activeIndex}
 									dragOverlay
 								/>
@@ -397,7 +444,7 @@ export function SortableItem({
 	value,
 	index,
 	useDragOverlay,
-  setTextBackground,
+	setTextBackground,
 	...props
 }: SortableItemProps) {
 	const {
@@ -429,7 +476,7 @@ export function SortableItem({
 			data-index={index}
 			data-id={value.id}
 			dragOverlay={!useDragOverlay && isDragging}
-      setTextBackground={setTextBackground}
+			setTextBackground={setTextBackground}
 			{...props}
 			{...attributes}
 		/>

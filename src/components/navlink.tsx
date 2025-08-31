@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import * as motion from 'motion/react-client'
+import { useSessionStore } from '@/lib/session-store'
 
 export default function NavLink({
 	href,
@@ -61,7 +62,8 @@ export function UserNavLink(
 	const pathname = usePathname()
 	const { user } = useParams()
 	const [active, setActive] = useState(false)
-  const [lastUser, setLastUser] = useState(user)
+  // const [lastUser, setLastUser] = useState(user)
+  const [storedUser, setStoredUser] = useSessionStore('user', '')
 
 	useEffect(() => {
 		setActive(!!user || pathname === `/`)
@@ -69,7 +71,8 @@ export function UserNavLink(
 
   useEffect(() => {
     if (user) {
-      setLastUser(user)
+      // window.sessionStorage.setItem('user', user as string)
+      setStoredUser(user as string)
     }
   },[user])
 
@@ -77,10 +80,10 @@ export function UserNavLink(
 		<Link
 			aria-current={active ? 'page' : undefined}
 			data-active={active}
-			href={`/${active ? "": lastUser ?? ""}`}
+			href={`/${active ? "": storedUser ?? ""}`}
       onNavigate={() => {
         if (active) {
-          setLastUser(undefined)
+          setStoredUser(undefined)
         }
       }}
 			className={cn(
@@ -118,7 +121,7 @@ export function UserNavLink(
 					/>
 				) : null}
 				<div className={cn('px-4', user && active && 'group-hover:blur')}>
-					{lastUser  ?? 'Personal'}
+					{storedUser  ?? 'Personal'}
 				</div>
 			</div>
 		</Link>
