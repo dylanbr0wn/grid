@@ -112,7 +112,7 @@ export const Album = React.memo(
 						{...props}
 						tabIndex={0}
 					>
-            {value.img ? <img src={value.img} className="w-full h-full object-cover" /> : <div className='w-full h-full bg-neutral-950' />}
+            {value.img ? <img src={value.img} className="w-full h-full object-cover" alt={`${value.album} by ${value.artist} album cover`} /> : <div className='w-full h-full bg-neutral-950' />}
 						<div className="flex items-center justify-center">
 							<div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
 								<div

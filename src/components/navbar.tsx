@@ -2,15 +2,15 @@
 
 import NavLink, { UserNavLink } from '@/components/navlink'
 import { cn } from '@/lib/util'
+import Image from 'next/image'
 
 export default function Navbar() {
 	return (
       <nav className="border-b border-neutral-800 flex items-center justify-between h-10">
-			{/* <LayoutGroup id="nav"> */}
 			<ul className="flex">
 				<li className='relative'>
           <div className='h-full px-3 flex items-center justify-center font-code font-bold text-white text-sm tracking-[0.5rem]'>
-            <img src="/logo.png" className="h-5" />
+            <Image src="/logo.png" height={20} width={20} alt="A cool looking logo for something cald grid" />
           </div>
 					<div
 						className={cn(
@@ -25,7 +25,6 @@ export default function Navbar() {
 					<NavLink href="/group">Group</NavLink>
 				</li>
 			</ul>
-			{/* </LayoutGroup> */}
 		</nav>
 	)
 }

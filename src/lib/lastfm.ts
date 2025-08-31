@@ -1,4 +1,5 @@
 import { type } from 'arktype'
+import 'server-only'
 
 const apiURL = 'http://ws.audioscrobbler.com/2.0/'
 

@@ -1,5 +1,6 @@
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@tailwindcss/oxide'
+  - '@vercel/speed-insights'
   - sharp
   - unrs-resolver
