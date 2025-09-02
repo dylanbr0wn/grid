@@ -37,8 +37,9 @@ import {
 import { Album } from './album'
 import { cn } from '@/lib/util'
 
-import Toolbar, { useToolbar } from './toolbar'
-import { useSessionStore } from '@/lib/session-store'
+import Toolbar from './toolbar'
+import { useParamsStore, useSessionStore } from '@/lib/session-store'
+import { GridAlbum } from '@/lib/lastfm'
 
 const dropAnimationConfig: DropAnimation = {
 	sideEffects: defaultDropAnimationSideEffects({
@@ -109,7 +110,6 @@ async function getImageBrightness(src: string): Promise<number> {
 	}
 	const res = await promise
 	document.body.removeChild(img)
-	console.count('getImageBrightness calls')
 	return res
 }
 
@@ -125,16 +125,12 @@ async function getImageBrightness(src: string): Promise<number> {
 // }
 
 function MakeAlbums(
-	items: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}[]
-) {
-	return items.map((item) => {
+	items: GridAlbum[]
+): Album[] {
+	return items.map(({ imgs, ...item }) => {
 		return {
-			...item,
+      ...item,
+      img: imgs.large || imgs.small || imgs.fallback,
 			textColor: 'white',
 			textBackground: false,
 		}
@@ -149,7 +145,7 @@ type SortableProps = {
 	coordinateGetter?: KeyboardCoordinateGetter
 	dropAnimation?: DropAnimation | null
 	getNewIndex?: NewIndexGetter
-	items?: Album[]
+	items?: GridAlbum[]
 	measuring?: MeasuringConfiguration
 	modifiers?: Modifiers
 	reorderItems?: typeof arrayMove
@@ -175,7 +171,8 @@ export default function Grid({
 	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
-	const { columns } = useToolbar()
+	const [columns] = useParamsStore<number>('cols')
+  const [rows] = useParamsStore<number>('rows')
 
 	const sensors = useSensors(
 		useSensor(MouseSensor, {
@@ -208,17 +205,22 @@ export default function Grid({
 	// }
 
 	const trimmedItems = useMemo(
-		() => albums?.slice(0, Math.min(columns * columns, albums.length)) ?? [],
-		[albums, columns]
+		() => {
+      if (!columns || !rows) return []
+      if (!albums) return []
+      return albums.slice(0, Math.min(columns * rows, albums.length))
+    },
+		[albums, columns, rows]
 	)
 
 	const extraItems = useMemo(() => {
 		if (!albums) return []
-		if (albums.length > columns * columns) {
-			return albums.slice(columns * columns)
+     if (!columns || !rows) return []
+		if (albums.length > columns * rows) {
+			return albums.slice(columns * rows)
 		}
 		return []
-	}, [albums, columns])
+	}, [albums, columns, rows])
 
 	const setTextColor = useCallback((index: number, color: string) => {
 		setAlbums((albums) => {
@@ -247,16 +249,14 @@ export default function Grid({
 		[]
 	)
 
-	const adustBrightness = useCallback(async (albums: Album[]) => {
+	const adustBrightness = useCallback(async (albums: GridAlbum[]) => {
 		const items = MakeAlbums(albums)
 		const brightnessArray =  await Promise.allSettled(
 			items.map((i) => getImageBrightness(i.img))
 		)
 		brightnessArray.forEach((brightness, index) => {
 			if (brightness.status === 'rejected') {
-				console.warn(`album ${albums[index].album} image was not loaded`, brightness.reason)
 			} else {
-				console.log(items[index].album, brightness)
 				if (brightness.value > 200) {
 					items[index].textBackground = false
 					items[index].textColor = 'black'
@@ -288,6 +288,9 @@ export default function Grid({
 	}, [activeId])
 
 	if (!albums) return null
+  if (!columns || !rows) return null
+
+  console.log('render grid', {albums, columns, rows})
 
 	return (
 		<DndContext
@@ -371,7 +374,7 @@ export default function Grid({
 									style={
 										{
 											width: columns * 128,
-											height: columns * 128,
+											height: rows * 128,
 										} as React.CSSProperties
 									}
 								>
@@ -425,12 +428,7 @@ type SortableItemProps = {
 	animateLayoutChanges?: AnimateLayoutChanges
 	disabled?: boolean
 	getNewIndex?: NewIndexGetter
-	value: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}
+	value: Album
 	setTextColor?(index: number, color: string): void
 	setTextBackground?(index: number, background: boolean): void
 	index: number

@@ -20,7 +20,6 @@ const jetBrainsMono = JetBrains_Mono({
 	weight: ['400', '800'],
 })
 
-
 export const metadata: Metadata = {
   metadataBase: new URL('https://grid.dylanbrown.xyz'),
 	title: 'GRID',
@@ -38,8 +37,6 @@ export const viewport: Viewport = {
   themeColor: '#0a0a0a',
   colorScheme: 'dark',
 }
-
-
 
 export default function RootLayout({
 	children,

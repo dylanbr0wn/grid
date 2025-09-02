@@ -4,6 +4,10 @@ import Select from '@/components/select'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import * as htmlToImage from 'html-to-image'
+import { IconGrid3x3, IconGridPattern, IconGridPatternFilled, IconGridScan, IconLayoutGrid, IconLayoutGridFilled } from '@tabler/icons-react'
+import Input from '@/components/input'
+import NumberInput from '@/components/number-input'
+import { useParamsStore } from '@/lib/session-store'
 
 const gridSizes = [
 	{ label: '1 x 1', value: '1' },
@@ -29,31 +33,33 @@ async function downloadGrid(columns: number, user:string) {
 	link.click() // Triggers the download
 }
 
-export function useToolbar() {
-	const searchParams = useSearchParams()
-  const {user} = useParams()
-	function updateColumns(columns: string) {
-		const params = new URLSearchParams(searchParams.toString())
-		params.set('cols', columns)
-		window.history.pushState(null, '', `?${params.toString()}`)
-	}
 
-	const columns = useMemo(() => {
-		const params = new URLSearchParams(searchParams.toString())
-		const size = params.get('cols')
-		if (!size || isNaN(parseInt(size))) {
-			return 5
-		}
-		return parseInt(size)
-	}, [searchParams])
-	return { columns, updateColumns, user }
-}
 
 export default function Toolbar() {
-	const { columns, updateColumns, user } = useToolbar()
+	const {user} = useParams()
+
+  const [columns, setColumns] = useParamsStore<number>('cols', 5)
+  const [rows, setRows] = useParamsStore<number>('rows', 5)
   const [loading, setLoading] = useState(false)
 
+  function cleanAndSetRows(value: number | null) {
+    console.log('value', value)
+    if (value === null) return
+    if (value < 1) value = 1
+    if (value > 10) value = 10
+    setRows(value)
+  }
+  function cleanAndSetCols(value: number | null) {
+    console.log('value', value)
+    if (value === null) return
+    if (value < 1) value = 1
+    if (value > 10) value = 10
+    setColumns(value)
+  }
+
   async function download() {
+    if (!user) return
+    if (!columns || !rows) return
     setLoading(true)
     await downloadGrid(columns, user as string)
     setLoading(false)
@@ -62,12 +68,29 @@ export default function Toolbar() {
 	return (
 		<div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950 z-20">
 			<div className="w-1/3"></div>
-			<div className="w-1/3 flex items-center justify-center">
-				<Select
+			<div className="w-1/3 flex items-center justify-center gap-1">
+        <NumberInput 
+          required
+          leftIcon={<div>X</div>}
+          min={1}
+          max={10}
+          value={rows}
+          onChange={cleanAndSetRows}
+         />
+         <NumberInput 
+          required
+          leftIcon={<div>Y</div>}
+          min={1}
+          max={10}
+          value={columns}
+          onChange={cleanAndSetCols}
+         />
+				{/* <Select
 					value={columns.toString()}
 					items={gridSizes}
-					onChange={updateColumns}
-				/>
+					onChange={v => setColumns(parseInt(v))}
+          icon={<IconLayoutGridFilled className="size-4 text-neutral-300" />}
+				/> */}
 			</div>
 			<div className="w-1/3 flex items-center justify-end">
 				<button

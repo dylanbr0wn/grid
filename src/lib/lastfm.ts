@@ -44,11 +44,10 @@ export async function fetchWeeklyAlbumChart(user: string) {
 		throw new Error('Failed to fetch data from Last.fm')
 	}
 
-
-	const out = weeklyAlbumChart(await response.json())
+  const maybeWeeklyAlbumChart = await response.json()
+	const out = weeklyAlbumChart(maybeWeeklyAlbumChart)
 
 	if (out instanceof type.errors) {
-		// hover out.summary to see validation errors
 		throw new Error(out.summary)
 	}
 
@@ -56,32 +55,43 @@ export async function fetchWeeklyAlbumChart(user: string) {
 }
 
 export async function fetchGridData(user: string) {
-	const albums = await fetchWeeklyAlbumChart(user)
+	let albums = await fetchWeeklyAlbumChart(user)
 
-	const sortedAlbums = albums.toSorted(
-		(a, b) => parseInt(b['@attr'].rank) - parseInt(b['@attr'].rank)
-	)
+	// albums.sort(
+	// 	(a, b) => parseInt(a['@attr'].rank) - parseInt(b['@attr'].rank)
+	// )
 
-	const mbidMap = new Map<string, (typeof sortedAlbums)[number]>()
-	sortedAlbums.forEach((album) => {
-		if (album.mbid !== '') {
-			mbidMap.set(album.mbid, album)
-		}
-	})
-
-	return getGridData(sortedAlbums)
+	return getGridData(albums)
 }
 
-function getGridData(albums: (typeof albumInfo.infer)[]) {
+export type GridAlbum = {
+  album: string
+  imgs: {
+    small?: string
+    large?: string
+    fallback: string
+  }
+  artist: string
+  plays: number
+  id: string
+}
+
+function getGridData(albums: (typeof albumInfo.infer)[]):GridAlbum[] {
 	return albums.map((a) => {
-		const image =
-			a.image.find((i) => i.size === 'large') ??
-			a.image.find((i) => i.size === '')
+		const large =
+			a.image.find((i) => i.size === 'large')
+    const small = a.image.find((i) => i.size === 'small')
+    const fallback = a.image.find((i) => i.size === '')
 
 		return {
 			album: a.name,
-			img: image?.['#text'] ?? '',
+			imgs: {
+        small: small?.['#text'],
+        large: large?.['#text'] ?? '',
+        fallback: fallback?.['#text'] ?? '',
+      },
 			artist: a.artist.name,
+      plays: parseInt(a.playcount),
 			id: a.mbid || `${a.artist.name}_${a.name}`.replaceAll(' ', '-').toLowerCase(),
 		}
 	})

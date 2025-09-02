@@ -1,15 +1,16 @@
 import { Redis } from '@upstash/redis';
 import 'server-only'
+import { GridAlbum } from './lastfm';
 
 const SHARED_ALBUMS_KEY = 'shared:albums';
 
 const redis = Redis.fromEnv();
 
 export async function pushAlbumsToCache(
-  albums: { album: string; artist: string; img: string; id: string }[]
+  albums: GridAlbum[]
 ) {
   const p = redis.multi();
-  const images = albums.map(a => a.img);
+  const images = albums.map(a => a.imgs.fallback);
   p.sadd(SHARED_ALBUMS_KEY, images[0], ...images.slice(1));
   p.scard(SHARED_ALBUMS_KEY);
   const [_, card] = await p.exec<[number,number]>();

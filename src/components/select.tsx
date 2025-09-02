@@ -10,6 +10,7 @@ type SelectProps = {
 	label?: string
 	description?: string
   value?: string
+  icon?: React.ReactNode
 }
 
 export default function Select({
@@ -19,6 +20,7 @@ export default function Select({
 	label,
 	description,
   value,
+  icon
 }: SelectProps) {
 	return (
 		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
@@ -30,11 +32,13 @@ export default function Select({
 			<BSelect.Root value={value} items={items} onValueChange={onChange}>
 				<BSelect.Trigger
 					className={cn(
-						'flex h-10 min-w-36 items-center justify-between gap-3 border border-neutral-200 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default',
+						'flex h-10 min-w-36 items-center gap-2 border-b border-neutral-200 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default',
 						className
 					)}
 				>
+          {icon}
 					<BSelect.Value />
+          <div className='grow' />
 					<BSelect.Icon className="flex">
 						<IconChevronDown className="size-3" />
 					</BSelect.Icon>

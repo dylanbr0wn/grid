@@ -1,4 +1,4 @@
-import { fetchGridData } from '@/lib/lastfm'
+import { fetchGridData, GridAlbum } from '@/lib/lastfm'
 import Grid from './grid'
 import { redirect, RedirectType } from 'next/navigation'
 import { pushAlbumsToCache } from '@/lib/db'
@@ -14,12 +14,7 @@ export default async function Page({
 		return <div>problem</div>
 	}
 
-	let data: {
-		album: string
-		img: string
-		artist: string
-		id: string
-	}[] = []
+	let data: GridAlbum[] = []
 	try {
 		data = await fetchGridData(user)
     await pushAlbumsToCache(data)

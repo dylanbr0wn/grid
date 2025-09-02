@@ -14,6 +14,7 @@ export type Album = {
     album: string;
     img: string;
     artist: string;
+    plays: number;
     id: string;
     textColor?: string;
     textBackground?: boolean;
