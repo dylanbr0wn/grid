@@ -37,7 +37,7 @@ import {
 import { Album } from './album'
 import { cn } from '@/lib/util'
 
-import Toolbar from './toolbar'
+import Toolbar, { useSort } from './toolbar'
 import { useParamsStore, useSessionStore } from '@/lib/session-store'
 import { GridAlbum } from '@/lib/lastfm'
 
@@ -171,8 +171,12 @@ export default function Grid({
 	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
-	const [columns] = useParamsStore<number>('cols')
-  const [rows] = useParamsStore<number>('rows')
+	const [columns] = useParamsStore<number>('cols',5)
+  const [rows] = useParamsStore<number>('rows',5)
+  const {sort, setSort, isPending} = useSort()
+  const isSortSettled = useRef(false)
+  const isSetup = useRef(false)
+  const [hasBrightCalcOnce, setHasBrightCalcOnce] = useState(false)
 
 	const sensors = useSensors(
 		useSensor(MouseSensor, {
@@ -249,8 +253,9 @@ export default function Grid({
 		[]
 	)
 
-	const adustBrightness = useCallback(async (albums: GridAlbum[]) => {
-		const items = MakeAlbums(albums)
+	const adustBrightness = useCallback(async (albums: Album[]) => {
+    if (hasBrightCalcOnce) return albums
+    const items = [...albums]
 		const brightnessArray =  await Promise.allSettled(
 			items.map((i) => getImageBrightness(i.img))
 		)
@@ -272,14 +277,47 @@ export default function Grid({
 				}
 			}
 		})
+    setHasBrightCalcOnce(true)
 		return items
 	}, [])
 
+  const sortAlbums = useCallback((albums: Album[]) => {
+    if (isPending) return albums
+    let sorted = [...albums]
+    if (sort === 'playcount') {
+      sorted = sorted.sort((a, b) => b.plays - a.plays)
+    } else if (sort === 'name') {
+      sorted = sorted.sort((a, b) => a.album.localeCompare(b.album))
+    } else if (sort === 'artist') {
+      sorted = sorted.sort((a, b) => a.artist.localeCompare(b.artist))
+    } else if (sort === 'random') {
+      sorted = sorted.sort(() => Math.random() - 0.5)
+    }
+    return sorted
+  }, [sort, isPending])
+
 	useEffect(() => {
+    if (isSetup.current) return
 		if (!initialItems) return
-    console.log('initialItems', initialItems)
-		adustBrightness(initialItems).then(setAlbums)
-	}, [initialItems, adustBrightness])
+
+    const albums = MakeAlbums(initialItems)
+		adustBrightness(albums).then(setAlbums)
+    .catch(console.error)
+    .finally(() => {
+      isSetup.current = true
+    })
+  }, [initialItems, adustBrightness])
+
+  useEffect(() => {
+    if (!isPending) {
+      if (!isSortSettled.current) {
+        isSortSettled.current = true
+        return
+      }
+      setAlbums(albums => sortAlbums(albums ?? []))
+    }
+    
+  },[sortAlbums])
 
 	useEffect(() => {
 		if (activeId == null) {
@@ -289,8 +327,6 @@ export default function Grid({
 
 	if (!albums) return null
   if (!columns || !rows) return null
-
-  console.log('render grid', {albums, columns, rows})
 
 	return (
 		<DndContext
@@ -317,6 +353,7 @@ export default function Grid({
 						setAlbums((albums) =>
 							reorderItems(albums ?? [], activeIndex, overIndex)
 						)
+            setSort('custom')
 					}
 				}
 			}}

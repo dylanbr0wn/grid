@@ -5,18 +5,27 @@ import { pushAlbumsToCache } from '@/lib/db'
 
 export default async function Page({
 	params,
+  searchParams
 }: {
 	params: Promise<{ user: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
 	const { user } = await params
+  const {sort = "playcount"} = await searchParams
+
+  if (sort && typeof sort !== 'string') {
+    return <div>problem</div>
+  }
 
 	if (!user || typeof user !== 'string') {
 		return <div>problem</div>
 	}
 
+ 
+
 	let data: GridAlbum[] = []
 	try {
-		data = await fetchGridData(user)
+		data = await fetchGridData(user, sort as string)
     await pushAlbumsToCache(data)
 	} catch (e) {
 		const error = e instanceof Error ? e.message : 'Unknown error'

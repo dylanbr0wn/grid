@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useMemo } from 'react'
 
-export function useSessionStore<T>(key: string, defaultValue?: T) {
+export function useSessionStore<T>(key: string, defaultValue: T) {
 	const queryClient = useQueryClient()
 	const query = useQuery<T | undefined>({
 		queryKey: ['session-storage', key],
@@ -44,7 +44,6 @@ export function useSessionStore<T>(key: string, defaultValue?: T) {
 			queryClient.invalidateQueries({ queryKey: ['session-storage', key] })
 		},
 	})
-  console.log('query', query)
 	const { data } = query
 	const { mutate } = mutation
 
@@ -58,7 +57,7 @@ export function useSessionStore<T>(key: string, defaultValue?: T) {
 	return [data, mutate, query, mutation] as const
 }
 
-export function useParamsStore<T>(key: string, defaultValue?: T) {
+export function useParamsStore<T>(key: string, defaultValue: T) {
 	const queryClient = useQueryClient()
 	const searchParams = useSearchParams()
 	const query = useQuery<T | undefined>({
@@ -66,6 +65,9 @@ export function useParamsStore<T>(key: string, defaultValue?: T) {
 		queryFn: () => {
 			const params = new URLSearchParams(searchParams.toString())
 			const raw = params.get(key)
+      if (typeof defaultValue === 'string') {
+        return (raw as T) ?? defaultValue
+      }
 			const value = raw ? (JSON.parse(raw) as T) : null
 			if (!value) return defaultValue
 			return value
@@ -75,9 +77,7 @@ export function useParamsStore<T>(key: string, defaultValue?: T) {
 	})
 	const mutation = useMutation({
 		mutationKey: ['param-storage', key],
-		mutationFn: async (
-			value: T | undefined
-		) => {
+		mutationFn: async (value: T | undefined) => {
 			if (typeof window === 'undefined') return
 			const params = new URLSearchParams(searchParams.toString())
 			// let newValue: string | undefined
@@ -89,14 +89,18 @@ export function useParamsStore<T>(key: string, defaultValue?: T) {
 			if (value === undefined) {
 				window.sessionStorage.removeItem(key)
 			} else {
-				params.set(key, JSON.stringify(value))
+				if (typeof value === 'string') {
+					params.set(key, value)
+				} else {
+					params.set(key, JSON.stringify(value))
+				}
 				window.history.pushState(null, '', `?${params.toString()}`)
 			}
 		},
-    onMutate: (value) => {
-      if (typeof window === 'undefined') return
-      queryClient.setQueryData(['param-storage', key], value)
-    },
+		onMutate: (value) => {
+			if (typeof window === 'undefined') return
+			queryClient.setQueryData(['param-storage', key], value)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['param-storage', key] })
 		},

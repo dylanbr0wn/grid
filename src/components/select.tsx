@@ -2,6 +2,8 @@ import { cn } from '@/lib/util'
 import { Field } from '@base-ui-components/react'
 import { Select as BSelect } from '@base-ui-components/react/select'
 import { IconCheck, IconChevronDown } from '@tabler/icons-react'
+import * as motion from 'motion/react-client'
+import { useState } from 'react'
 
 type SelectProps = {
 	items: { label: string; value: string }[]
@@ -9,8 +11,8 @@ type SelectProps = {
 	className?: string
 	label?: string
 	description?: string
-  value?: string
-  icon?: React.ReactNode
+	value?: string
+	icon?: React.ReactNode
 }
 
 export default function Select({
@@ -19,9 +21,11 @@ export default function Select({
 	className,
 	label,
 	description,
-  value,
-  icon
+	value,
+	icon,
 }: SelectProps) {
+	const [focused, setFocused] = useState(false)
+  const [open, setOpen] = useState(false)
 	return (
 		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
 			{label && (
@@ -29,19 +33,34 @@ export default function Select({
 					{label}
 				</Field.Label>
 			)}
-			<BSelect.Root value={value} items={items} onValueChange={onChange}>
+			<BSelect.Root value={value} items={items} onValueChange={onChange} onOpenChange={setOpen}>
 				<BSelect.Trigger
+					onFocus={() => setFocused(true)}
+					onBlur={() => setFocused(false)}
 					className={cn(
-						'flex h-10 min-w-36 items-center gap-2 border-b border-neutral-200 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default',
+						'flex h-10 min-w-36 items-center gap-2 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
 						className
 					)}
 				>
-          {icon}
+					{icon}
 					<BSelect.Value />
-          <div className='grow' />
+					<div className="grow" />
 					<BSelect.Icon className="flex">
 						<IconChevronDown className="size-3" />
 					</BSelect.Icon>
+					<motion.div
+						className={cn(
+							'absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 data transition-colors',
+							open && ' bg-white'
+						)}
+						layout
+						transition={{
+							duration: 0.15,
+						}}
+						style={{
+							height: open ? 3 : 1,
+						}}
+					/>
 				</BSelect.Trigger>
 				<BSelect.Portal>
 					<BSelect.Positioner
@@ -50,12 +69,12 @@ export default function Select({
 						alignItemWithTrigger={false}
 					>
 						<BSelect.ScrollUpArrow className="top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center  bg-neutral-900 text-center text-xs before:absolute before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] data-[direction=down]:bottom-0 data-[direction=down]:before:bottom-[-100%]" />
-						<BSelect.Popup className="group max-h-[var(--available-height)] origin-[var(--transform-origin)] overflow-y-auto  bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-neutral-900 outline outline-neutral-200 transition-[transform,scale,opacity] data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[side=none]:data-[ending-style]:transition-none data-[starting-style]:scale-90 data-[starting-style]:opacity-0 data-[side=none]:data-[starting-style]:scale-100 data-[side=none]:data-[starting-style]:opacity-100 data-[side=none]:data-[starting-style]:transition-none dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
+						<BSelect.Popup className="group max-h-[var(--available-height)] origin-[var(--transform-origin)] overflow-y-auto  bg-neutral-950 text-neutral-300 shadow-lg shadow-neutral-900  transition-[transform,scale,opacity] data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[side=none]:data-[ending-style]:transition-none data-[starting-style]:scale-90 data-[starting-style]:opacity-0 data-[side=none]:data-[starting-style]:scale-100 data-[side=none]:data-[starting-style]:opacity-100 data-[side=none]:data-[starting-style]:transition-none dark:shadow-none border border-neutral-700">
 							{items.map(({ label, value }) => (
 								<BSelect.Item
 									key={label}
 									value={value}
-									className="grid min-w-[var(--anchor-width)] cursor-default grid-cols-[0.75rem_1fr] items-center gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none group-data-[side=none]:min-w-[calc(var(--anchor-width)+1rem)] group-data-[side=none]:pr-12 group-data-[side=none]:text-base group-data-[side=none]:leading-4 data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-1 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1]  data-[highlighted]:before:bg-neutral-900 pointer-coarse:py-2.5 pointer-coarse:text-[0.925rem]"
+									className="grid min-w-[var(--anchor-width)] cursor-default grid-cols-[0.75rem_1fr] items-center gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none group-data-[side=none]:min-w-[calc(var(--anchor-width)+1rem)] group-data-[side=none]:pr-12 group-data-[side=none]:text-base group-data-[side=none]:leading-4 data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-0 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1]  data-[highlighted]:before:bg-neutral-900 pointer-coarse:py-2.5 pointer-coarse:text-[0.925rem]"
 								>
 									<BSelect.ItemIndicator className="col-start-1">
 										<IconCheck className="size-3" />

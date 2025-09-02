@@ -54,8 +54,21 @@ export async function fetchWeeklyAlbumChart(user: string) {
 	return out.topalbums.album
 }
 
-export async function fetchGridData(user: string) {
+export async function fetchGridData(user: string, sort: string) {
 	let albums = await fetchWeeklyAlbumChart(user)
+
+  if (sort === 'random') {
+    albums = albums.sort(() => Math.random() - 0.5)
+  } else if (sort === 'name') {
+    albums = albums.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sort === 'artist') {
+    albums = albums.sort((a, b) => a.artist.name.localeCompare(b.artist.name))
+  } else if (sort === 'custom') {
+    // do nothing, keep the order from the DB
+  } else {
+    // default to playcount
+    albums = albums.sort((a, b) => parseInt(b.playcount) - parseInt(a.playcount))
+  }
 
 	// albums.sort(
 	// 	(a, b) => parseInt(a['@attr'].rank) - parseInt(b['@attr'].rank)
