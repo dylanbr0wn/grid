@@ -13,8 +13,8 @@ async function downloadGrid(columns: number, rows:number, user: string) {
 	const dpr = window.devicePixelRatio
 	if (!node) return
 	const dataUrl = await htmlToImage.toPng(node, {
-		canvasHeight: columns * 128 * dpr * 2,
-		canvasWidth: rows * 128 * dpr * 2,
+		canvasHeight: rows * 128 * dpr * 2,
+		canvasWidth: columns * 128 * dpr * 2,
 		backgroundColor: '#000000',
 	})
 	const date = new Date()
