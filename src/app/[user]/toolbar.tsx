@@ -8,13 +8,13 @@ import { IconSortAscending2Filled } from '@tabler/icons-react'
 import NumberInput from '@/components/number-input'
 import { useParamsStore } from '@/lib/session-store'
 
-async function downloadGrid(columns: number, user: string) {
+async function downloadGrid(columns: number, rows:number, user: string) {
 	const node = document.getElementById('fm-grid')
 	const dpr = window.devicePixelRatio
 	if (!node) return
 	const dataUrl = await htmlToImage.toPng(node, {
 		canvasHeight: columns * 128 * dpr * 2,
-		canvasWidth: columns * 128 * dpr * 2,
+		canvasWidth: rows * 128 * dpr * 2,
 		backgroundColor: '#000000',
 	})
 	const date = new Date()
@@ -83,7 +83,7 @@ export default function Toolbar() {
 		if (!user) return
 		if (!columns || !rows) return
 		setLoading(true)
-		await downloadGrid(columns, user as string)
+		await downloadGrid(columns,rows, user as string)
 		setLoading(false)
 	}
 
