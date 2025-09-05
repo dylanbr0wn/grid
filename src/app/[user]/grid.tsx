@@ -167,7 +167,7 @@ export default function Grid({
 	reorderItems = arrayMove,
 	useDragOverlay = true,
 }: SortableProps) {
-	// const [albums, setAlbums] = useSessionStore('user:albums', MakeAlbums(initialItems ?? []))
+	const [brightnessLookup, setBrightnessLookup] = useSessionStore<Record<string,number>>('album:brightness', {})
 	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
@@ -253,11 +253,23 @@ export default function Grid({
 		[]
 	)
 
+  const lookupBrightness = useCallback((album: Album) => {
+    if (!album.id) return undefined
+    if (!brightnessLookup) return undefined
+    return brightnessLookup[album.id]
+  }, [brightnessLookup])
+
 	const adustBrightness = useCallback(async (albums: Album[]) => {
     if (hasBrightCalcOnce) return albums
     const items = [...albums]
 		const brightnessArray =  await Promise.allSettled(
-			items.map((i) => getImageBrightness(i.img))
+			items.map((album) => {
+        const cached = lookupBrightness(album)
+        if (cached !== undefined) {
+          return Promise.resolve(cached)
+        }
+        return getImageBrightness(album.img)
+      })
 		)
 		brightnessArray.forEach((brightness, index) => {
 			if (brightness.status === 'rejected') {
@@ -301,11 +313,8 @@ export default function Grid({
 		if (!initialItems) return
 
     const albums = MakeAlbums(initialItems)
-		adustBrightness(albums).then(setAlbums)
-    .catch(console.error)
-    .finally(() => {
-      isSetup.current = true
-    })
+		setAlbums(albums)
+    isSetup.current = true
   }, [initialItems, adustBrightness])
 
   useEffect(() => {

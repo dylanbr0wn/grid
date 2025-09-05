@@ -121,7 +121,7 @@ export function UserNavLink(
 					/>
 				) : null}
 				<div className={cn('px-4', user && active && 'group-hover:blur')}>
-					{storedUser  ?? 'Personal'}
+					{storedUser || 'Personal'}
 				</div>
 			</div>
 		</Link>

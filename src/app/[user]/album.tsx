@@ -1,23 +1,24 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import type { DraggableSyntheticListeners } from '@dnd-kit/core'
 import type { Transform } from '@dnd-kit/utilities'
 
 import styles from './album.module.scss'
-import { cn } from '@/lib/util'
+import { cn, getImageBrightness } from '@/lib/util'
 import { ContextMenu } from '@base-ui-components/react'
 import { IconCheck, IconChevronRight } from '@tabler/icons-react'
+import { useSessionStore } from '@/lib/session-store'
 
 export type Album = {
-    album: string;
-    img: string;
-    artist: string;
-    plays: number;
-    id: string;
-    textColor?: string;
-    textBackground?: boolean;
+	album: string
+	img: string
+	artist: string
+	plays: number
+	id: string
+	textColor?: string
+	textBackground?: boolean
 }
 
 export interface AlbumProps {
@@ -31,8 +32,8 @@ export interface AlbumProps {
 	transition?: string | null
 	wrapperStyle?: React.CSSProperties
 	ref?: React.Ref<HTMLLIElement>
-  setTextColor?(index: number, color: string): void
-  setTextBackground?(index: number, background: boolean): void
+	setTextColor?(index: number, color: string): void
+	setTextBackground?(index: number, background: boolean): void
 	value: Album
 }
 
@@ -48,10 +49,47 @@ export const Album = React.memo(
 		transform,
 		value,
 		wrapperStyle,
-    setTextColor,
-    setTextBackground,
+		setTextColor,
+		setTextBackground,
 		ref,
 	}: AlbumProps) => {
+		const [brightnessLookup, setBrightnessLookup] = useSessionStore<
+			number | undefined
+		>(`album:${value.id}:brightness`, -1)
+		const [hasBrightCalcOnce, setHasBrightCalcOnce] = useState(false)
+
+		const adustBrightness = useCallback(
+			async (album: Album) => {
+        
+				if (hasBrightCalcOnce) return album
+				const brightness = await (brightnessLookup !== -1 ? Promise.resolve(brightnessLookup) :
+					getImageBrightness(album.img ?? ''))
+        if (brightnessLookup === -1) {
+          setBrightnessLookup(brightness ?? -1)
+        }
+				if (!brightness) return album
+				if (brightness > 200) {
+					setTextBackground?.(index ?? -1, false)
+					setTextColor?.(index ?? -1, 'black')
+				} else if (brightness > 160) {
+					setTextBackground?.(index ?? -1, true)
+					setTextColor?.(index ?? -1, 'black')
+				} else if (brightness > 60) {
+					setTextBackground?.(index ?? -1, true)
+					setTextColor?.(index ?? -1, 'white')
+				} else {
+					setTextBackground?.(index ?? -1, false)
+					setTextColor?.(index ?? -1, 'white')
+				}
+				setHasBrightCalcOnce(true)
+				return album
+			},
+			[brightnessLookup, hasBrightCalcOnce, index, setTextBackground, setTextColor]
+		)
+
+		useEffect(() => {
+			adustBrightness(value)
+		}, [value, adustBrightness])
 
 		useEffect(() => {
 			if (!dragOverlay) {
@@ -98,12 +136,20 @@ export const Album = React.memo(
 							styles.album,
 							dragging && styles.dragging,
 							dragOverlay && styles.dragOverlay,
-							disabled && styles.disabled,
+							disabled && styles.disabled
 						)}
 						{...listeners}
 						tabIndex={0}
 					>
-            {value.img ? <img src={value.img} className="w-full h-full object-cover" alt={`${value.album} by ${value.artist} album cover`} /> : <div className='w-full h-full bg-neutral-950' />}
+						{value.img ? (
+							<img
+								src={value.img}
+								className="w-full h-full object-cover"
+								alt={`${value.album} by ${value.artist} album cover`}
+							/>
+						) : (
+							<div className="w-full h-full bg-neutral-950" />
+						)}
 						<div className="flex items-center justify-center">
 							<div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
 								<div
@@ -169,7 +215,9 @@ export const Album = React.memo(
 											<ContextMenu.Popup className="origin-[var(--transform-origin)] bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-neutral-200 outline-1 outline-neutral-200 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
 												<ContextMenu.RadioGroup
 													value={value.textColor}
-													onValueChange={(value) => setTextColor?.(index ?? -1, value)}
+													onValueChange={(value) =>
+														setTextColor?.(index ?? -1, value)
+													}
 												>
 													<ContextMenu.RadioItem
 														value="white"
@@ -195,9 +243,11 @@ export const Album = React.memo(
 									</ContextMenu.Portal>
 								</ContextMenu.SubmenuRoot>
 								<ContextMenu.CheckboxItem
-                  checked={!!value.textBackground}
+									checked={!!value.textBackground}
 									className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-1 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1] data-[highlighted]:before:bg-neutral-900"
-                  onMouseUp={() => setTextBackground?.(index ?? -1, !value.textBackground)}
+									onMouseUp={() =>
+										setTextBackground?.(index ?? -1, !value.textBackground)
+									}
 								>
 									<ContextMenu.CheckboxItemIndicator className="col-start-1">
 										<IconCheck className="size-3" />
