@@ -1,7 +1,6 @@
 import { fetchGridData, GridAlbum } from '@/lib/lastfm'
 import Grid from './grid'
 import { redirect, RedirectType } from 'next/navigation'
-import { pushAlbumsToCache } from '@/lib/db'
 
 export default async function Page({
 	params,
@@ -26,7 +25,7 @@ export default async function Page({
 	let data: GridAlbum[] = []
 	try {
 		data = await fetchGridData(user, sort as string)
-    await pushAlbumsToCache(data)
+    // await pushAlbumsToCache(data)
 	} catch (e) {
 		const error = e instanceof Error ? e.message : 'Unknown error'
     console.error(e)
