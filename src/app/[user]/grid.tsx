@@ -130,7 +130,7 @@ function MakeAlbums(
 	return items.map(({ imgs, ...item }) => {
 		return {
       ...item,
-      img: imgs.large || imgs.small || imgs.fallback,
+      img: imgs.large || imgs.small || imgs.fallback || "/placeholder.png",
 			textColor: 'white',
 			textBackground: false,
 		}

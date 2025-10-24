@@ -143,7 +143,7 @@ export const Album = React.memo(
 					>
 						{value.img ? (
 							<img
-								src={value.img}
+								src={value.img || "/placeholder.png"}
 								className="w-full h-full object-cover"
 								alt={`${value.album} by ${value.artist} album cover`}
 							/>
