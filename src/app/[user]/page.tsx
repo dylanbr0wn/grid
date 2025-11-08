@@ -9,26 +9,22 @@ export default async function Page({
 	params: Promise<{ user: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-	const { user } = await params
-  const {sort = "playcount"} = await searchParams
+	let { user } = await params
+  let {sort = "playcount"} = await searchParams
 
   if (sort && typeof sort !== 'string') {
-    return <div>problem</div>
+    sort = 'playcount'
   }
 
 	if (!user || typeof user !== 'string') {
-		return <div>problem</div>
+		redirect(`/?error=Invalid user`, RedirectType.replace)
 	}
-
- 
 
 	let data: GridAlbum[] = []
 	try {
 		data = await fetchGridData(user, sort as string)
-    // await pushAlbumsToCache(data)
 	} catch (e) {
 		const error = e instanceof Error ? e.message : 'Unknown error'
-    console.error(e)
 		redirect(`/?error=${error}`, RedirectType.replace)
 	}
 

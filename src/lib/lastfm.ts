@@ -70,10 +70,6 @@ export async function fetchGridData(user: string, sort: string) {
     albums = albums.sort((a, b) => parseInt(b.playcount) - parseInt(a.playcount))
   }
 
-	// albums.sort(
-	// 	(a, b) => parseInt(a['@attr'].rank) - parseInt(b['@attr'].rank)
-	// )
-
 	return getGridData(albums)
 }
 

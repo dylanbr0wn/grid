@@ -31,15 +31,13 @@ import {
 	sortableKeyboardCoordinates,
 	SortingStrategy,
 	rectSortingStrategy,
-	AnimateLayoutChanges,
-	NewIndexGetter,
 } from '@dnd-kit/sortable'
 import { Album, AlbumProps } from './album'
-import { cn } from '@/lib/util'
 
-import Toolbar, { useSort } from './toolbar'
+import Toolbar from './toolbar'
 import { useParamsStore, useSessionStore } from '@/lib/session-store'
 import { GridAlbum } from '@/lib/lastfm'
+import { sortAlbums, SortType, useSort } from '@/lib/sort'
 
 const dropAnimationConfig: DropAnimation = {
 	sideEffects: defaultDropAnimationSideEffects({
@@ -60,11 +58,11 @@ const screenReaderInstructions: ScreenReaderInstructions = {
 }
 
 async function getImageBrightness(src: string): Promise<number> {
-  const { promise, resolve, reject } = Promise.withResolvers<number>()
-  if (!src) {
-    reject('No src provided')
-    return promise
-  }
+	const { promise, resolve, reject } = Promise.withResolvers<number>()
+	if (!src) {
+		reject('No src provided')
+		return promise
+	}
 	const img = document.createElement('img')
 	img.crossOrigin = 'anonymous'
 	img.src = src
@@ -113,76 +111,41 @@ async function getImageBrightness(src: string): Promise<number> {
 	return res
 }
 
-// async function getImageLightnessArray(
-//   imageSrcs: string[],
-// ): Promise<number[]> {
-//   const res = await Promise.all(imageSrcs.map(loadImage))
-
-// }
-
-// async function getImageBrightnessArray(images: string[]) {
-// 	return
-// }
-
-function MakeAlbums(
-	items: GridAlbum[]
-): Album[] {
+function MakeAlbums(items: GridAlbum[]): Album[] {
 	return items.map(({ imgs, ...item }) => {
 		return {
-      ...item,
-      img: imgs.large || imgs.small || imgs.fallback || "/placeholder.png",
+			...item,
+			img: imgs.large || imgs.small || imgs.fallback || '/placeholder.png',
 			textColor: 'white',
 			textBackground: false,
 		}
 	})
 }
 
-type SortableProps = {
-	activationConstraint?: PointerActivationConstraint
-	adjustScale?: boolean
-	collisionDetection?: CollisionDetection
-	coordinateGetter?: KeyboardCoordinateGetter
-	dropAnimation?: DropAnimation | null
-	items?: GridAlbum[]
-	measuring?: MeasuringConfiguration
-	modifiers?: Modifiers
-	reorderItems?: typeof arrayMove
-	style?: React.CSSProperties
-	useDragOverlay?: boolean
-	isDisabled?(id: UniqueIdentifier): boolean
+type GridProps = {
+	items: GridAlbum[]
 }
 
 export default function Grid({
-	activationConstraint,
-	collisionDetection = closestCenter,
-	coordinateGetter = sortableKeyboardCoordinates,
-	dropAnimation = dropAnimationConfig,
 	items: initialItems,
-	measuring,
-	modifiers,
-	reorderItems = arrayMove,
-}: SortableProps) {
-	const [brightnessLookup, setBrightnessLookup] = useSessionStore<Record<string,number>>('album:brightness', {})
+}: GridProps) {
+	const [brightnessLookup] = useSessionStore<
+		Record<string, number>
+	>('album:brightness', {})
 	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
 	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
 	const [activeId, setActiveId] = useState<string | null>(null)
-	const [columns] = useParamsStore<number>('cols',5)
-  const [rows] = useParamsStore<number>('rows',5)
-  const {sort, setSort, isPending} = useSort()
-  const isSortSettled = useRef(false)
-  const isSetup = useRef(false)
-  const [hasBrightCalcOnce, setHasBrightCalcOnce] = useState(false)
+	const [columns] = useParamsStore<number>('cols', 5)
+	const [rows] = useParamsStore<number>('rows', 5)
+	const { sort, setSort, isPending } = useSort()
+	const isSetup = useRef(false)
+	const [hasBrightCalcOnce, setHasBrightCalcOnce] = useState(false)
 
 	const sensors = useSensors(
-		useSensor(MouseSensor, {
-			activationConstraint,
-		}),
-		useSensor(TouchSensor, {
-			activationConstraint,
-		}),
+		useSensor(MouseSensor),
+		useSensor(TouchSensor),
 		useSensor(KeyboardSensor, {
-			// Disable smooth scrolling in Cypress automated tests
-			coordinateGetter,
+			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	)
 	const isFirstAnnouncement = useRef(true)
@@ -192,29 +155,15 @@ export default function Grid({
 	)
 	const activeIndex = activeId != null ? getIndex(activeId) : -1
 
-	// const onRemove = (id: UniqueIdentifier) => {
-	// 	const index = getIndex(id as string)
-	// 	if (index !== -1) {
-	// 		setItems((items) => {
-	// 			const newItems = [...items]
-	// 			newItems.splice(index, 1)
-	// 			return newItems
-	// 		})
-	// 	}
-	// }
-
-	const trimmedItems = useMemo(
-		() => {
-      if (!columns || !rows) return []
-      if (!albums) return []
-      return albums.slice(0, Math.min(columns * rows, albums.length))
-    },
-		[albums, columns, rows]
-	)
+	const trimmedItems = useMemo(() => {
+		if (!columns || !rows) return []
+		if (!albums) return []
+		return albums.slice(0, Math.min(columns * rows, albums.length))
+	}, [albums, columns, rows])
 
 	const extraItems = useMemo(() => {
 		if (!albums) return []
-     if (!columns || !rows) return []
+		if (!columns || !rows) return []
 		if (albums.length > columns * rows) {
 			return albums.slice(columns * rows)
 		}
@@ -248,23 +197,26 @@ export default function Grid({
 		[]
 	)
 
-  const lookupBrightness = useCallback((album: Album) => {
-    if (!album.id) return undefined
-    if (!brightnessLookup) return undefined
-    return brightnessLookup[album.id]
-  }, [brightnessLookup])
+	const lookupBrightness = useCallback(
+		(album: Album) => {
+			if (!album.id) return undefined
+			if (!brightnessLookup) return undefined
+			return brightnessLookup[album.id]
+		},
+		[brightnessLookup]
+	)
 
 	const adustBrightness = useCallback(async (albums: Album[]) => {
-    if (hasBrightCalcOnce) return albums
-    const items = [...albums]
-		const brightnessArray =  await Promise.allSettled(
+		if (hasBrightCalcOnce) return albums
+		const items = [...albums]
+		const brightnessArray = await Promise.allSettled(
 			items.map((album) => {
-        const cached = lookupBrightness(album)
-        if (cached !== undefined) {
-          return Promise.resolve(cached)
-        }
-        return getImageBrightness(album.img)
-      })
+				const cached = lookupBrightness(album)
+				if (cached !== undefined) {
+					return Promise.resolve(cached)
+				}
+				return getImageBrightness(album.img)
+			})
 		)
 		brightnessArray.forEach((brightness, index) => {
 			if (brightness.status === 'rejected') {
@@ -284,44 +236,26 @@ export default function Grid({
 				}
 			}
 		})
-    setHasBrightCalcOnce(true)
+		setHasBrightCalcOnce(true)
 		return items
-	}, [])
-
-  const sortAlbums = useCallback((albums: Album[]) => {
-    if (isPending) return albums
-    let sorted = [...albums]
-    if (sort === 'playcount') {
-      sorted = sorted.sort((a, b) => b.plays - a.plays)
-    } else if (sort === 'name') {
-      sorted = sorted.sort((a, b) => a.album.localeCompare(b.album))
-    } else if (sort === 'artist') {
-      sorted = sorted.sort((a, b) => a.artist.localeCompare(b.artist))
-    } else if (sort === 'random') {
-      sorted = sorted.sort(() => Math.random() - 0.5)
-    }
-    return sorted
-  }, [sort, isPending])
+	}, [hasBrightCalcOnce, lookupBrightness])
 
 	useEffect(() => {
-    if (isSetup.current) return
+		if (isSetup.current) return
 		if (!initialItems) return
 
-    const albums = MakeAlbums(initialItems)
+		const albums = MakeAlbums(initialItems)
 		setAlbums(albums)
-    isSetup.current = true
-  }, [initialItems, adustBrightness])
+		isSetup.current = true
+	}, [initialItems, adustBrightness])
 
-  useEffect(() => {
-    if (!isPending) {
-      if (!isSortSettled.current) {
-        isSortSettled.current = true
-        return
-      }
-      setAlbums(albums => sortAlbums(albums ?? []))
-    }
-    
-  },[sortAlbums])
+	const updateSort = useCallback(
+		(newSort: SortType) => {
+			setSort(newSort as any)
+			setAlbums((albums) => sortAlbums(albums ?? [], newSort))
+		},
+		[setSort]
+	)
 
 	useEffect(() => {
 		if (activeId == null) {
@@ -330,7 +264,7 @@ export default function Grid({
 	}, [activeId])
 
 	if (!albums) return null
-  if (!columns || !rows) return null
+	if (!columns || !rows) return null
 
 	return (
 		<DndContext
@@ -338,7 +272,6 @@ export default function Grid({
 				screenReaderInstructions,
 			}}
 			sensors={sensors}
-			collisionDetection={collisionDetection}
 			onDragStart={({ active }) => {
 				if (!active) {
 					return
@@ -355,40 +288,45 @@ export default function Grid({
 					const overIndex = getIndex(over.id as string)
 					if (activeIndex !== overIndex) {
 						setAlbums((albums) =>
-							reorderItems(albums ?? [], activeIndex, overIndex)
+							arrayMove(albums ?? [], activeIndex, overIndex)
 						)
-            setSort('custom')
+						setSort('custom')
 					}
 				}
 			}}
 			onDragCancel={() => setActiveId(null)}
-			measuring={measuring}
-			modifiers={modifiers}
 		>
-			<div
-				className={cn('h-full flex w-full box-border justify-center relative')}
-			>
-				<SortableContext items={albums} strategy={rectSortingStrategy}>
-					<div className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative">
-						<div className="h-10 border-b border-neutral-800 flex items-center justify-center">
+			<div className="h-full flex w-screen relative">
+				<SortableContext items={albums} strategy={rectSortingStrategy} >
+					<div
+						className="h-full shrink-0 border-r border-neutral-800 overflow-hidden relative flex flex-col"
+						style={{ width: 3 * 128 + 16 }}
+					>
+						<div className="h-10 border-b border-neutral-800 flex items-center justify-center shrink-0">
 							<h5 className=" text-sm tracking-[0.5rem]  mb-0 uppercase font-code">
 								extras
 							</h5>
 						</div>
-						<ScrollArea.Root className="h-[calc(100%-40px)] relative w-full">
-							<ScrollArea.Viewport className="h-full p-2">
-								<div className="grid grid-cols-3" style={{ width: 128 * 3 }}>
-									{extraItems.map((value, index) => (
-										<SortableItem
-											key={value.id}
-											value={value}
-											index={trimmedItems.length + index}
-											// animateLayoutChanges={animateLayoutChanges}
-											setTextBackground={setTextBackground}
-											setTextColor={setTextColor}
-										/>
-									))}
-								</div>
+						<ScrollArea.Root
+							className="relative w-full h-full"
+						>
+							<ScrollArea.Viewport
+								className="grid grid-cols-3 px-2 relative overscroll-contain overflow-x-hidden"
+								style={{ 
+                  width: (128 * 3) + 16,
+                  height: 'calc(100% - 40px)'
+                }}
+
+							>
+								{extraItems.map((value, index) => (
+									<SortableItem
+										key={value.id}
+										value={value}
+										index={trimmedItems.length + index}
+										setTextBackground={setTextBackground}
+										setTextColor={setTextColor}
+									/>
+								))}
 							</ScrollArea.Viewport>
 							<ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
 								<ScrollArea.Thumb className="w-full bg-neutral-500" />
@@ -397,7 +335,7 @@ export default function Grid({
 					</div>
 					<div className="w-full h-full">
 						<ScrollArea.Root
-							className="h-[calc(100%-80px)]  relative"
+							className="h-[calc(100%-80px)] relative"
 							style={
 								{
 									'--col-count': columns,
@@ -424,7 +362,7 @@ export default function Grid({
 											index={index}
 											setTextBackground={setTextBackground}
 											setTextColor={setTextColor}
-                      priority={true}
+											priority={true}
 										/>
 									))}
 								</div>
@@ -433,19 +371,13 @@ export default function Grid({
 								<ScrollArea.Thumb className="w-full bg-neutral-500" />
 							</ScrollArea.Scrollbar>
 						</ScrollArea.Root>
-						{/* <div
-							className="h-[calc(100%-80px)] flex justify-center items-center-safe overflow-auto"
-							
-						>
-							
-						</div> */}
-						<Toolbar />
+						<Toolbar updateSort={updateSort} sort={sort ?? 'playcount'} />
 					</div>
 				</SortableContext>
 			</div>
 			{typeof document !== 'undefined'
 				? createPortal(
-						<DragOverlay adjustScale={false} dropAnimation={dropAnimation}>
+						<DragOverlay adjustScale={false} dropAnimation={dropAnimationConfig}>
 							{activeId != null ? (
 								<Album
 									value={albums[activeIndex]}
@@ -462,7 +394,6 @@ export default function Grid({
 }
 
 type SortableItemProps = {
-	// animateLayoutChanges?: AnimateLayoutChanges
 	disabled?: boolean
 	value: Album
 	index: number
@@ -470,10 +401,8 @@ type SortableItemProps = {
 
 export function SortableItem({
 	disabled,
-	// animateLayoutChanges,
 	value,
 	index,
-	setTextBackground,
 	...props
 }: SortableItemProps) {
 	const {
@@ -502,7 +431,6 @@ export function SortableItem({
 			listeners={listeners}
 			data-index={index}
 			data-id={value.id}
-			setTextBackground={setTextBackground}
 			{...props}
 			{...attributes}
 		/>

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import * as htmlToImage from 'html-to-image'
 import NumberInput from '@/components/number-input'
 import { useParamsStore } from '@/lib/session-store'
+import { sortOptions, SortType, useSort } from '@/lib/sort'
 
 async function downloadGrid(columns: number, rows:number) {
 	const node = document.getElementById('fm-grid')
@@ -44,27 +45,14 @@ export function useGridSize() {
 	return { rows, setRows, columns, setColumns }
 }
 
-type SortType = 'playcount' | 'name' | 'artist' | 'random' | 'custom'
-
-const sortOptions: { label: string; value: SortType }[] = [
-	{ label: 'Plays', value: 'playcount' },
-	{ label: 'Name', value: 'name' },
-	{ label: 'Artist', value: 'artist' },
-	{ label: 'Random', value: 'random' },
-]
-
-export function useSort() {
-	const [sort, setSort, { isPending }] = useParamsStore<SortType>(
-		'sort',
-		'playcount'
-	)
-	return { sort, setSort, isPending }
+type ToolbarProps = {
+  updateSort: (sort: SortType) => void
+  sort: SortType
 }
 
-export default function Toolbar() {
+export default function Toolbar({ updateSort, sort }: ToolbarProps) {
 	const { user } = useParams()
 	const { rows, setRows, columns, setColumns } = useGridSize()
-	const { sort, setSort } = useSort()
 
 	const [loading, setLoading] = useState(false)
 
@@ -100,7 +88,7 @@ export default function Toolbar() {
 				<Select
 					value={sort}
 					items={sortOptions}
-					onChange={(v) => setSort(v as SortType)}
+					onChange={(v) => updateSort(v as SortType)}
 					icon={<div className="text-neutral-500">sort by</div>}
 				/>
 			</div>
