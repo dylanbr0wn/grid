@@ -92,16 +92,16 @@ export type GridAlbum = {
 function getGridData(albums: (typeof albumInfo.infer)[]):GridAlbum[] {
 	return albums.map((a) => {
 		const large =
-			a.image.find((i) => i.size === 'large')
-    const small = a.image.find((i) => i.size === 'small')
-    const fallback = a.image.find((i) => i.size === '')
+			a.image.find((i) => i.size === 'large')?.['#text'] ?? ''
+    const small = a.image.find((i) => i.size === 'small')?.['#text'] ?? ''
+    const fallback = a.image.find((i) => i.size === '')?.['#text'] ?? ''
 
 		return {
 			album: a.name,
 			imgs: {
-        small: small?.['#text'],
-        large: large?.['#text'] ?? '',
-        fallback: fallback?.['#text'] ?? '',
+        small,
+        large,
+        fallback,
       },
 			artist: a.artist.name,
       plays: parseInt(a.playcount),

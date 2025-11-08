@@ -31,6 +31,7 @@ export default function NavLink({
 			aria-current={active ? 'page' : undefined}
 			data-active={active}
 			href={href}
+      prefetch={false}
 			className="h-10 block box-border hover:bg-neutral-900 font-code relative"
 			{...props}
 		>
@@ -62,7 +63,6 @@ export function UserNavLink(
 	const pathname = usePathname()
 	const { user } = useParams()
 	const [active, setActive] = useState(false)
-  // const [lastUser, setLastUser] = useState(user)
   const [storedUser, setStoredUser] = useSessionStore('user', '')
 
 	useEffect(() => {
@@ -71,7 +71,6 @@ export function UserNavLink(
 
   useEffect(() => {
     if (user) {
-      // window.sessionStorage.setItem('user', user as string)
       setStoredUser(user as string)
     }
   },[user])
@@ -81,6 +80,7 @@ export function UserNavLink(
 			aria-current={active ? 'page' : undefined}
 			data-active={active}
 			href={`/${active ? "": storedUser ?? ""}`}
+      prefetch={false}
       onNavigate={() => {
         if (active) {
           setStoredUser(undefined)

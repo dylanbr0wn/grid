@@ -75,7 +75,7 @@ $focused-outline-color: #4c9ffe;
   &.dragOverlay {
     cursor: inherit;
     /* box-shadow: 0 0px 6px 2px $focused-outline-color; */
-    animation: pop 200ms linear forwards;
+    animation: pop 100ms linear forwards;
     box-shadow: var(--box-shadow-picked-up);
     opacity: 1;
   };

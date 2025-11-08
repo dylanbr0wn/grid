@@ -1,7 +1,6 @@
 'use client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-import { useCallback, useMemo } from 'react'
 
 export function useSessionStore<T>(key: string, defaultValue: T) {
 	const queryClient = useQueryClient()
@@ -19,7 +18,6 @@ export function useSessionStore<T>(key: string, defaultValue: T) {
 		mutationFn: async (
 			value: T | ((v: T | undefined) => T | undefined) | undefined
 		) => {
-			console.log('mutate', value)
 			if (typeof window === 'undefined') return
 			let newValue: string | undefined
 			if (value === undefined) {
@@ -47,13 +45,6 @@ export function useSessionStore<T>(key: string, defaultValue: T) {
 	const { data } = query
 	const { mutate } = mutation
 
-	// useEffect(() => {
-	//   const storedUser = window.sessionStorage.getItem('user')
-	//   if (storedUser) {
-	//     setUser(storedUser)
-	//   }
-	// }, [])
-
 	return [data, mutate, query, mutation] as const
 }
 
@@ -80,12 +71,7 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 		mutationFn: async (value: T | undefined) => {
 			if (typeof window === 'undefined') return
 			const params = new URLSearchParams(searchParams.toString())
-			// let newValue: string | undefined
-			// if (value === undefined) {
-			// 	newValue = undefined
-			// }else {
-			// 	newValue = JSON.stringify(value)
-			// }
+
 			if (value === undefined) {
 				window.sessionStorage.removeItem(key)
 			} else {
@@ -107,13 +93,6 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 	})
 	const { data } = query
 	const { mutate } = mutation
-
-	// useEffect(() => {
-	//   const storedUser = window.sessionStorage.getItem('user')
-	//   if (storedUser) {
-	//     setUser(storedUser)
-	//   }
-	// }, [])
 
 	return [data, mutate, query, mutation] as const
 }

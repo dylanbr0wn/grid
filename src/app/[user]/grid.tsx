@@ -34,7 +34,7 @@ import {
 	AnimateLayoutChanges,
 	NewIndexGetter,
 } from '@dnd-kit/sortable'
-import { Album } from './album'
+import { Album, AlbumProps } from './album'
 import { cn } from '@/lib/util'
 
 import Toolbar, { useSort } from './toolbar'
@@ -139,12 +139,10 @@ function MakeAlbums(
 
 type SortableProps = {
 	activationConstraint?: PointerActivationConstraint
-	animateLayoutChanges?: AnimateLayoutChanges
 	adjustScale?: boolean
 	collisionDetection?: CollisionDetection
 	coordinateGetter?: KeyboardCoordinateGetter
 	dropAnimation?: DropAnimation | null
-	getNewIndex?: NewIndexGetter
 	items?: GridAlbum[]
 	measuring?: MeasuringConfiguration
 	modifiers?: Modifiers
@@ -156,16 +154,13 @@ type SortableProps = {
 
 export default function Grid({
 	activationConstraint,
-	animateLayoutChanges,
 	collisionDetection = closestCenter,
 	coordinateGetter = sortableKeyboardCoordinates,
 	dropAnimation = dropAnimationConfig,
-	getNewIndex,
 	items: initialItems,
 	measuring,
 	modifiers,
 	reorderItems = arrayMove,
-	useDragOverlay = true,
 }: SortableProps) {
 	const [brightnessLookup, setBrightnessLookup] = useSessionStore<Record<string,number>>('album:brightness', {})
 	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
@@ -388,9 +383,7 @@ export default function Grid({
 											key={value.id}
 											value={value}
 											index={trimmedItems.length + index}
-											animateLayoutChanges={animateLayoutChanges}
-											useDragOverlay={useDragOverlay}
-											getNewIndex={getNewIndex}
+											// animateLayoutChanges={animateLayoutChanges}
 											setTextBackground={setTextBackground}
 											setTextColor={setTextColor}
 										/>
@@ -412,7 +405,7 @@ export default function Grid({
 							}
 						>
 							<ScrollArea.Viewport className="h-full flex justify-center items-center-safe">
-								<ul
+								<div
 									id="fm-grid"
 									className={
 										'shrink-0 grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full'
@@ -429,14 +422,12 @@ export default function Grid({
 											key={value.id}
 											value={value}
 											index={index}
-											animateLayoutChanges={animateLayoutChanges}
-											useDragOverlay={useDragOverlay}
-											getNewIndex={getNewIndex}
 											setTextBackground={setTextBackground}
 											setTextColor={setTextColor}
+                      priority={true}
 										/>
 									))}
-								</ul>
+								</div>
 							</ScrollArea.Viewport>
 							<ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
 								<ScrollArea.Thumb className="w-full bg-neutral-500" />
@@ -452,7 +443,7 @@ export default function Grid({
 					</div>
 				</SortableContext>
 			</div>
-			{useDragOverlay && typeof document !== 'undefined'
+			{typeof document !== 'undefined'
 				? createPortal(
 						<DragOverlay adjustScale={false} dropAnimation={dropAnimation}>
 							{activeId != null ? (
@@ -471,23 +462,17 @@ export default function Grid({
 }
 
 type SortableItemProps = {
-	animateLayoutChanges?: AnimateLayoutChanges
+	// animateLayoutChanges?: AnimateLayoutChanges
 	disabled?: boolean
-	getNewIndex?: NewIndexGetter
 	value: Album
-	setTextColor?(index: number, color: string): void
-	setTextBackground?(index: number, background: boolean): void
 	index: number
-	useDragOverlay?: boolean
-}
+} & Pick<AlbumProps, 'priority' | 'setTextBackground' | 'setTextColor'>
 
 export function SortableItem({
 	disabled,
-	animateLayoutChanges,
-	getNewIndex,
+	// animateLayoutChanges,
 	value,
 	index,
-	useDragOverlay,
 	setTextBackground,
 	...props
 }: SortableItemProps) {
@@ -501,9 +486,7 @@ export function SortableItem({
 		transition,
 	} = useSortable({
 		id: value.id,
-		animateLayoutChanges,
 		disabled,
-		getNewIndex,
 	})
 
 	return (
@@ -519,7 +502,6 @@ export function SortableItem({
 			listeners={listeners}
 			data-index={index}
 			data-id={value.id}
-			dragOverlay={!useDragOverlay && isDragging}
 			setTextBackground={setTextBackground}
 			{...props}
 			{...attributes}

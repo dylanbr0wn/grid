@@ -12,11 +12,11 @@ async function downloadGrid(columns: number, rows:number) {
 	const dpr = window.devicePixelRatio
 	if (!node) return
 	const dataUrl = await htmlToImage.toPng(node, {
-		canvasHeight: rows * 128 * dpr * 2,
-		canvasWidth: columns * 128 * dpr * 2,
+		canvasHeight: rows * 128 * 2 / dpr ,
+		canvasWidth: columns * 128* 2 / dpr ,
 		backgroundColor: '#000000',
-    cacheBust: true,
-    imagePlaceholder: "/placeholder.png"
+    imagePlaceholder: "/placeholder.png",
+    type: 'image/png',
 	})
 	const date = new Date()
 	const link = document.createElement('a')
@@ -121,12 +121,6 @@ export default function Toolbar() {
 					value={columns}
 					onChange={cleanAndSetCols}
 				/>
-				{/* <Select
-					value={columns.toString()}
-					items={gridSizes}
-					onChange={v => setColumns(parseInt(v))}
-          icon={<IconLayoutGridFilled className="size-4 text-neutral-300" />}
-				/> */}
 			</div>
 			<div className="w-1/3 flex items-center justify-end">
 				<button

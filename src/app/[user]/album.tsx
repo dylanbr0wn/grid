@@ -10,6 +10,31 @@ import { cn, getImageBrightness } from '@/lib/util'
 import { ContextMenu } from '@base-ui-components/react'
 import { IconCheck, IconChevronRight } from '@tabler/icons-react'
 import { useSessionStore } from '@/lib/session-store'
+import {CSS} from '@dnd-kit/utilities';
+
+function getBrightnessStyle(brightness: number) {
+	if (brightness > 200) {
+		return {
+			textColor: 'black',
+			textBackground: false,
+		}
+	} else if (brightness > 160) {
+		return {
+			textColor: 'black',
+			textBackground: true,
+		}
+	} else if (brightness > 60) {
+		return {
+			textColor: 'white',
+			textBackground: true,
+		}
+	} else {
+		return {
+			textColor: 'white',
+			textBackground: false,
+		}
+	}
+}
 
 export type Album = {
 	album: string
@@ -21,7 +46,8 @@ export type Album = {
 	textBackground?: boolean
 }
 
-export interface AlbumProps {
+export type AlbumProps = {
+	priority?: boolean
 	dragOverlay?: boolean
 	disabled?: boolean
 	dragging?: boolean
@@ -31,7 +57,7 @@ export interface AlbumProps {
 	sorting?: boolean
 	transition?: string | null
 	wrapperStyle?: React.CSSProperties
-	ref?: React.Ref<HTMLLIElement>
+	ref?: React.Ref<HTMLDivElement>
 	setTextColor?(index: number, color: string): void
 	setTextBackground?(index: number, background: boolean): void
 	value: Album
@@ -46,11 +72,12 @@ export const Album = React.memo(
 		listeners,
 		sorting,
 		transition,
-		transform,
+		transform = null,
 		value,
 		wrapperStyle,
 		setTextColor,
 		setTextBackground,
+		priority = false,
 		ref,
 	}: AlbumProps) => {
 		const [brightnessLookup, setBrightnessLookup] = useSessionStore<
@@ -60,31 +87,27 @@ export const Album = React.memo(
 
 		const adustBrightness = useCallback(
 			async (album: Album) => {
-        
 				if (hasBrightCalcOnce) return album
-				const brightness = await (brightnessLookup !== -1 ? Promise.resolve(brightnessLookup) :
-					getImageBrightness(album.img ?? ''))
-        if (brightnessLookup === -1) {
-          setBrightnessLookup(brightness ?? -1)
-        }
-				if (!brightness) return album
-				if (brightness > 200) {
-					setTextBackground?.(index ?? -1, false)
-					setTextColor?.(index ?? -1, 'black')
-				} else if (brightness > 160) {
-					setTextBackground?.(index ?? -1, true)
-					setTextColor?.(index ?? -1, 'black')
-				} else if (brightness > 60) {
-					setTextBackground?.(index ?? -1, true)
-					setTextColor?.(index ?? -1, 'white')
-				} else {
-					setTextBackground?.(index ?? -1, false)
-					setTextColor?.(index ?? -1, 'white')
+				const brightness = await (brightnessLookup !== -1
+					? Promise.resolve(brightnessLookup)
+					: getImageBrightness(album.img ?? ''))
+				if (brightnessLookup === -1) {
+					setBrightnessLookup(brightness ?? -1)
 				}
+				if (!brightness) return album
+				const { textColor, textBackground } = getBrightnessStyle(brightness)
+				setTextBackground?.(index ?? -1, textBackground)
+				setTextColor?.(index ?? -1, textColor)
 				setHasBrightCalcOnce(true)
 				return album
 			},
-			[brightnessLookup, hasBrightCalcOnce, index, setTextBackground, setTextColor]
+			[
+				brightnessLookup,
+				hasBrightCalcOnce,
+				index,
+				setTextBackground,
+				setTextColor,
+			]
 		)
 
 		useEffect(() => {
@@ -104,98 +127,76 @@ export const Album = React.memo(
 		}, [dragOverlay])
 
 		return (
-			<li
-				className={cn(
-					styles.Wrapper,
-					sorting && styles.sorting,
-					dragOverlay && styles.dragOverlay
-				)}
-				style={
-					{
-						...wrapperStyle,
-						transition: [transition, wrapperStyle?.transition]
-							.filter(Boolean)
-							.join(', '),
-						'--translate-x': transform
-							? `${Math.round(transform.x)}px`
-							: undefined,
-						'--translate-y': transform
-							? `${Math.round(transform.y)}px`
-							: undefined,
-						'--scale-x': transform?.scaleX ? `${transform.scaleX}` : undefined,
-						'--scale-y': transform?.scaleY ? `${transform.scaleY}` : undefined,
-						'--index': index,
-					} as React.CSSProperties
-				}
-				ref={ref}
-			>
 				<ContextMenu.Root>
 					<ContextMenu.Trigger
 						className={cn(
-							'flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 h-32 aspect-square relative transition-[box-shadow_200ms_cubic-bezier(0.18,0.67,0.6,1.22)] z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500] font-code',
+							'flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 h-32 aspect-square relative  z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500] font-code',
 							styles.album,
+              styles.Wrapper,
 							dragging && styles.dragging,
 							dragOverlay && styles.dragOverlay,
 							disabled && styles.disabled
 						)}
+            style={{ transition, '--index': index, transform: CSS.Transform.toString(transform)} as React.CSSProperties}
 						{...listeners}
+            ref={ref}
 						tabIndex={0}
 					>
 						{value.img ? (
 							<img
-								src={value.img || "/placeholder.png"}
-								className="w-full h-full object-cover"
+								src={value.img || '/placeholder.png'}
+								className="w-32 aspect-square object-cover overflow-hidden"
 								alt={`${value.album} by ${value.artist} album cover`}
+								fetchPriority={priority ? 'high' : 'auto'}
+								loading={priority ? 'eager' : 'lazy'}
 							/>
 						) : (
 							<div className="w-full h-full bg-neutral-950" />
 						)}
-						<div className="flex items-center justify-center">
-							<div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
-								<div
-									className="font-bold text-[9px]/[9px] pb-0.5"
+						<div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
+							<div
+								className="font-bold text-[9px]/[10px] pb-0.5"
+								style={
+									{
+										color: value.textColor,
+									} as React.CSSProperties
+								}
+							>
+								<span
+									className="break-words"
 									style={
 										{
-											color: value.textColor,
+											backgroundColor: value.textBackground
+												? value.textColor === 'white'
+													? 'black'
+													: 'white'
+												: 'transparent',
 										} as React.CSSProperties
 									}
 								>
-									<span
-										className="break-words"
-										style={
-											{
-												backgroundColor: value.textBackground
-													? value.textColor === 'white'
-														? 'black'
-														: 'white'
-													: 'transparent',
-											} as React.CSSProperties
-										}
-									>
-										{value.album}
-									</span>
-								</div>
-								<div
-									className="text-[7px] leading-[7px] font-medium "
-									style={{
-										color: value.textColor,
-									}}
+									{value.album}
+								</span>
+							</div>
+							<div
+								className="text-[7px]/[7px] font-medium "
+								style={{
+									color: value.textColor,
+								}}
+							>
+								<span
+									className="break-words"
+									style={
+										{
+											backgroundColor: value.textBackground
+												? value.textColor === 'white'
+													? 'black'
+													: 'white'
+												: 'transparent',
+										} as React.CSSProperties
+									}
 								>
-									<span
-										className="break-words"
-										style={
-											{
-												backgroundColor: value.textBackground
-													? value.textColor === 'white'
-														? 'black'
-														: 'white'
-													: 'transparent',
-											} as React.CSSProperties
-										}
-									>
-										{value.artist}
-									</span>
-								</div>
+									{value.artist}
+								</span>
 							</div>
 						</div>
 					</ContextMenu.Trigger>
@@ -258,7 +259,6 @@ export const Album = React.memo(
 						</ContextMenu.Positioner>
 					</ContextMenu.Portal>
 				</ContextMenu.Root>
-			</li>
 		)
 	}
 )
