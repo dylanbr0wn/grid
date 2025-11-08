@@ -54,9 +54,7 @@ export type AlbumProps = {
 	index?: number
 	transform?: Transform | null
 	listeners?: DraggableSyntheticListeners
-	sorting?: boolean
 	transition?: string | null
-	wrapperStyle?: React.CSSProperties
 	ref?: React.Ref<HTMLDivElement>
 	setTextColor?(index: number, color: string): void
 	setTextBackground?(index: number, background: boolean): void
@@ -70,11 +68,9 @@ export const Album = React.memo(
 		disabled,
 		index,
 		listeners,
-		sorting,
 		transition,
 		transform = null,
 		value,
-		wrapperStyle,
 		setTextColor,
 		setTextBackground,
 		priority = false,
@@ -130,9 +126,8 @@ export const Album = React.memo(
 				<ContextMenu.Root>
 					<ContextMenu.Trigger
 						className={cn(
-							'flex grow items-center outline-none box-border list-none origin-center [-webkit-tap-highlight-color:transparent] font-normal whitespace-nowrap w-32 h-32 aspect-square relative  z-0 focus-visible:z-10 focus-visible:shadow-sm focus-visible:shadow-blue-500] font-code',
+							'flex grow items-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square relative font-code',
 							styles.album,
-              styles.Wrapper,
 							dragging && styles.dragging,
 							dragOverlay && styles.dragOverlay,
 							disabled && styles.disabled

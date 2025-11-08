@@ -1,6 +1,7 @@
-import { fetchGridData, GridAlbum } from '@/lib/lastfm'
+import { fetchAlbums } from '@/lib/lastfm'
 import Grid from './grid'
 import { redirect, RedirectType } from 'next/navigation'
+import { Album } from './album'
 
 export default async function Page({
 	params,
@@ -20,9 +21,9 @@ export default async function Page({
 		redirect(`/?error=Invalid user`, RedirectType.replace)
 	}
 
-	let data: GridAlbum[] = []
+	let albums: Album[] = []
 	try {
-		data = await fetchGridData(user, sort as string)
+		albums = await fetchAlbums(user, sort as string)
 	} catch (e) {
 		const error = e instanceof Error ? e.message : 'Unknown error'
 		redirect(`/?error=${error}`, RedirectType.replace)
@@ -30,7 +31,7 @@ export default async function Page({
 
 	return (
 		<div className="flex h-full flex-col font-code relative">
-			<Grid items={data} />
+			<Grid albums={albums} />
 		</div>
 	)
 }

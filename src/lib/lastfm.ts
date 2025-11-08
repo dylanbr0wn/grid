@@ -1,3 +1,4 @@
+import { Album } from '@/app/[user]/album'
 import { type } from 'arktype'
 import 'server-only'
 
@@ -54,7 +55,7 @@ export async function fetchWeeklyAlbumChart(user: string) {
 	return out.topalbums.album
 }
 
-export async function fetchGridData(user: string, sort: string) {
+export async function fetchAlbums(user: string, sort: string) {
 	let albums = await fetchWeeklyAlbumChart(user)
 
   if (sort === 'random') {
@@ -70,7 +71,7 @@ export async function fetchGridData(user: string, sort: string) {
     albums = albums.sort((a, b) => parseInt(b.playcount) - parseInt(a.playcount))
   }
 
-	return getGridData(albums)
+	return parseAlbums(albums)
 }
 
 export type GridAlbum = {
@@ -85,7 +86,7 @@ export type GridAlbum = {
   id: string
 }
 
-function getGridData(albums: (typeof albumInfo.infer)[]):GridAlbum[] {
+function parseAlbums(albums: (typeof albumInfo.infer)[]):Album[] {
 	return albums.map((a) => {
 		const large =
 			a.image.find((i) => i.size === 'large')?.['#text'] ?? ''
@@ -102,6 +103,9 @@ function getGridData(albums: (typeof albumInfo.infer)[]):GridAlbum[] {
 			artist: a.artist.name,
       plays: parseInt(a.playcount),
 			id: a.mbid || `${a.artist.name}_${a.name}`.replaceAll(' ', '-').toLowerCase(),
+      img: large || small || fallback || '/placeholder.png',
+			textColor: 'white',
+			textBackground: false,
 		}
 	})
 }

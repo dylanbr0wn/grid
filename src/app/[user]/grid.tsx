@@ -6,48 +6,27 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import {
-	closestCenter,
-	CollisionDetection,
 	DragOverlay,
 	DndContext,
-	DropAnimation,
 	KeyboardSensor,
-	KeyboardCoordinateGetter,
-	Modifiers,
 	MouseSensor,
-	MeasuringConfiguration,
-	PointerActivationConstraint,
 	ScreenReaderInstructions,
 	TouchSensor,
-	UniqueIdentifier,
 	useSensor,
 	useSensors,
-	defaultDropAnimationSideEffects,
 } from '@dnd-kit/core'
 import {
 	arrayMove,
 	useSortable,
 	SortableContext,
 	sortableKeyboardCoordinates,
-	SortingStrategy,
 	rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { Album, AlbumProps } from './album'
 
 import Toolbar from './toolbar'
-import { useParamsStore, useSessionStore } from '@/lib/session-store'
-import { GridAlbum } from '@/lib/lastfm'
+import { useParamsStore } from '@/lib/session-store'
 import { sortAlbums, SortType, useSort } from '@/lib/sort'
-
-const dropAnimationConfig: DropAnimation = {
-	sideEffects: defaultDropAnimationSideEffects({
-		styles: {
-			active: {
-				opacity: '0.5',
-			},
-		},
-	}),
-}
 
 const screenReaderInstructions: ScreenReaderInstructions = {
 	draggable: `
@@ -57,89 +36,18 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 }
 
-async function getImageBrightness(src: string): Promise<number> {
-	const { promise, resolve, reject } = Promise.withResolvers<number>()
-	if (!src) {
-		reject('No src provided')
-		return promise
-	}
-	const img = document.createElement('img')
-	img.crossOrigin = 'anonymous'
-	img.src = src
-	img.style.display = 'none'
-	document.body.appendChild(img)
-	let colorSum = 0
-
-	img.onload = function () {
-		// create canvas
-		const canvas = document.createElement('canvas')
-		canvas.width = img.naturalWidth
-		canvas.height = img.naturalHeight
-
-		const ctx = canvas.getContext('2d')
-		if (!ctx) {
-			reject('Could not get canvas context')
-			return
-		}
-		ctx.drawImage(img, 0, 0)
-
-		const imageData = ctx.getImageData(
-			0,
-			canvas.height * 0.75,
-			canvas.width,
-			canvas.height * 0.25
-		)
-		const data = imageData.data
-		let r, g, b, avg
-		for (let x = 0, len = data.length; x < len; x += 4) {
-			r = data[x]
-			g = data[x + 1]
-			b = data[x + 2]
-
-			avg = Math.floor((r + g + b) / 3)
-			colorSum += avg
-		}
-
-		const brightness = Math.floor(
-			colorSum / (img.naturalWidth * img.naturalHeight * 0.25)
-		)
-		canvas.remove()
-		resolve(brightness)
-	}
-	const res = await promise
-	document.body.removeChild(img)
-	return res
-}
-
-function MakeAlbums(items: GridAlbum[]): Album[] {
-	return items.map(({ imgs, ...item }) => {
-		return {
-			...item,
-			img: imgs.large || imgs.small || imgs.fallback || '/placeholder.png',
-			textColor: 'white',
-			textBackground: false,
-		}
-	})
-}
-
 type GridProps = {
-	items: GridAlbum[]
+	albums: Album[]
 }
 
 export default function Grid({
-	items: initialItems,
+	albums: initialAlbums,
 }: GridProps) {
-	const [brightnessLookup] = useSessionStore<
-		Record<string, number>
-	>('album:brightness', {})
-	const [albums, setAlbums] = useState<Album[]>(MakeAlbums(initialItems ?? []))
-	const strategy = useRef<SortingStrategy>(rectSortingStrategy)
+	const [albums, setAlbums] = useState<Album[]>(initialAlbums)
 	const [activeId, setActiveId] = useState<string | null>(null)
 	const [columns] = useParamsStore<number>('cols', 5)
 	const [rows] = useParamsStore<number>('rows', 5)
-	const { sort, setSort, isPending } = useSort()
-	const isSetup = useRef(false)
-	const [hasBrightCalcOnce, setHasBrightCalcOnce] = useState(false)
+	const { sort, setSort } = useSort()
 
 	const sensors = useSensors(
 		useSensor(MouseSensor),
@@ -153,7 +61,7 @@ export default function Grid({
 		(id: string) => albums?.findIndex((item) => item.id === id) ?? -1,
 		[albums]
 	)
-	const activeIndex = activeId != null ? getIndex(activeId) : -1
+	const activeIndex = useMemo(() => activeId != null ? getIndex(activeId) : -1, [activeId, getIndex])
 
 	const trimmedItems = useMemo(() => {
 		if (!columns || !rows) return []
@@ -197,58 +105,6 @@ export default function Grid({
 		[]
 	)
 
-	const lookupBrightness = useCallback(
-		(album: Album) => {
-			if (!album.id) return undefined
-			if (!brightnessLookup) return undefined
-			return brightnessLookup[album.id]
-		},
-		[brightnessLookup]
-	)
-
-	const adustBrightness = useCallback(async (albums: Album[]) => {
-		if (hasBrightCalcOnce) return albums
-		const items = [...albums]
-		const brightnessArray = await Promise.allSettled(
-			items.map((album) => {
-				const cached = lookupBrightness(album)
-				if (cached !== undefined) {
-					return Promise.resolve(cached)
-				}
-				return getImageBrightness(album.img)
-			})
-		)
-		brightnessArray.forEach((brightness, index) => {
-			if (brightness.status === 'rejected') {
-			} else {
-				if (brightness.value > 200) {
-					items[index].textBackground = false
-					items[index].textColor = 'black'
-				} else if (brightness.value > 160) {
-					items[index].textBackground = true
-					items[index].textColor = 'black'
-				} else if (brightness.value > 60) {
-					items[index].textBackground = true
-					items[index].textColor = 'white'
-				} else {
-					items[index].textBackground = false
-					items[index].textColor = 'white'
-				}
-			}
-		})
-		setHasBrightCalcOnce(true)
-		return items
-	}, [hasBrightCalcOnce, lookupBrightness])
-
-	useEffect(() => {
-		if (isSetup.current) return
-		if (!initialItems) return
-
-		const albums = MakeAlbums(initialItems)
-		setAlbums(albums)
-		isSetup.current = true
-	}, [initialItems, adustBrightness])
-
 	const updateSort = useCallback(
 		(newSort: SortType) => {
 			setSort(newSort as any)
@@ -277,9 +133,6 @@ export default function Grid({
 					return
 				}
 				setActiveId(active.id as string)
-				if (trimmedItems.find((item) => item.id === active.id)) {
-					strategy.current = rectSortingStrategy
-				}
 			}}
 			onDragEnd={({ over }) => {
 				setActiveId(null)
@@ -308,15 +161,16 @@ export default function Grid({
 							</h5>
 						</div>
 						<ScrollArea.Root
-							className="relative w-full h-full"
+							className="relative w-full"
+              style={{
+                height: 'calc(100% - 40px)'
+              }}
 						>
 							<ScrollArea.Viewport
-								className="grid grid-cols-3 px-2 relative overscroll-contain overflow-x-hidden"
+								className="grid grid-cols-3 px-2 relative overscroll-contain overflow-x-hidden max-h-full"
 								style={{ 
                   width: (128 * 3) + 16,
-                  height: 'calc(100% - 40px)'
                 }}
-
 							>
 								{extraItems.map((value, index) => (
 									<SortableItem
@@ -377,12 +231,13 @@ export default function Grid({
 			</div>
 			{typeof document !== 'undefined'
 				? createPortal(
-						<DragOverlay adjustScale={false} dropAnimation={dropAnimationConfig}>
+						<DragOverlay dropAnimation={{ duration: 0, easing: 'ease-in' }}>
 							{activeId != null ? (
 								<Album
 									value={albums[activeIndex]}
 									index={activeIndex}
 									dragOverlay
+                  priority={true}
 								/>
 							) : null}
 						</DragOverlay>,
@@ -408,7 +263,6 @@ export function SortableItem({
 	const {
 		attributes,
 		isDragging,
-		isSorting,
 		listeners,
 		setNodeRef,
 		transform,
@@ -424,7 +278,6 @@ export function SortableItem({
 			value={value}
 			disabled={disabled}
 			dragging={isDragging}
-			sorting={isSorting}
 			index={index}
 			transform={transform}
 			transition={transition}
