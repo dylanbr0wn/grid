@@ -12,12 +12,13 @@ async function downloadGrid(columns: number, rows:number) {
 	const node = document.getElementById('fm-grid')
 	const dpr = window.devicePixelRatio
 	if (!node) return
-	const dataUrl = await htmlToImage.toPng(node, {
+	const dataUrl = await htmlToImage.toJpeg(node, {
 		canvasHeight: rows * 128 * 2 / dpr ,
-		canvasWidth: columns * 128* 2 / dpr ,
+		canvasWidth: columns * 128 * 2 / dpr ,
 		backgroundColor: '#000000',
     imagePlaceholder: "/placeholder.png",
-    type: 'image/png',
+    quality: 1,
+    type: 'image/jpeg',
 	})
 	const date = new Date()
 	const link = document.createElement('a')
@@ -33,7 +34,7 @@ async function downloadGrid(columns: number, rows:number) {
 		.padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date
 		.getSeconds()
 		.toString()
-		.padStart(2, '0')}.png`
+		.padStart(2, '0')}.jpeg`
 	link.href = dataUrl
 	link.click() // Triggers the download
   link.remove()
