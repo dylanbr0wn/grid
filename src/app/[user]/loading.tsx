@@ -1,5 +1,3 @@
-import { cn } from '@/lib/util'
-
 export default function Loading() {
 	return (
 		<div

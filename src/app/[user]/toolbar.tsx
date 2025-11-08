@@ -6,7 +6,7 @@ import { useState } from 'react'
 import * as htmlToImage from 'html-to-image'
 import NumberInput from '@/components/number-input'
 import { useParamsStore } from '@/lib/session-store'
-import { sortOptions, SortType, useSort } from '@/lib/sort'
+import { sortOptions, SortType } from '@/lib/sort'
 
 async function downloadGrid(columns: number, rows:number) {
 	const node = document.getElementById('fm-grid')

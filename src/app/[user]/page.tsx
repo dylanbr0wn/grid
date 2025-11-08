@@ -10,8 +10,8 @@ export default async function Page({
 	params: Promise<{ user: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-	let { user } = await params
-  let {sort = "playcount"} = await searchParams
+	const { user } = await params
+  let { sort = "playcount" } = await searchParams
 
   if (sort && typeof sort !== 'string') {
     sort = 'playcount'

@@ -24,7 +24,6 @@ export default function Select({
 	value,
 	icon,
 }: SelectProps) {
-	const [focused, setFocused] = useState(false)
   const [open, setOpen] = useState(false)
 	return (
 		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
@@ -35,8 +34,6 @@ export default function Select({
 			)}
 			<BSelect.Root value={value} items={items} onValueChange={onChange} onOpenChange={setOpen}>
 				<BSelect.Trigger
-					onFocus={() => setFocused(true)}
-					onBlur={() => setFocused(false)}
 					className={cn(
 						'flex h-10 min-w-36 items-center gap-2 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
 						className

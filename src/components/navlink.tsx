@@ -73,7 +73,7 @@ export function UserNavLink(
     if (user) {
       setStoredUser(user as string)
     }
-  },[user])
+  },[user, setStoredUser])
 
 	return (
 		<Link

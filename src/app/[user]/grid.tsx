@@ -107,7 +107,7 @@ export default function Grid({
 
 	const updateSort = useCallback(
 		(newSort: SortType) => {
-			setSort(newSort as any)
+			setSort(newSort)
 			setAlbums((albums) => sortAlbums(albums ?? [], newSort))
 		},
 		[setSort]
