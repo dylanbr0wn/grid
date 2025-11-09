@@ -23,9 +23,9 @@
     "clsx": "^2.1.1",
     "html-to-image": "1.11.11",
     "motion": "^12.23.12",
-    "next": "15.5.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "next": "16.0.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "sass": "^1.90.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1"
@@ -35,11 +35,17 @@
     "@tailwindcss/postcss": "^4",
     "@tanstack/eslint-plugin-query": "^5.83.1",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
     "eslint": "^9",
-    "eslint-config-next": "15.5.0",
+    "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.2",
+      "@types/react-dom": "19.2.2"
+    }
   }
 }

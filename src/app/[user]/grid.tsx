@@ -25,8 +25,8 @@ import {
 import { Album, AlbumProps } from './album'
 
 import Toolbar from './toolbar'
-import { useParamsStore } from '@/lib/session-store'
 import { sortAlbums, SortType, useSort } from '@/lib/sort'
+import { useGridSize } from '@/lib/grid'
 
 const screenReaderInstructions: ScreenReaderInstructions = {
 	draggable: `
@@ -45,8 +45,7 @@ export default function Grid({
 }: GridProps) {
 	const [albums, setAlbums] = useState<Album[]>(initialAlbums)
 	const [activeId, setActiveId] = useState<string | null>(null)
-	const [columns] = useParamsStore<number>('cols', 5)
-	const [rows] = useParamsStore<number>('rows', 5)
+  const { rows, columns } = useGridSize()
 	const { sort, setSort } = useSort()
 
 	const sensors = useSensors(
@@ -234,7 +233,7 @@ export default function Grid({
 						<DragOverlay dropAnimation={{ duration: 0, easing: 'ease-in' }}>
 							{activeId != null ? (
 								<Album
-									value={albums[activeIndex]}
+									album={albums[activeIndex]}
 									index={activeIndex}
 									dragOverlay
                   priority={true}
@@ -275,7 +274,7 @@ export function SortableItem({
 	return (
 		<Album
 			ref={setNodeRef}
-			value={value}
+			album={value}
 			disabled={disabled}
 			dragging={isDragging}
 			index={index}

@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import * as htmlToImage from 'html-to-image'
 import NumberInput from '@/components/number-input'
-import { useParamsStore } from '@/lib/session-store'
 import { sortOptions, SortType } from '@/lib/sort'
+import { useGridSize } from '@/lib/grid'
 
 async function downloadGrid(columns: number, rows:number) {
 	const node = document.getElementById('fm-grid')
@@ -38,12 +38,6 @@ async function downloadGrid(columns: number, rows:number) {
 	link.href = dataUrl
 	link.click() // Triggers the download
   link.remove()
-}
-
-export function useGridSize() {
-	const [rows, setRows] = useParamsStore<number>('rows', 5)
-	const [columns, setColumns] = useParamsStore<number>('cols', 5)
-	return { rows, setRows, columns, setColumns }
 }
 
 type ToolbarProps = {

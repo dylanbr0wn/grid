@@ -96,3 +96,13 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 
 	return [data, mutate, query, mutation] as const
 }
+
+export async function withSessionCache<T>(key: string, value: Promise<T>): Promise<T> {
+  const raw = window.sessionStorage.getItem(key)
+  if (raw) {
+    return Promise.resolve(JSON.parse(raw) as T)
+  }
+  const res = await value
+  window.sessionStorage.setItem(key, JSON.stringify(res))
+  return res
+}
