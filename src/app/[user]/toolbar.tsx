@@ -8,17 +8,17 @@ import NumberInput from '@/components/number-input'
 import { sortOptions, SortType } from '@/lib/sort'
 import { useGridSize } from '@/lib/grid'
 
-async function downloadGrid(columns: number, rows:number) {
+async function downloadGrid(columns: number, rows: number) {
 	const node = document.getElementById('fm-grid')
 	const dpr = window.devicePixelRatio
 	if (!node) return
 	const dataUrl = await htmlToImage.toJpeg(node, {
-		canvasHeight: rows * 128 * 2 / dpr ,
-		canvasWidth: columns * 128 * 2 / dpr ,
+		canvasHeight: rows * 128 * 2 / dpr,
+		canvasWidth: columns * 128 * 2 / dpr,
 		backgroundColor: '#000000',
-    imagePlaceholder: "/placeholder.png",
-    quality: 1,
-    type: 'image/jpeg',
+		imagePlaceholder: "/placeholder.png",
+		quality: 1,
+		type: 'image/jpeg',
 	})
 	const date = new Date()
 	const link = document.createElement('a')
@@ -26,23 +26,23 @@ async function downloadGrid(columns: number, rows:number) {
 		.getDate()
 		.toString()
 		.padStart(2, '0')}${date
-		.getMonth()
-		.toString()
-		.padStart(2, '0')}${date.getFullYear()}_${date
-		.getHours()
-		.toString()
-		.padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date
-		.getSeconds()
-		.toString()
-		.padStart(2, '0')}.jpeg`
+			.getMonth()
+			.toString()
+			.padStart(2, '0')}${date.getFullYear()}_${date
+				.getHours()
+				.toString()
+				.padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date
+					.getSeconds()
+					.toString()
+					.padStart(2, '0')}.jpeg`
 	link.href = dataUrl
 	link.click() // Triggers the download
-  link.remove()
+	link.remove()
 }
 
 type ToolbarProps = {
-  updateSort: (sort: SortType) => void
-  sort: SortType
+	updateSort: (sort: SortType) => void
+	sort: SortType
 }
 
 export default function Toolbar({ updateSort, sort }: ToolbarProps) {
@@ -68,12 +68,12 @@ export default function Toolbar({ updateSort, sort }: ToolbarProps) {
 		if (!user) return
 		if (!columns || !rows) return
 		setLoading(true)
-    try {
-      await downloadGrid(columns,rows)
-    } catch (e) {
-      console.error(e)
-    }
-		
+		try {
+			await downloadGrid(columns, rows)
+		} catch (e) {
+			console.error(e)
+		}
+
 		setLoading(false)
 	}
 
