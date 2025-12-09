@@ -45,7 +45,7 @@ export default function Grid({
 }: GridProps) {
 	const [albums, setAlbums] = useState<Album[]>(initialAlbums)
 	const [activeId, setActiveId] = useState<string | null>(null)
-  const { rows, columns } = useGridSize()
+	const { rows, columns } = useGridSize()
 	const { sort, setSort } = useSort()
 
 	const sensors = useSensors(
@@ -161,15 +161,15 @@ export default function Grid({
 						</div>
 						<ScrollArea.Root
 							className="relative w-full"
-              style={{
-                height: 'calc(100% - 40px)'
-              }}
+							style={{
+								height: 'calc(100% - 40px)'
+							}}
 						>
 							<ScrollArea.Viewport
 								className="grid grid-cols-3 px-2 relative overscroll-contain overflow-x-hidden max-h-full"
-								style={{ 
-                  width: (128 * 3) + 16,
-                }}
+								style={{
+									width: (128 * 3) + 16,
+								}}
 							>
 								{extraItems.map((value, index) => (
 									<SortableItem
@@ -230,18 +230,18 @@ export default function Grid({
 			</div>
 			{typeof document !== 'undefined'
 				? createPortal(
-						<DragOverlay dropAnimation={{ duration: 0, easing: 'ease-in' }}>
-							{activeId != null ? (
-								<Album
-									album={albums[activeIndex]}
-									index={activeIndex}
-									dragOverlay
-                  priority={true}
-								/>
-							) : null}
-						</DragOverlay>,
-						document.body
-				  )
+					<DragOverlay dropAnimation={{ duration: 0, easing: 'ease-in' }}>
+						{activeId != null ? (
+							<Album
+								album={albums[activeIndex]}
+								index={activeIndex}
+								dragOverlay
+								priority={true}
+							/>
+						) : null}
+					</DragOverlay>,
+					document.body
+				)
 				: null}
 		</DndContext>
 	)

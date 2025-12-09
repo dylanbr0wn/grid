@@ -19,6 +19,7 @@ async function downloadGrid(columns: number, rows: number) {
 		imagePlaceholder: "/placeholder.png",
 		quality: 1,
 		type: 'image/jpeg',
+    includeQueryParams: true,
 	})
 	const date = new Date()
 	const link = document.createElement('a')

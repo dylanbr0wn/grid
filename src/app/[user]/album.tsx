@@ -116,7 +116,9 @@ export const Album = React.memo(
 				>
 					{album.img ? (
 						<Image
+							id={album.id}
 							src={album.img || '/placeholder.png'}
+							onError={(e) => console.error("error loding image", album.img)}
 							width={128}
 							height={128}
 							className="object-cover overflow-hidden"
@@ -130,6 +132,7 @@ export const Album = React.memo(
 								setTextColor?.(index ?? -1, textColor)
 							}}
 							alt={`${album.album} by ${album.artist} album cover`}
+							decoding='sync'
 							fetchPriority={priority ? 'high' : 'auto'}
 							loading={priority ? 'eager' : 'lazy'}
 						/>

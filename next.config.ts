@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
         pathname: '/i/u/174s/**',
         search: '',
       },
-    ]
+    ],
+    formats: ['image/webp'],
   }
   /* config options here */
 };
