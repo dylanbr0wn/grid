@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { AppleTrack, fetchRecentlyPlayedREST } from "@/lib/apple"
 import { headers } from "next/headers"
 import { redirect, RedirectType } from "next/navigation"
 
@@ -24,8 +25,13 @@ export default async function SpotifyPage() {
   } catch (err) {
     console.error("Error getting access token:", err);
   }
-  console.log("ACCESS TOKEN", accessToken);
 
+  let tracks: AppleTrack[] = [];
+  try {
+    tracks = await fetchRecentlyPlayedREST(process.env.APPLE_MUSIC_CLIENT_SECRET as string, accessToken, 50);
+  } catch(err) {
+    console.error("Error getting recently played:", err);
+  }
 
   if (!session?.user) {
     redirect('/', RedirectType.push)
@@ -34,7 +40,7 @@ export default async function SpotifyPage() {
     <div className="flex h-full flex-col font-code relative">
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">Welcome {session.user.name}</h1>
-        <p className="text-lg">We&rsquo;re working hard to bring Apple support to our app. Stay tuned for updates!</p>
+        <p className="text-lg">{JSON.stringify(tracks)}</p>
       </div>
     </div>
   )
