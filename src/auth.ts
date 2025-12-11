@@ -14,6 +14,7 @@ export const auth = betterAuth({
       clientSecret: process.env.APPLE_CLIENT_SECRET as string,
     }
   },
+  trustedOrigins: ["https://appleid.apple.com"],
   database: new Pool({
     connectionString: process.env.DATABASE_URL,
   }),
