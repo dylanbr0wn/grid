@@ -1,6 +1,18 @@
 import UserForm from '@/components/user-form'
+import { SignIn } from '@/components/signin-button'
+import { auth } from '@/auth'
+import { headers } from 'next/headers'
 
 export default async function Home() {
+
+  const session = await auth.api.getSession({
+      headers: await headers() // you need to pass the headers object.
+  })
+
+  if (session?.user) {
+    console.log(session.user)
+  }
+
 	return (
 		<div className="font-code relative w-full h-full">
 			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start h-full w-full">
