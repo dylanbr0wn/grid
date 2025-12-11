@@ -28,7 +28,7 @@ export default async function SpotifyPage() {
 
   let tracks: AppleTrack[] = [];
   try {
-    tracks = await fetchRecentlyPlayedREST(process.env.APPLE_MUSIC_CLIENT_SECRET as string, accessToken, 50);
+    tracks = await fetchRecentlyPlayedREST(process.env.APPLE_CLIENT_SECRET as string, accessToken, 50);
   } catch(err) {
     console.error("Error getting recently played:", err);
   }
