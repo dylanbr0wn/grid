@@ -46,7 +46,7 @@ export async function fetchRecentlyPlayedREST(
   if (!developerToken) throw new Error('developerToken is required');
   if (!userToken) throw new Error('userToken is required');
 
-  const url = `https://api.music.apple.com/v1/me/recent/played?limit=${encodeURIComponent(String(limit))}&type=songs`;
+  const url = `https://api.music.apple.com/v1/me/recent/played/tracks?limit=${encodeURIComponent(String(limit))}&type=songs`;
 
   const res = await fetch(url, {
     method: 'GET',
