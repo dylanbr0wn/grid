@@ -6,7 +6,7 @@ import Image from 'next/image'
 
 export default function Navbar() {
 	return (
-      <nav className="border-b border-neutral-800 flex items-center justify-between h-10">
+    <nav className="border-b border-neutral-800 flex items-center justify-between">
 			<ul className="flex">
 				<li className='relative'>
           <div className='h-full px-3 flex items-center justify-center font-code font-bold text-white text-sm tracking-[0.5rem]'>

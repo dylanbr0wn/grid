@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
         pathname: '/i/u/174s/**',
         search: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'coverartarchive.org',
+        port: '',
+        pathname: '/release-group/**',
+        search: '',
+      },
     ],
     formats: ['image/webp'],
   }

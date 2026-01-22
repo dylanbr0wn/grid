@@ -13,8 +13,8 @@ export default function AppWrapper({
 }) {
 	return (
 		<QueryClientProvider client={queryClient}>
-			<Navbar />
-			<div className="h-[calc(100%-40px)]">{children}</div>
+
+			{children}
 			<SpeedInsights />
 			<Analytics />
 		</QueryClientProvider>

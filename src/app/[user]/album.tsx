@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { HTMLProps, useEffect } from 'react'
 
-import type { DraggableSyntheticListeners } from '@dnd-kit/core'
+import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
 import type { Transform } from '@dnd-kit/utilities'
 
 import styles from './album.module.scss'
@@ -59,10 +59,10 @@ export type AlbumProps = {
 	setTextColor?(index: number, color: string): void
 	setTextBackground?(index: number, background: boolean): void
 	album: Album
-}
+  isOver?: boolean
+} & HTMLProps<HTMLDivElement>
 
-export const Album = React.memo(
-	({
+export const Album = ({
 		dragOverlay,
 		dragging,
 		disabled,
@@ -75,6 +75,8 @@ export const Album = React.memo(
 		setTextBackground,
 		priority = false,
 		ref,
+    isOver = false,
+    ...props
 	}: AlbumProps) => {
 
 		useEffect(() => {
@@ -101,8 +103,10 @@ export const Album = React.memo(
 						styles.album,
 						dragging && styles.dragging,
 						dragOverlay && styles.dragOverlay,
-						disabled && styles.disabled
+						disabled && styles.disabled,
+            isOver && "after:absolute after:inset-0 after:z-10 after:bg-white after:bg-opacity-10"
 					)}
+          {...props}
 					style={
 						{
 							transition,
@@ -115,27 +119,28 @@ export const Album = React.memo(
 					tabIndex={0}
 				>
 					{album.img ? (
-						<Image
-							id={album.id}
-							src={album.img || '/placeholder.png'}
-							onError={(e) => console.error("error loding image", album.img)}
-							width={128}
-							height={128}
-							className="object-cover overflow-hidden"
-							onLoad={function (
-								ev: React.SyntheticEvent<HTMLImageElement, Event>
-							) {
-								const img = ev.currentTarget
-								const { textColor, textBackground } =
-									getBrightnessStyle(getImageBrightness(img))
-								setTextBackground?.(index ?? -1, textBackground)
-								setTextColor?.(index ?? -1, textColor)
-							}}
-							alt={`${album.album} by ${album.artist} album cover`}
-							decoding='sync'
-							fetchPriority={priority ? 'high' : 'auto'}
-							loading={priority ? 'eager' : 'lazy'}
-						/>
+						// <Image
+						// 	id={album.id}
+						// 	src={album.img || '/placeholder.png'}
+						// 	onError={(e) => console.error("error loding image", album.img)}
+						// 	width={128}
+						// 	height={128}
+						// 	className="object-cover overflow-hidden"
+						// 	onLoad={function (
+						// 		ev: React.SyntheticEvent<HTMLImageElement, Event>
+						// 	) {
+						// 		const img = ev.currentTarget
+						// 		const { textColor, textBackground } =
+						// 		getBrightnessStyle(getImageBrightness(img))
+						// 		setTextBackground?.(index ?? -1, textBackground)
+						// 		setTextColor?.(index ?? -1, textColor)
+						// 	}}
+						// 	alt={`${album.album} by ${album.artist} album cover`}
+						// 	decoding='sync'
+						// 	fetchPriority={priority ? 'high' : 'auto'}
+						// 	loading={priority ? 'eager' : 'lazy'}
+						// />
+            <div className='w-full h-full bg-indigo-500'/>
 					) : (
 						<div className="w-full h-full bg-neutral-950" />
 					)}
@@ -247,5 +252,3 @@ export const Album = React.memo(
 			</ContextMenu.Root>
 		)
 	}
-)
-Album.displayName = 'Album'

@@ -30,7 +30,7 @@
 
   &.dragging:not(.dragOverlay) {
     opacity: var(--dragging-opacity, 0.5);
-    transition: opacity 200ms ease;
+    // transition: opacity 200ms ease;
     z-index: 0;
   }
 
@@ -43,10 +43,10 @@
   &.dragOverlay {
     cursor: inherit;
     opacity: 1;
-    
-    animation: pop 300ms ease both;
+    scale: 1.05;
+    // animation: pop 300ms ease both;
     z-index: 1000;
-  };
+  }
 
   &:hover {
     .Remove {

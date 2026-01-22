@@ -94,7 +94,7 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 	const { data } = query
 	const { mutate } = mutation
 
-	return [data, mutate, query, mutation] as const
+	return [data ?? defaultValue, mutate, query, mutation] as const
 }
 
 export async function withSessionCache<T>(key: string, value: Promise<T>): Promise<T> {
