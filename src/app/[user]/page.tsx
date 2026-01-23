@@ -1,7 +1,8 @@
 import { fetchAlbums } from '@/lib/lastfm'
-import Grid from './grid'
+import dynamic from 'next/dynamic'
 import { redirect, RedirectType } from 'next/navigation'
-import { Album } from './album'
+import { Album } from '../../components/album'
+import Grid from '@/components/grid'
 
 export default async function Page({
 	params,

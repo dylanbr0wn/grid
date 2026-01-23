@@ -1,10 +1,10 @@
 'use client'
 import Image from "next/image"
-import { useState } from "react"
+import { memo, useState } from "react"
 
 type ImageProps = React.ComponentProps<typeof Image>
 
-export function ImageWithFallback(props: ImageProps) {
+export const ImageWithFallback = memo(function ImageWithFallback(props: ImageProps) {
   const { src, alt, ...rest } = props
   const [imgSrc, setImgSrc] = useState(src)
   return (
@@ -17,4 +17,4 @@ export function ImageWithFallback(props: ImageProps) {
       }}
     />
   )
-}
+})

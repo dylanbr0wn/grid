@@ -44,8 +44,10 @@
     cursor: inherit;
     opacity: 1;
     scale: 1.05;
+    // transition: scale 200ms ease;
     // animation: pop 300ms ease both;
     z-index: 1000;
+    cursor: grabbing;
   }
 
   &:hover {

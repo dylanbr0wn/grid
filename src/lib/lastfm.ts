@@ -1,4 +1,4 @@
-import { Album } from '@/app/[user]/album'
+import { Album } from '@/components/album'
 import { type } from 'arktype'
 import 'server-only'
 

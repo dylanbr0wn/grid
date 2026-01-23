@@ -1,4 +1,4 @@
-import { Album } from "@/app/[user]/album"
+import { Album } from "@/components/album"
 import { useParamsStore } from "./session-store"
 
 export type SortType = 'playcount' | 'name' | 'artist' | 'random' | 'custom'
