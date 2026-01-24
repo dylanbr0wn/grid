@@ -263,7 +263,7 @@ export const Album = ({
 
 type SortableAlbumProps = {
   disabled?: boolean;
-  album: Album | PlaceholderAlbum;
+  album: Album | PlaceholderAlbum | CustomAlbum;
   index: number;
 } & Pick<AlbumProps, "priority" | "setTextBackground" | "setTextColor">
 
@@ -287,8 +287,13 @@ export const SortableAlbum = React.memo(function SortableAlbum({
     data: {
       album,
     },
-    // transition: null,
   });
+
+  if (album.type === "custom") {
+    return (
+      <CustomAlbumPlaceholder />
+    )
+  }
 
   if (album.type === "placeholder") {
     return (
@@ -323,3 +328,19 @@ export const SortableAlbum = React.memo(function SortableAlbum({
     );
   }
 });
+
+export type CustomAlbum = BaseAlbum & {
+  type: "custom";
+};
+
+export function CustomAlbumPlaceholder() {
+  return (
+    <div
+      className={cn(
+        "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-800 border-2 border-dashed border-neutral-600 text-neutral-500 font-code",
+      )}
+    >
+      +
+    </div>
+  );
+}

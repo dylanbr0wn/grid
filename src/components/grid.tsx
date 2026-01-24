@@ -2,7 +2,13 @@
 import "client-only";
 import { ScrollArea } from "@base-ui-components/react/scroll-area";
 
-import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -28,7 +34,13 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { Album, AlbumTypes, PlaceholderAlbum, SortableAlbum } from "./album";
+import {
+  Album,
+  AlbumTypes,
+  CustomAlbum,
+  PlaceholderAlbum,
+  SortableAlbum,
+} from "./album";
 import { useGridSize } from "@/lib/grid";
 import { cn } from "@/lib/util";
 import AlbumPallete from "./lastfm";
@@ -55,11 +67,18 @@ function newPlaceholderAlbum(): PlaceholderAlbum {
   };
 }
 
+function newCustomAlbum(): CustomAlbum {
+  return {
+    id: `custom_${generateId()}`,
+    type: "custom",
+  };
+}
+
 function isPlaceholderId(id: UniqueIdentifier) {
   return typeof id === "string" && id.startsWith(PLACEHOLDER_ID);
 }
 
-function findContainer(id: UniqueIdentifier, containers: ItemsMap) {
+function findContainer(id: UniqueIdentifier, containers: ContainerMap) {
   if (id in containers) {
     return id;
   }
@@ -69,30 +88,46 @@ function findContainer(id: UniqueIdentifier, containers: ItemsMap) {
   );
 }
 
-type GridProps = {
-  albums: Album[];
-};
-
 export type Container = {
   title: string;
-  albums: (PlaceholderAlbum | Album)[];
+  albums: (PlaceholderAlbum | Album | CustomAlbum)[];
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
 };
 
-type ItemsMap = Record<UniqueIdentifier, Container>;
+type ContainerMap = Record<UniqueIdentifier, Container>;
+
+type SetAlbumFunc = (
+    id: UniqueIdentifier,
+    album: Album | ((album: Album) => Album),
+  ) => void
+type GridContextType = {
+  setTextBackground: (id: UniqueIdentifier, background: boolean) => void;
+  setTextColor: (id: UniqueIdentifier, color: string) => void;
+  setAlbum: SetAlbumFunc;
+};
+
+const GridContext = createContext<GridContextType>({
+  setTextBackground: () => {},
+  setTextColor: () => {},
+  setAlbum: () => {},
+});
+
+type GridProps = {
+  albums: Album[];
+};
 
 export default function Grid({ albums: initialAlbums }: GridProps) {
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
-  // const lastOverId = useRef<UniqueIdentifier | null>(null);
-  const recentlyMovedToNewContainer = useRef(false);
-  const overflowItem = useRef<Album | PlaceholderAlbum | null>(null);
+  const overflowItem = useRef<Album | PlaceholderAlbum | CustomAlbum | null>(
+    null,
+  );
   const { rows, columns } = useGridSize();
   // const { sort, setSort } = useSort();
   const id = useId();
 
-  const [albums, setAlbums] = useState<ItemsMap>({
+  const [albums, setAlbums] = useState<ContainerMap>({
     grid: {
       title: "Grid",
       allowedTypes: ["placeholder", "lastfm", "custom"],
@@ -106,7 +141,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       title: "Custom",
       allowedTypes: ["custom"],
       albums: new Array(3).fill(0).map(() => {
-        return newPlaceholderAlbum();
+        return newCustomAlbum();
       }),
     },
     lastfm: {
@@ -248,11 +283,13 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       );
 
       // If the type is not allowed in the over container, do nothing, it doesnt belong here
-      if (!overItems.allowedTypes.includes(active.data.current?.album.type as AlbumTypes)) {
+      if (
+        !overItems.allowedTypes.includes(
+          active.data.current?.album.type as AlbumTypes,
+        )
+      ) {
         return albums;
       }
-
-      recentlyMovedToNewContainer.current = true;
 
       const isBelowOverItem =
         over &&
@@ -353,7 +390,11 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       }
 
       // If the type is not allowed in the over container, do nothing, it doesnt belong here
-      if (!albums[overContainer].allowedTypes.includes(active.data.current?.album.type as AlbumTypes)) {
+      if (
+        !albums[overContainer].allowedTypes.includes(
+          active.data.current?.album.type as AlbumTypes,
+        )
+      ) {
         return albums;
       }
 
@@ -373,7 +414,6 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
         overIndex,
       );
       if (isPlaceholderId(overId)) {
-        console.log("swapping with placeholder");
         newAlbums = arraySwap(
           albums[overContainer].albums,
           activeIndex,
@@ -391,129 +431,153 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
     });
   }, []);
 
+  const setAlbum = useCallback<SetAlbumFunc>((id, album) => {
+    setAlbums((albums) => {
+      const container = Object.keys(albums).find((key) =>
+        albums[key].albums.some((a) => a.id === id),
+      );
+      if (!container) return albums;
+
+
+      const newItems = albums[container].albums.map((item) =>
+        item.id === id
+          ? typeof album === "function"
+            ? album(item as Album)
+            : album
+          : item,
+      );
+
+      return {
+        ...albums,
+        [container]: {
+          ...albums[container],
+          albums: newItems,
+        },
+      };
+    })
+  }, [])
+
   if (!albums) return null;
   if (!columns || !rows) return null;
 
   return (
-    <DndContext
-      id={id}
-      accessibility={{
-        screenReaderInstructions,
-      }}
-      sensors={sensors}
-      onDragStart={({ active }) => {
-        if (!active.data.current) return;
-        setActiveAlbum(active.data.current.album as Album);
-      }}
-      measuring={{
-        droppable: {
-          strategy: MeasuringStrategy.Always,
-        },
-      }}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragCancel={() => setActiveAlbum(null)}
-      modifiers={[restrictToWindowEdges]}
-    >
-      <div className="h-full flex w-screen relative">
-        <div className="shrink-0 flex flex-col h-full overflow-hidden border-neutral-800 border-r">
-          {Object.keys(albums).map((containerKey) => {
-            if (containerKey === "grid") return null;
-            const container = albums[containerKey];
-            return (
-              <AlbumPallete
-                title={container.title}
-                key={containerKey}
-              >
-                <SortableContext
-                  id={containerKey}
-                  items={container.albums}
-                  strategy={rectSortingStrategy}
-                >
-                  {container.albums.map((album, index) => (
-                    <SortableAlbum
-                      key={album.id}
-                      album={album}
-                      index={container.albums.length + index}
-                      setTextBackground={setTextBackground}
-                      setTextColor={setTextColor}
-                    />
-                  ))}
-                </SortableContext>
-              </AlbumPallete>
-            );
-          })}
-        </div>
-        <div className="w-full h-full">
-          <ScrollArea.Root
-            className="h-[calc(100%-80px)] relative"
-            style={
-              {
-                "--col-count": columns,
-              } as React.CSSProperties
-            }
-          >
-            <ScrollArea.Viewport className="h-full flex justify-center items-center-safe">
-              <SortableContext
-                id="grid"
-                items={albums["grid"].albums}
-                strategy={gridSortingStrategy}
-              >
-                <div
-                  id="fm-grid"
-                  className={
-                    "shrink-0 grid h-full relative select-none outline outline-neutral-800 -outline-offset-1 place-items-center"
-                  }
-                  style={
-                    {
-                      width: columns * 128,
-                      height: rows * 128,
-                    } as React.CSSProperties
-                  }
-                >
-                  <BackgroundGrid rows={rows} columns={columns} />
-                  <div className="grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
-                    {albums["grid"].albums.map((album, index) => (
+    <GridContext.Provider value={{
+      setTextColor,
+      setTextBackground,
+      setAlbum
+    }}>
+      <DndContext
+        id={id}
+        accessibility={{
+          screenReaderInstructions,
+        }}
+        sensors={sensors}
+        onDragStart={({ active }) => {
+          if (!active.data.current) return;
+          setActiveAlbum(active.data.current.album as Album);
+        }}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
+        }}
+        onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
+        onDragCancel={() => setActiveAlbum(null)}
+        modifiers={[restrictToWindowEdges]}
+      >
+        <div className="h-full flex w-screen relative">
+          <div className="shrink-0 flex flex-col h-full overflow-hidden border-neutral-800 border-r">
+            {Object.keys(albums).map((containerKey) => {
+              if (containerKey === "grid") return null;
+              const container = albums[containerKey];
+              return (
+                <AlbumPallete title={container.title} key={containerKey}>
+                  <SortableContext
+                    id={containerKey}
+                    items={container.albums}
+                    strategy={rectSortingStrategy}
+                  >
+                    {container.albums.map((album, index) => (
                       <SortableAlbum
                         key={album.id}
                         album={album}
-                        index={index}
-                        disabled={isPlaceholderId(album.id)}
+                        index={container.albums.length + index}
                         setTextBackground={setTextBackground}
                         setTextColor={setTextColor}
-                        priority={true}
                       />
                     ))}
+                  </SortableContext>
+                </AlbumPallete>
+              );
+            })}
+          </div>
+          <div className="w-full h-full">
+            <ScrollArea.Root
+              className="h-[calc(100%-80px)] relative"
+              style={
+                {
+                  "--col-count": columns,
+                } as React.CSSProperties
+              }
+            >
+              <ScrollArea.Viewport className="h-full flex justify-center items-center-safe">
+                <SortableContext
+                  id="grid"
+                  items={albums["grid"].albums}
+                  strategy={gridSortingStrategy}
+                >
+                  <div
+                    id="fm-grid"
+                    className={
+                      "shrink-0 grid h-full relative select-none outline outline-neutral-800 -outline-offset-1 place-items-center"
+                    }
+                    style={
+                      {
+                        width: columns * 128,
+                        height: rows * 128,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <BackgroundGrid rows={rows} columns={columns} />
+                    <div className="grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
+                      {albums["grid"].albums.map((album, index) => (
+                        <SortableAlbum
+                          key={album.id}
+                          album={album}
+                          index={index}
+                          disabled={isPlaceholderId(album.id)}
+                          setTextBackground={setTextBackground}
+                          setTextColor={setTextColor}
+                          priority={true}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </SortableContext>
-            </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
-              <ScrollArea.Thumb className="w-full bg-neutral-500" />
-            </ScrollArea.Scrollbar>
-          </ScrollArea.Root>
+                </SortableContext>
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+                <ScrollArea.Thumb className="w-full bg-neutral-500" />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>
+          </div>
+          {typeof document !== "undefined"
+            ? createPortal(
+                <DragOverlay
+                  adjustScale={true}
+                  modifiers={[restrictToWindowEdges]}
+                  dropAnimation={{ duration: 0.1, easing: "ease-in" }}
+                >
+                  {activeAlbum ? (
+                    <Album album={activeAlbum} dragOverlay priority={true} />
+                  ) : null}
+                </DragOverlay>,
+                document.body,
+              )
+            : null}
         </div>
-        {typeof document !== "undefined"
-          ? createPortal(
-              <DragOverlay
-                adjustScale={true}
-                modifiers={[restrictToWindowEdges]}
-                dropAnimation={{ duration: 0.1, easing: "ease-in" }}
-              >
-                {activeAlbum ? (
-                  <Album
-                    album={activeAlbum}
-                    // index={activeIndex}
-                    dragOverlay
-                    priority={true}
-                  />
-                ) : null}
-              </DragOverlay>,
-              document.body,
-            )
-          : null}
-      </div>
-    </DndContext>
+      </DndContext>
+    </GridContext.Provider>
   );
 }
 
