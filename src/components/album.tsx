@@ -15,6 +15,7 @@ import { IconCheck, IconChevronRight } from "@tabler/icons-react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { ImageWithFallback } from "./image";
+import { Container } from "./grid";
 
 function getBrightnessStyle(brightness: number) {
   if (brightness > 200) {
@@ -40,12 +41,28 @@ function getBrightnessStyle(brightness: number) {
   }
 }
 
+export type AlbumTypes = "lastfm" | "placeholder" | "custom";
+
+export type BaseAlbum = {
+  id: UniqueIdentifier;
+  type: AlbumTypes;
+};
+
+export type PlaceholderAlbum = BaseAlbum & {
+  type: "placeholder";
+};
+
 export type Album = {
+  id: UniqueIdentifier;
+  type: "lastfm";
   album: string;
+  mbid?: string;
   img: string;
-  artist: string;
   plays: number;
-  id: string;
+
+  artist: string;
+  artistMbid?: string;
+
   textColor?: string;
   textBackground?: boolean;
 };
@@ -83,22 +100,6 @@ export const Album = ({
   isOver = false,
   ...props
 }: AlbumProps) => {
-
-  if (disabled && index !== undefined) {
-    return (
-      <div
-        ref={setNodeRef}
-        className={cn(
-          "pointer-events-none w-32 h-32 bg-transparent",
-        )}
-        style={{
-          transform: CSS.Transform.toString(transform),
-          transition,
-        }}
-      ></div>
-    );
-  }
-
   if (!album) {
     return null;
   }
@@ -113,7 +114,7 @@ export const Album = ({
           dragOverlay && styles.dragOverlay,
           disabled && styles.disabled,
           isOver &&
-            "after:absolute after:inset-0 after:z-10 after:bg-white after:bg-opacity-10"
+            "after:absolute after:inset-0 after:z-10 after:bg-white after:bg-opacity-10",
         )}
         {...props}
         style={
@@ -129,17 +130,17 @@ export const Album = ({
       >
         {album.img ? (
           <ImageWithFallback
-            id={album.id}
+            id={`${album.id}`}
             src={album.img || "/placeholder.png"}
             width={128}
             height={128}
             className="object-cover overflow-hidden"
             onLoad={function (
-              ev: React.SyntheticEvent<HTMLImageElement, Event>
+              ev: React.SyntheticEvent<HTMLImageElement, Event>,
             ) {
               const img = ev.currentTarget;
               const { textColor, textBackground } = getBrightnessStyle(
-                getImageBrightness(img)
+                getImageBrightness(img),
               );
               setTextBackground?.(album.id, textBackground);
               setTextColor?.(album.id, textColor);
@@ -216,9 +217,7 @@ export const Album = ({
                   <ContextMenu.Popup className="origin-[var(--transform-origin)] bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-neutral-200 outline-1 outline-neutral-200 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
                     <ContextMenu.RadioGroup
                       value={album.textColor}
-                      onValueChange={(value) =>
-                        setTextColor?.(album.id, value)
-                      }
+                      onValueChange={(value) => setTextColor?.(album.id, value)}
                     >
                       <ContextMenu.RadioItem
                         value="white"
@@ -264,16 +263,13 @@ export const Album = ({
 
 type SortableAlbumProps = {
   disabled?: boolean;
-  value: Album;
+  album: Album | PlaceholderAlbum;
   index: number;
-} & Pick<
-  AlbumProps,
-  "priority" | "setTextBackground" | "setTextColor"
->;
+} & Pick<AlbumProps, "priority" | "setTextBackground" | "setTextColor">
 
 export const SortableAlbum = React.memo(function SortableAlbum({
   disabled,
-  value,
+  album,
   index,
   ...props
 }: SortableAlbumProps) {
@@ -286,29 +282,44 @@ export const SortableAlbum = React.memo(function SortableAlbum({
     attributes,
     isOver,
   } = useSortable({
-    id: value.id,
+    id: album.id,
     disabled,
     data: {
-      album: value,
-    }
+      album,
+    },
     // transition: null,
   });
 
-  return (
-    <Album
-      setNodeRef={setNodeRef}
-      album={value}
-      disabled={disabled}
-      dragging={isDragging}
-      isOver={isOver}
-      index={index}
-      transform={transform}
-      transition={transition}
-      listeners={listeners}
-      data-index={index}
-      data-id={value.id}
-      {...props}
-      {...attributes}
-    />
-  );
+  if (album.type === "placeholder") {
+    return (
+      <div
+        ref={setNodeRef}
+        className={cn("pointer-events-none w-32 h-32 bg-transparent")}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+        }}
+      ></div>
+    );
+  }
+
+  if (album.type === "lastfm") {
+    return (
+      <Album
+        setNodeRef={setNodeRef}
+        album={album}
+        disabled={disabled}
+        dragging={isDragging}
+        isOver={isOver}
+        index={index}
+        transform={transform}
+        transition={transition}
+        listeners={listeners}
+        data-index={index}
+        data-id={album.id}
+        {...props}
+        {...attributes}
+      />
+    );
+  }
 });

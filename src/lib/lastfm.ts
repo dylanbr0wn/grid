@@ -46,6 +46,7 @@ export async function fetchWeeklyAlbumChart(user: string) {
 	}
 
   const maybeWeeklyAlbumChart = await response.json()
+  console.debug('Last.fm response:', JSON.stringify(maybeWeeklyAlbumChart, null, 2))
 	const out = weeklyAlbumChart(maybeWeeklyAlbumChart)
 
 	if (out instanceof type.errors) {
@@ -100,6 +101,9 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]):Album[] {
         large,
         fallback,
       },
+      type: 'lastfm',
+      mbid: a.mbid,
+      artistMbid: a.artist.mbid,
 			artist: a.artist.name,
       plays: parseInt(a.playcount),
 			id: a.mbid || `${a.artist.name}_${a.name}`.replaceAll(' ', '-').toLowerCase(),

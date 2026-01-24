@@ -25,12 +25,13 @@ import {
   sortableKeyboardCoordinates,
   arraySwap,
   SortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { Album, SortableAlbum } from "./album";
+import { Album, AlbumTypes, PlaceholderAlbum, SortableAlbum } from "./album";
 import { useGridSize } from "@/lib/grid";
 import { cn } from "@/lib/util";
-import LastFmAlbums from "./lastfm";
+import AlbumPallete from "./lastfm";
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
@@ -47,13 +48,12 @@ const screenReaderInstructions: ScreenReaderInstructions = {
 const TRASH_ID = "void";
 const PLACEHOLDER_ID = "placeholder";
 
-const placeholderAlbum: Album = {
-  album: "",
-  artist: "",
-  img: "",
-  plays: 0,
-  id: PLACEHOLDER_ID,
-};
+function newPlaceholderAlbum(): PlaceholderAlbum {
+  return {
+    id: `${PLACEHOLDER_ID}_${generateId()}`,
+    type: "placeholder",
+  };
+}
 
 function isPlaceholderId(id: UniqueIdentifier) {
   return typeof id === "string" && id.startsWith(PLACEHOLDER_ID);
@@ -65,7 +65,7 @@ function findContainer(id: UniqueIdentifier, containers: ItemsMap) {
   }
 
   return Object.keys(containers).find((key) =>
-    containers[key].albums.some((a) => a.id === id)
+    containers[key].albums.some((a) => a.id === id),
   );
 }
 
@@ -73,8 +73,10 @@ type GridProps = {
   albums: Album[];
 };
 
-type Container = {
-  albums: Album[];
+export type Container = {
+  title: string;
+  albums: (PlaceholderAlbum | Album)[];
+  allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
 };
@@ -85,23 +87,33 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
   // const lastOverId = useRef<UniqueIdentifier | null>(null);
   const recentlyMovedToNewContainer = useRef(false);
-  const overflowItem = useRef<Album | null>(null);
+  const overflowItem = useRef<Album | PlaceholderAlbum | null>(null);
   const { rows, columns } = useGridSize();
   // const { sort, setSort } = useSort();
   const id = useId();
 
   const [albums, setAlbums] = useState<ItemsMap>({
     grid: {
+      title: "Grid",
+      allowedTypes: ["placeholder", "lastfm", "custom"],
       maxLength: rows * columns,
       minLength: rows * columns,
       albums: new Array(rows * columns).fill(0).map(() => {
-        return {
-          ...placeholderAlbum,
-          id: `${PLACEHOLDER_ID}_${generateId()}`,
-        };
+        return newPlaceholderAlbum();
       }),
     },
-    extras: { albums: initialAlbums },
+    custom: {
+      title: "Custom",
+      allowedTypes: ["custom"],
+      albums: new Array(3).fill(0).map(() => {
+        return newPlaceholderAlbum();
+      }),
+    },
+    lastfm: {
+      title: "Last.fm",
+      allowedTypes: ["lastfm"],
+      albums: initialAlbums,
+    },
   });
 
   const sensors = useSensors(
@@ -109,13 +121,13 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
     useSensor(TouchSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const setTextColor = useCallback((id: UniqueIdentifier, color: string) => {
     setAlbums((albums) => {
       const container = Object.keys(albums).find((key) =>
-        albums[key].albums.some((a) => a.id === id)
+        albums[key].albums.some((a) => a.id === id),
       );
       if (!container) return albums;
 
@@ -128,7 +140,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
               ...item,
               textColor: color,
             }
-          : item
+          : item,
       );
 
       return {
@@ -145,12 +157,12 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
     (id: UniqueIdentifier, background: boolean) => {
       setAlbums((albums) => {
         const container = Object.keys(albums).find((key) =>
-          albums[key].albums.some((a) => a.id === id)
+          albums[key].albums.some((a) => a.id === id),
         );
         if (!container) return albums;
 
         const itemIndex = albums[container].albums.findIndex(
-          (a) => a.id === id
+          (a) => a.id === id,
         );
         if (itemIndex === -1) return albums;
 
@@ -160,7 +172,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
                 ...item,
                 textBackground: background,
               }
-            : item
+            : item,
         );
 
         return {
@@ -172,7 +184,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
         };
       });
     },
-    []
+    [],
   );
 
   // const updateSort = useCallback(
@@ -206,7 +218,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
         scaleY: newRect.height / oldRect.height,
       };
     },
-    [albums]
+    [albums],
   );
 
   const onDragOver = useCallback(({ active, over }: DragOverEvent) => {
@@ -216,6 +228,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       return;
     }
 
+    // Go into setAlbums to avoid closure issues
     setAlbums((albums) => {
       const overContainer = findContainer(overId, albums);
       const activeContainer = findContainer(active.id, albums);
@@ -231,8 +244,13 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       const overItems = albums[overContainer];
       const overIndex = overItems.albums.findIndex((a) => a.id === overId);
       const activeIndex = activeItems.albums.findIndex(
-        (a) => a.id === active.id
+        (a) => a.id === active.id,
       );
+
+      // If the type is not allowed in the over container, do nothing, it doesnt belong here
+      if (!overItems.allowedTypes.includes(active.data.current?.album.type as AlbumTypes)) {
+        return albums;
+      }
 
       recentlyMovedToNewContainer.current = true;
 
@@ -247,27 +265,27 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
         overIndex >= 0 ? overIndex + modifier : overItems.albums.length - 1;
 
       let newActiveAlbums = activeItems.albums.filter(
-        (item) => item.id !== active.id
+        (item) => item.id !== active.id,
       );
       let newOverAlbums = overItems.albums;
 
-      const gridMax = albums[overContainer].maxLength;
+      const overMaxLength = albums[overContainer].maxLength;
 
-      if (gridMax && overItems.albums.length >= gridMax) {
+      if (overMaxLength && overItems.albums.length >= overMaxLength) {
         // first see if we can just remove the next placeholder
-        const placeholderIndex = newOverAlbums
+        const placeholder = newOverAlbums
           .slice(newIndex, newOverAlbums.length - 1)
-          .findIndex((a) => isPlaceholderId(a.id));
-        if (placeholderIndex !== -1) {
-          newOverAlbums = newOverAlbums.filter(
-            (_, i) => i !== placeholderIndex + newIndex
-          );
+          .find((a) => isPlaceholderId(a.id));
+
+        if (placeholder) {
+          overflowItem.current = placeholder;
+          newOverAlbums = newOverAlbums.filter((a) => a.id !== placeholder.id);
         } else {
           // Move the last item from grid to extras
           const itemToMove = newOverAlbums[overItems.albums.length - 1];
 
+          overflowItem.current = itemToMove;
           if (!isPlaceholderId(itemToMove.id)) {
-            overflowItem.current = itemToMove;
             newActiveAlbums = [itemToMove, ...newActiveAlbums];
           }
         }
@@ -277,19 +295,20 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
         if (overflowItem.current) {
           const itemToReturn = overflowItem.current;
           overflowItem.current = null;
-          newActiveAlbums.push(itemToReturn);
+          newActiveAlbums = [
+            ...newActiveAlbums.slice(0, activeIndex),
+            itemToReturn,
+            ...newActiveAlbums.slice(activeIndex),
+          ];
           newOverAlbums = newOverAlbums.filter(
-            (item) => item.id !== itemToReturn.id
+            (item) => item.id !== itemToReturn.id,
           );
         }
         if (
           albums[activeContainer].minLength &&
           newActiveAlbums.length < albums[activeContainer].minLength!
         ) {
-          newActiveAlbums.push({
-            ...placeholderAlbum,
-            id: `${PLACEHOLDER_ID}_${generateId()}`,
-          });
+          newActiveAlbums.push(newPlaceholderAlbum());
         }
       }
 
@@ -306,7 +325,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
             albums[activeContainer].albums[activeIndex],
             ...newOverAlbums.slice(
               newIndex,
-              overItems.maxLength ? overItems.maxLength - 1 : undefined
+              overItems.maxLength ? overItems.maxLength - 1 : undefined,
             ),
           ],
         },
@@ -314,60 +333,63 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
     });
   }, []);
 
-  const onDragEnd = useCallback(
-    ({ active, over }: DragEndEvent) => {
-      overflowItem.current = null;
-      setActiveAlbum(null);
+  const onDragEnd = useCallback(({ active, over }: DragEndEvent) => {
+    overflowItem.current = null;
+    setActiveAlbum(null);
 
-      const overId = over?.id;
+    const overId = over?.id;
 
-      if (overId == null) {
-        return;
+    if (overId == null) {
+      return;
+    }
+
+    // Go into setAlbums to avoid closure issues
+    setAlbums((albums) => {
+      const activeContainer = findContainer(active.id, albums);
+      const overContainer = findContainer(overId, albums);
+
+      if (!activeContainer || !overContainer) {
+        return albums;
       }
 
-      setAlbums((albums) => {
-        const activeContainer = findContainer(active.id, albums);
-        const overContainer = findContainer(overId, albums);
+      // If the type is not allowed in the over container, do nothing, it doesnt belong here
+      if (!albums[overContainer].allowedTypes.includes(active.data.current?.album.type as AlbumTypes)) {
+        return albums;
+      }
 
-        if (!activeContainer || !overContainer) {
-          return albums;
-        }
+      const activeIndex = albums[activeContainer].albums.findIndex(
+        (a) => active.id === a.id,
+      );
+      const overIndex = albums[overContainer].albums.findIndex(
+        (a) => overId === a.id,
+      );
+      if (activeIndex === overIndex) {
+        return albums;
+      }
 
-        const activeIndex = albums[activeContainer].albums.findIndex(
-          (a) => active.id === a.id
-        );
-        const overIndex = albums[overContainer].albums.findIndex(
-          (a) => overId === a.id
-        );
-        if (activeIndex === overIndex) {
-          return albums;
-        }
-
-        let newAlbums = arrayMove(
+      let newAlbums = arrayMove(
+        albums[overContainer].albums,
+        activeIndex,
+        overIndex,
+      );
+      if (isPlaceholderId(overId)) {
+        console.log("swapping with placeholder");
+        newAlbums = arraySwap(
           albums[overContainer].albums,
           activeIndex,
-          overIndex
+          overIndex,
         );
-        if (isPlaceholderId(overId)) {
-          console.log("swapping with placeholder");
-          newAlbums = arraySwap(
-            albums[overContainer].albums,
-            activeIndex,
-            overIndex
-          );
-        }
+      }
 
-        return {
-          ...albums,
-          [overContainer]: {
-            ...albums[overContainer],
-            albums: newAlbums,
-          },
-        };
-      });
-    },
-    []
-  );
+      return {
+        ...albums,
+        [overContainer]: {
+          ...albums[overContainer],
+          albums: newAlbums,
+        },
+      };
+    });
+  }, []);
 
   if (!albums) return null;
   if (!columns || !rows) return null;
@@ -381,7 +403,7 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       sensors={sensors}
       onDragStart={({ active }) => {
         if (!active.data.current) return;
-        setActiveAlbum(active.data.current.album as Album)
+        setActiveAlbum(active.data.current.album as Album);
       }}
       measuring={{
         droppable: {
@@ -394,11 +416,34 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
       modifiers={[restrictToWindowEdges]}
     >
       <div className="h-full flex w-screen relative">
-        <LastFmAlbums
-          setTextBackground={setTextBackground}
-          setTextColor={setTextColor}
-          albums={albums["extras"].albums}
-        />
+        <div className="shrink-0 flex flex-col h-full overflow-hidden border-neutral-800 border-r">
+          {Object.keys(albums).map((containerKey) => {
+            if (containerKey === "grid") return null;
+            const container = albums[containerKey];
+            return (
+              <AlbumPallete
+                title={container.title}
+                key={containerKey}
+              >
+                <SortableContext
+                  id={containerKey}
+                  items={container.albums}
+                  strategy={rectSortingStrategy}
+                >
+                  {container.albums.map((album, index) => (
+                    <SortableAlbum
+                      key={album.id}
+                      album={album}
+                      index={container.albums.length + index}
+                      setTextBackground={setTextBackground}
+                      setTextColor={setTextColor}
+                    />
+                  ))}
+                </SortableContext>
+              </AlbumPallete>
+            );
+          })}
+        </div>
         <div className="w-full h-full">
           <ScrollArea.Root
             className="h-[calc(100%-80px)] relative"
@@ -428,17 +473,17 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
                 >
                   <BackgroundGrid rows={rows} columns={columns} />
                   <div className="grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
-                  {albums["grid"].albums.map((album, index) => (
-                    <SortableAlbum
-                      key={album.id}
-                      value={album}
-                      index={index}
-                      disabled={isPlaceholderId(album.id)}
-                      setTextBackground={setTextBackground}
-                      setTextColor={setTextColor}
-                      priority={true}
-                    />
-                  ))}
+                    {albums["grid"].albums.map((album, index) => (
+                      <SortableAlbum
+                        key={album.id}
+                        album={album}
+                        index={index}
+                        disabled={isPlaceholderId(album.id)}
+                        setTextBackground={setTextBackground}
+                        setTextColor={setTextColor}
+                        priority={true}
+                      />
+                    ))}
                   </div>
                 </div>
               </SortableContext>
@@ -448,28 +493,26 @@ export default function Grid({ albums: initialAlbums }: GridProps) {
             </ScrollArea.Scrollbar>
           </ScrollArea.Root>
         </div>
+        {typeof document !== "undefined"
+          ? createPortal(
+              <DragOverlay
+                adjustScale={true}
+                modifiers={[restrictToWindowEdges]}
+                dropAnimation={{ duration: 0.1, easing: "ease-in" }}
+              >
+                {activeAlbum ? (
+                  <Album
+                    album={activeAlbum}
+                    // index={activeIndex}
+                    dragOverlay
+                    priority={true}
+                  />
+                ) : null}
+              </DragOverlay>,
+              document.body,
+            )
+          : null}
       </div>
-      {typeof document !== "undefined"
-        ? createPortal(
-            <DragOverlay
-              adjustScale={true}
-              modifiers={[restrictToWindowEdges]}
-              dropAnimation={{ duration: 0.1, easing: "ease-in" }}
-            >
-              {activeAlbum ? (
-                <Album
-                  album={
-                    activeAlbum
-                  }
-                  // index={activeIndex}
-                  dragOverlay
-                  priority={true}
-                />
-              ) : null}
-            </DragOverlay>,
-            document.body
-          )
-        : null}
     </DndContext>
   );
 }
@@ -503,7 +546,7 @@ const BackgroundGrid = React.memo(function BackgroundGrid({
             className={cn(
               "w-32 h-32 bg-neutral-950 -z-1 border-neutral-800 -translate-x-[0.5px] -translate-y-[0.5px]",
               index % columns > 0 && "border-l",
-              index >= columns && "border-t"
+              index >= columns && "border-t",
             )}
           />
         );
