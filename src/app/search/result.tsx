@@ -1,14 +1,17 @@
-`use client`;
+'use client'
 import { ImageWithFallback } from "@/components/image";
-import { ReleaseGroupResponse } from "@/lib/music-brainz";
+import { searchReleases } from "@/lib/music-brainz";
 import { use } from "react";
 
 type SearchResultProps = {
-  releaseGroups: Promise<typeof ReleaseGroupResponse.infer | undefined>;
+  query: string;
 };
 
-export default function SearchResult({ releaseGroups }: SearchResultProps) {
-  const groups = use(releaseGroups);
+export default function SearchResult({ query }: SearchResultProps) {
+  if (!query) {
+    return null;
+  }
+  const groups = use(searchReleases(query, 10));
   if (!groups || groups.count === 0) {
     return <div className="text-white mt-4">No results found.</div>;
   }
@@ -20,7 +23,7 @@ export default function SearchResult({ releaseGroups }: SearchResultProps) {
               blurDataURL="/placeholder.png"
               placeholder="blur"
               alt={`${group.title}-cover`}
-              src={group.thumbnails?.small!}
+              src={group.thumbnails?.small || '/placeholder.png'}
               width={125}
               height={125}
               fetchPriority="high"

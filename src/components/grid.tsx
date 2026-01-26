@@ -100,7 +100,7 @@ type ContainerMap = Record<UniqueIdentifier, Container>;
 
 type SetAlbumFunc = (
     id: UniqueIdentifier,
-    album: Album | ((album: Album) => Album),
+    album: Album | CustomAlbum | ((album: Album | CustomAlbum) => Album | CustomAlbum),
   ) => void
 type GridContextType = {
   setTextBackground: (id: UniqueIdentifier, background: boolean) => void;
@@ -108,7 +108,7 @@ type GridContextType = {
   setAlbum: SetAlbumFunc;
 };
 
-const GridContext = createContext<GridContextType>({
+export const GridContext = createContext<GridContextType>({
   setTextBackground: () => {},
   setTextColor: () => {},
   setAlbum: () => {},
