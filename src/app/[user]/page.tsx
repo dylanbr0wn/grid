@@ -1,8 +1,7 @@
 import { fetchAlbums } from '@/lib/lastfm'
-import dynamic from 'next/dynamic'
 import { redirect, RedirectType } from 'next/navigation'
 import { Album } from '../../components/album'
-import Grid from '@/components/grid'
+import Editor from '@/components/editor/editor'
 
 export default async function Page({
 	params,
@@ -32,7 +31,7 @@ export default async function Page({
 
 	return (
 		<div className="flex h-full flex-col font-code relative">
-			<Grid albums={albums} />
+			<Editor albums={albums} />
 		</div>
 	)
 }

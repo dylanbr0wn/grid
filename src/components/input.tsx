@@ -13,7 +13,7 @@ type InputProps = {
   onChange?(value: string): void
   name?: string
   error?: string
-}
+} & Omit<React.HTMLProps<HTMLInputElement>, 'onChange'>
 
 export default function Input({
 	required,
@@ -23,10 +23,11 @@ export default function Input({
   value,
   onChange,
   name,
+  className,
   error
 }: InputProps) {
 	return (
-		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
+		<Field.Root className={cn("flex w-full max-w-64 flex-col items-start gap-1", className)}>
 			{label && (
 				<Field.Label className="text-sm font-medium text-neutral-500">
 					{label}

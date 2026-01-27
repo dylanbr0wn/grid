@@ -56,9 +56,9 @@ export const ReleaseGroupResponse = type({
 
 export async function searchReleases(query: string, limit = 25, offset = 0){
   if (query.length === 0) {
-    return undefined
+    return []
   }
-  const response = await  request("/release-group", { query, limit, offset, inc: "artists+labels+recordings+isrcs" });
+  const response = await request("/release-group", { query, limit, offset, inc: "artists+labels+recordings+isrcs" });
   const out = ReleaseGroupResponse(response);
 
   if (out instanceof type.errors) {
@@ -73,5 +73,5 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
     }
   }))
 
-  return out as typeof ReleaseGroupResponse.infer;
+  return out["release-groups"] as typeof ReleaseGroupResponse.infer['release-groups'];
 }

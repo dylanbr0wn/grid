@@ -11,7 +11,7 @@ export default function AlbumPallete({
 }: AlbumPalleteProps) {
   return (
     <div
-      className=" min-h-0 min-h-[184px] border-b border-neutral-800 relative flex flex-col"
+      className="min-h-0 min-h-[184px] border-b border-neutral-800 relative flex flex-col"
       style={{ width: 3 * 128 + 16 }}
     >
       <div className="w-full h-[39px] border-b border-neutral-800 flex items-center justify-center shrink-0">

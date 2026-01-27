@@ -20,11 +20,7 @@ export default function NavLink({
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
 	const pathname = usePathname()
 
-	const [active, setActive] = useState(false)
-
-	useEffect(() => {
-		setActive(activeOverride !== undefined ? activeOverride : pathname === href)
-	}, [activeOverride, pathname, href])
+  const active = activeOverride !== undefined ? activeOverride : pathname === href
 
 	return (
 		<Link
@@ -62,12 +58,9 @@ export function UserNavLink(
 ) {
 	const pathname = usePathname()
 	const { user } = useParams()
-	const [active, setActive] = useState(false)
   const [storedUser, setStoredUser] = useSessionStore('user', '')
 
-	useEffect(() => {
-		setActive(!!user || pathname === `/`)
-	}, [user, pathname])
+  const active = !!user || pathname === `/`
 
   useEffect(() => {
     if (user) {
