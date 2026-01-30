@@ -105,7 +105,7 @@ const BackgroundGrid = memo(function BackgroundGrid({
   return (
     <div
       className={
-        "shrink-0 col-span-full row-span-full grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full -z-1 pointer-events-none select-none overflow-hidden"
+        "shrink-0 col-span-full row-span-full grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full -z-1 pointer-events-none select-none overflow-hidden no-export"
       }
       style={
         {

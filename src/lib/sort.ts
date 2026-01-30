@@ -1,9 +1,15 @@
 import { Album } from "@/components/album"
 import { useParamsStore } from "./session-store"
 
+export type Sortable = {
+  album: string
+  artist: string
+  plays: number
+}
+
 export type SortType = 'playcount' | 'name' | 'artist' | 'random' | 'custom'
 
-export function sortAlbums(albums: Album[], sort: SortType | undefined): Album[] {
+export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | undefined): T[] {
   switch (sort) {
     case 'name':
       return albums.toSorted((a, b) => a.album.localeCompare(b.album))
@@ -30,9 +36,9 @@ export const sortOptions: { label: string; value: SortType }[] = [
 	{ label: 'Random', value: 'random' },
 ]
 
-export function useSort() {
+export function useSort(key: string = 'sort') {
   const [sort, setSort, { isPending }] = useParamsStore<SortType>(
-    'sort',
+    key,
     'playcount'
   )
   return { sort, setSort, isPending }

@@ -11,14 +11,22 @@ import type {
 import type { Transform } from "@dnd-kit/utilities";
 
 import styles from "./album.module.scss";
-import { cn, getImageBrightness } from "@/lib/util";
+import { cn, generateId, getImageBrightness } from "@/lib/util";
 import { ContextMenu, Dialog, Field } from "@base-ui-components/react";
-import { IconCheck, IconChevronRight, IconPlus, IconSearch, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconChevronRight,
+  IconPlus,
+  IconSearch,
+  IconX,
+} from "@tabler/icons-react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { ImageWithFallback } from "./image";
 import { SearchResult } from "@/app/search/result";
-import { generateId, GridContext } from "./editor/context";
+import { GridContext } from "./editor/context";
+import { ReleaseGroupResponse } from "@/lib/music-brainz";
+import { type } from "arktype";
 
 function getBrightnessStyle(brightness: number) {
   if (brightness > 200) {
@@ -62,6 +70,7 @@ export type Album = {
   mbid?: string;
   img: string;
   plays: number;
+  imgs: string[];
 
   artist: string;
   artistMbid?: string;
@@ -137,6 +146,7 @@ export const Album = ({
             width={128}
             height={128}
             className="object-cover overflow-hidden"
+            srcSet={album.imgs}
             onLoad={function (
               ev: React.SyntheticEvent<HTMLImageElement, Event>
             ) {
@@ -350,6 +360,7 @@ export type CustomAlbum = BaseAlbum & {
   album?: string;
   mbid?: string;
   img?: string;
+  imgs?: string[];
   plays?: number;
   artist?: string;
   artistMbid?: string;
@@ -393,6 +404,33 @@ export const CustomAlbum = memo(function CustomAlbum({
 
   const { addCustomAlbum } = use(GridContext);
 
+  function handleAddCustomAlbum(
+    group: (typeof ReleaseGroupResponse.infer)["release-groups"][number]
+  ) {
+    const imgs = type("string")
+      .array()
+      .assert(
+        [
+          group.thumbnails?.large,
+          group.thumbnails?.small,
+          "/placeholder.png",
+        ].filter((url) => url && url.length > 0)
+      );
+    addCustomAlbum({
+      ...album,
+      id: `custom-${group.id}-${generateId()}`,
+      type: "custom",
+      mbid: group.id,
+      album: group.title,
+      artist: group["artist-credit"].map((ac) => ac.artist.name).join(", "),
+      artistMbid: group["artist-credit"].map((ac) => ac.artist.id).join(", "),
+      img: imgs[0],
+      imgs,
+    });
+    setSearchQuery("");
+    setOpen(false);
+  }
+
   if (album.mbid) {
     return (
       <Album
@@ -418,16 +456,17 @@ export const CustomAlbum = memo(function CustomAlbum({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         className={cn(
-          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50",
-
+          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50"
         )}
       >
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors">
-						<div className="flex gap-1 opacity-0 group-hover:opacity-100 items-center group-hover:translate-y-0 transition-all translate-y-4 text-green-700 group-hover:scale-100 scale-80 group-active:text-green-500 ">
-							<div>Add Album</div>
-						</div>
-					</div>
-        <div className={cn('group-hover:blur')}><IconPlus className="size-4" /></div>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 items-center group-hover:translate-y-0 transition-all translate-y-4 text-green-700 group-hover:scale-100 scale-80 group-active:text-green-500 ">
+            <div>Add Album</div>
+          </div>
+        </div>
+        <div className={cn("group-hover:blur")}>
+          <IconPlus className="size-4" />
+        </div>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 min-h-dvh bg-black opacity-20 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 dark:opacity-70 supports-[-webkit-touch-callout:none]:absolute" />
@@ -452,46 +491,27 @@ export const CustomAlbum = memo(function CustomAlbum({
                 placeholder="Search for an album..."
                 className={cn("h-10 w-full outline-none text-left text-base")}
               />
-
             </div>
             <motion.div
-                className={cn(
-                  "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 data transition-colors",
-                  focused && " bg-white"
-                )}
-                layout
-                transition={{
-                  duration: 0.15,
-                }}
-                style={{
-                  height: focused ? 3 : 1,
-                }}
-              />
+              className={cn(
+                "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 data transition-colors",
+                focused && " bg-white"
+              )}
+              layout
+              transition={{
+                duration: 0.15,
+              }}
+              style={{
+                height: focused ? 3 : 1,
+              }}
+            />
           </Field.Root>
           <Suspense
             fallback={<div className="text-white mt-4">Loading...</div>}
           >
             <SearchResult
               query={debouncedSearchQuery}
-              onSelect={(group) => {
-                addCustomAlbum({
-                  ...album,
-                  id: `custom-${group.id}-${generateId()}`,
-                  type: "custom",
-                  mbid: group.id,
-                  album: group.title,
-                  artist: group["artist-credit"]
-                    .map((ac) => ac.artist.name)
-                    .join(", "),
-                  artistMbid: group["artist-credit"]
-                    .map((ac) => ac.artist.id)
-                    .join(", "),
-                  img: group.thumbnails?.large || "",
-                })
-                setSearchQuery("");
-                setOpen(false);
-              }
-              }
+              onSelect={handleAddCustomAlbum}
             />
           </Suspense>
           <Dialog.Close className="absolute top-0 right-0 flex h-10 items-center justify-center bg-red-500 px-3.5 text-base font-medium text-white select-none hover:bg-red-700 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-red-900">

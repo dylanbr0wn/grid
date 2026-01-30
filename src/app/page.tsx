@@ -1,28 +1,49 @@
-import UserForm from '@/components/user-form'
-import { SignIn } from '@/components/signin-button'
-import { auth } from '@/auth'
-import { headers } from 'next/headers'
+import { EditorContext } from '@/components/editor/context'
+import CustomPallete from '@/components/editor/custom'
+import Grid from '@/components/editor/grid'
+import Overlay from '@/components/editor/overlay'
+import LastFM from '@/components/editor/lastfm'
+import { SortType } from '@/lib/sort'
+import { redirect, RedirectType } from 'next/navigation'
+import { Separator } from '@base-ui-components/react'
+import Toolbar from '@/components/editor/toolbar'
 
-export default async function Home() {
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const sp = await searchParams
+  let {
+    sort = "playcount"
+  } = sp
 
-  const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
-  })
+  const { lastfmUser } = sp
 
-  if (session?.user) {
-    console.log(session.user)
+  if (sort && typeof sort !== 'string') {
+    sort = 'playcount'
+  }
+
+  if (lastfmUser && typeof lastfmUser !== "string") {
+    redirect('/', RedirectType.replace)
   }
 
 	return (
-		<div className="font-code relative w-full h-full">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start h-full w-full">
-				<div className="flex flex-col gap-4 items-center justify-center w-full h-full">
-					<h1 className="text-6xl font-bold text-white uppercase font-code tracking-[1rem]">grid</h1>
-          <div className='text-neutral-400 text-sm italic'>A Last.fm album grid generator</div>
-          <div className='h-32' />
-					<UserForm />
-				</div>
-			</main>
+		<div className="flex h-full flex-col font-code relative">
+			<EditorContext>
+      <div className="h-full flex w-screen relative">
+        <div className="shrink-0 flex flex-col h-full overflow-hidden border-neutral-800 border-r">
+          <CustomPallete />
+          <Separator orientation="horizontal" className="h-px bg-neutral-800" />
+          <LastFM user={lastfmUser} sort={sort as SortType} />
+        </div>
+        <div className="w-full h-full">
+          <Grid />
+          <Toolbar />
+        </div>
+        <Overlay />
+      </div>
+    </EditorContext>
 		</div>
 	)
 }

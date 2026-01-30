@@ -26,16 +26,16 @@ export default function Select({
 }: SelectProps) {
   const [open, setOpen] = useState(false)
 	return (
-		<Field.Root className="flex w-full max-w-64 flex-col items-start gap-1">
+		<Field.Root className="flex h-full max-w-64 flex-col items-start gap-1">
 			{label && (
-				<Field.Label className="text-sm font-medium text-neutral-500">
+				<Field.Label className="text-xs font-medium text-neutral-500">
 					{label}
 				</Field.Label>
 			)}
 			<BSelect.Root value={value} items={items} onValueChange={onChange} onOpenChange={setOpen}>
 				<BSelect.Trigger
 					className={cn(
-						'flex h-10 min-w-36 items-center gap-2 pr-3 pl-3.5 text-base text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
+						'flex h-full min-w-36 items-center gap-2 pr-3 pl-3.5 text-sm text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
 						className
 					)}
 				>

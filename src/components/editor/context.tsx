@@ -17,10 +17,11 @@ import {
   arraySwap,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { createContext, useCallback, useId, useRef, useState } from "react";
+import { createContext, use, useCallback, useId, useRef, useState } from "react";
 import { Album, AlbumTypes, CustomAlbum, PlaceholderAlbum } from "../album";
 import { useGridSize } from "@/lib/grid";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { generateId } from "@/lib/util";
 
 export type Container = {
   title: string;
@@ -28,6 +29,7 @@ export type Container = {
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
+  sortable?: boolean;
 };
 
 export type ContainerMap = Record<UniqueIdentifier, Container>;
@@ -63,6 +65,20 @@ export const GridContext = createContext<GridContextType>({
   columns: 0,
 });
 
+export function useGrid() {
+  return use(GridContext);
+}
+
+export function useContainer(id: UniqueIdentifier) {
+  const { albums } = useGrid()
+
+  const container = albums[id]
+
+    return {
+      container,
+    }
+}
+
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
     To pick up a sortable item, press the space bar.
@@ -81,9 +97,7 @@ function findContainer(id: UniqueIdentifier, containers: ContainerMap) {
   );
 }
 
-export function generateId() {
-  return Math.random().toString(36).substring(2, 9);
-}
+
 
 const PLACEHOLDER_ID = "placeholder";
 
@@ -107,10 +121,8 @@ export function isPlaceholderId(id: UniqueIdentifier) {
 
 export function EditorContext({
   children,
-  initialAlbums,
 }: {
   children: React.ReactNode;
-  initialAlbums: Album[];
 }) {
   const id = useId();
   const { rows, columns } = useGridSize();
@@ -132,7 +144,8 @@ export function EditorContext({
     lastfm: {
       title: "Last.fm",
       allowedTypes: ["lastfm"],
-      albums: initialAlbums,
+      albums: [],
+      sortable: true,
     },
   });
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);

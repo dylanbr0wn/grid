@@ -50,10 +50,7 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} ${jetBrainsMono.variable} antialiased h-screen bg-neutral-950 text-neutral-300 overflow-hidden font-code relative`}
       >
         <AppWrapper>
-          <div className="h-10 z-50 bg-neutral-950">
-            <Navbar />
-          </div>
-          <div className="h-[calc(100%-40px)]">
+          <div className="h-full">
            {children}
           </div>
         </AppWrapper>

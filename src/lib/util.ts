@@ -12,6 +12,7 @@ export function getImageBrightness(
 	const canvas = document.createElement('canvas')
 	canvas.width = img.naturalWidth
 	canvas.height = img.naturalHeight
+  img.crossOrigin = "Anonymous";
 
 	const ctx = canvas.getContext('2d')
 	if (!ctx) {
@@ -41,4 +42,9 @@ export function getImageBrightness(
 	)
 	canvas.remove()
 	return brightness
+}
+
+
+export function generateId() {
+  return Math.random().toString(36).substring(2, 9);
 }

@@ -18,7 +18,6 @@ async function request(path: string, params?: Record<string, string | number>) {
     "Accept": "application/json",
     "User-Agent": USER_AGENT,
   };
-  console.log(`MusicBrainz request: ${url.toString()}`);
   const res = await fetch(url.toString(), { headers });
 
   if (!res.ok) {
@@ -35,7 +34,7 @@ export const ReleaseGroupResponse = type({
   "release-groups": type({
       id: "string",
       title: "string",
-      "primary-type": "string",
+      "primary-type?": "string",
       "first-release-date?": "string",
       "artist-credit": type({
           artist: {
@@ -68,10 +67,16 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
   out["release-groups"] = out["release-groups"].map(rg => ({
     ...rg,
     thumbnails: {
-      small: `https://coverartarchive.org/release-group/${rg.id}/front-250`,
-      large: `https://coverartarchive.org/release-group/${rg.id}/front-500`
+      small: getCoverArtUrl(rg.id, 'small'),
+      large: getCoverArtUrl(rg.id, 'large')
     }
   }))
 
   return out["release-groups"] as typeof ReleaseGroupResponse.infer['release-groups'];
+}
+
+export function getCoverArtUrl(releaseGroupId: string, size: 'small' | 'large' = 'large') {
+  if (!releaseGroupId) return undefined;
+  const sizeParam = size === 'small' ? '250' : '500';
+  return `https://coverartarchive.org/release-group/${releaseGroupId}/front-${sizeParam}`;
 }

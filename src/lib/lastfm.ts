@@ -1,63 +1,65 @@
 import { Album } from '@/components/album'
 import { type } from 'arktype'
 import 'server-only'
+import { generateId } from './util'
+import { getCoverArtUrl } from './music-brainz'
 
 const apiURL = 'http://ws.audioscrobbler.com/2.0/'
 
 const albumInfo = type({
-	artist: {
-		mbid: 'string',
-		name: 'string',
-	},
-	name: 'string',
-	image: type({
-		size: 'string',
-		'#text': 'string',
-	}).array(),
-	mbid: 'string',
-	playcount: 'string',
-	'@attr': {
-		rank: 'string',
-	},
+  artist: {
+    mbid: 'string',
+    name: 'string',
+  },
+  name: 'string',
+  image: type({
+    size: 'string',
+    '#text': 'string',
+  }).array(),
+  mbid: 'string',
+  playcount: 'string',
+  '@attr': {
+    rank: 'string',
+  },
 })
 
 const weeklyAlbumChart = type({
-	topalbums: {
-		album: albumInfo.array(),
-		'@attr': {
-			user: 'string',
-			total: 'string',
-		},
-	},
+  topalbums: {
+    album: albumInfo.array(),
+    '@attr': {
+      user: 'string',
+      total: 'string',
+    },
+  },
 })
 
 export async function fetchWeeklyAlbumChart(user: string) {
-	const url = `${apiURL}?method=user.getTopAlbums&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json&period=7day&limit=100`
-	const response = await fetch(url, { cache: 'no-store' })
+  const url = `${apiURL}?method=user.getTopAlbums&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json&period=7day&limit=100`
+  const response = await fetch(url, { cache: 'no-store' })
 
-	if (!response.ok) {
-		console.error(
-			'Last.fm API response not ok:',
-			response.status,
-			await response.text(),
-			url
-		)
-		throw new Error('Failed to fetch data from Last.fm')
-	}
+  if (!response.ok) {
+    console.error(
+      'Last.fm API response not ok:',
+      response.status,
+      await response.text(),
+      url
+    )
+    throw new Error('Failed to fetch data from Last.fm')
+  }
 
   const maybeWeeklyAlbumChart = await response.json()
   console.debug('Last.fm response:', JSON.stringify(maybeWeeklyAlbumChart, null, 2))
-	const out = weeklyAlbumChart(maybeWeeklyAlbumChart)
+  const out = weeklyAlbumChart(maybeWeeklyAlbumChart)
 
-	if (out instanceof type.errors) {
-		throw new Error(out.summary)
-	}
+  if (out instanceof type.errors) {
+    throw new Error(out.summary)
+  }
 
-	return out.topalbums.album
+  return out.topalbums.album
 }
 
 export async function fetchAlbums(user: string, sort: string) {
-	let albums = await fetchWeeklyAlbumChart(user)
+  let albums = await fetchWeeklyAlbumChart(user)
 
   if (sort === 'random') {
     albums = albums.sort(() => Math.random() - 0.5)
@@ -72,44 +74,38 @@ export async function fetchAlbums(user: string, sort: string) {
     albums = albums.sort((a, b) => parseInt(b.playcount) - parseInt(a.playcount))
   }
 
-	return parseAlbums(albums)
+  return parseAlbums(albums)
 }
 
-export type GridAlbum = {
-  album: string
-  imgs: {
-    small?: string
-    large?: string
-    fallback: string
-  }
-  artist: string
-  plays: number
-  id: string
-}
-
-function parseAlbums(albums: (typeof albumInfo.infer)[]):Album[] {
-	return albums.map((a) => {
-		const large =
-			a.image.find((i) => i.size === 'large')?.['#text'] ?? ''
+function parseAlbums(albums: (typeof albumInfo.infer)[]): Album[] {
+  return albums.map((a) => {
+    const large =
+      a.image.find((i) => i.size === 'large')?.['#text'] ?? ''
     const small = a.image.find((i) => i.size === 'small')?.['#text'] ?? ''
     const fallback = a.image.find((i) => i.size === '')?.['#text'] ?? ''
 
-		return {
-			album: a.name,
-			imgs: {
-        small,
+    const imgs = type("string").array().assert(
+      [
         large,
+        getCoverArtUrl(a.mbid),
+        small,
         fallback,
-      },
+        '/placeholder.png'
+      ].filter((url) => url && url.length > 0)
+    )
+
+    return {
+      album: a.name,
+      imgs,
       type: 'lastfm',
       mbid: a.mbid,
       artistMbid: a.artist.mbid,
-			artist: a.artist.name,
+      artist: a.artist.name,
       plays: parseInt(a.playcount),
-			id: a.mbid || `${a.artist.name}_${a.name}`.replaceAll(' ', '-').toLowerCase(),
-      img: large || small || fallback || '/placeholder.png',
-			textColor: 'white',
-			textBackground: false,
-		}
-	})
+      id: `${a.mbid}_${generateId()}` || `${a.artist.name}_${a.name}_${generateId()}`.replaceAll(' ', '-').toLowerCase(),
+      img: large || getCoverArtUrl(a.mbid) || small || fallback || '/placeholder.png',
+      textColor: 'white',
+      textBackground: false,
+    }
+  })
 }
