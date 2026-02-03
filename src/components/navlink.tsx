@@ -65,6 +65,9 @@ export function UserNavLink(
   useEffect(() => {
     if (user) {
       setStoredUser(user as string)
+      return () => {
+        setStoredUser(undefined)
+      }
     }
   },[user, setStoredUser])
 

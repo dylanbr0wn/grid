@@ -18,10 +18,11 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { createContext, use, useCallback, useId, useRef, useState } from "react";
-import { Album, AlbumTypes, CustomAlbum, PlaceholderAlbum } from "../album";
+import { Album, AlbumTypes, PlaceholderAlbum } from "../album";
 import { useGridSize } from "@/lib/grid";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { generateId } from "@/lib/util";
+import { CustomAlbum } from "./custom";
 
 export type Container = {
   title: string;
@@ -101,7 +102,7 @@ function findContainer(id: UniqueIdentifier, containers: ContainerMap) {
 
 const PLACEHOLDER_ID = "placeholder";
 
-function newPlaceholderAlbum(): PlaceholderAlbum {
+export function newPlaceholderAlbum(): PlaceholderAlbum {
   return {
     id: `${PLACEHOLDER_ID}_${generateId()}`,
     type: "placeholder",

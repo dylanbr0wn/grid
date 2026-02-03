@@ -2,7 +2,9 @@
 // Minimal MusicBrainz client for searching and fetching releases.
 // Respects MusicBrainz rate limit (1 req/sec) and sets a proper User-Agent.
 
+import { CustomAlbum } from "@/components/editor/custom";
 import { type } from "arktype";
+import { generateId } from "./util";
 
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";
@@ -64,15 +66,28 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
     throw new Error(out.summary);
   }
 
-  out["release-groups"] = out["release-groups"].map(rg => ({
-    ...rg,
-    thumbnails: {
-      small: getCoverArtUrl(rg.id, 'small'),
-      large: getCoverArtUrl(rg.id, 'large')
-    }
-  }))
-
-  return out["release-groups"] as typeof ReleaseGroupResponse.infer['release-groups'];
+  const albums: CustomAlbum[] = out["release-groups"].map(rg => {
+    const imgs = type("string")
+      .array()
+      .assert(
+        [
+          getCoverArtUrl(rg.id, 'large'),
+          getCoverArtUrl(rg.id, 'small'),
+          "/placeholder.png",
+        ].filter((url) => url && url.length > 0)
+      );
+    return {
+        id: `custom-${rg.id}-${generateId()}`,
+        type: "custom",
+        mbid: rg.id,
+        album: rg.title,
+        artist: rg["artist-credit"].map((ac) => ac.artist.name).join(", "),
+        artistMbid: rg["artist-credit"].map((ac) => ac.artist.id).join(", "),
+        img: imgs[0],
+        imgs,
+      }
+  })
+  return albums;
 }
 
 export function getCoverArtUrl(releaseGroupId: string, size: 'small' | 'large' = 'large') {

@@ -14,7 +14,7 @@ export default function Navbar() {
           </div>
 					<div
 						className={cn(
-              "bg-white absolute bottom-0 left-0 right-0 h-[1px]",
+              "bg-white absolute bottom-0 left-0 right-0 h-px",
             )}
 					/>
 				</li>

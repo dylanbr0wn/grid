@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { Album, SortableAlbum } from "../album";
-import { useContainer, useGrid } from "./context";
+import { newPlaceholderAlbum, useContainer, useGrid } from "./context";
 import { IconX } from "@tabler/icons-react";
 
 import * as motion from "motion/react-client";
@@ -67,12 +67,36 @@ type LastFMAlbumProps = {
 
 export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
   const { container } = useContainer(containerKey);
-  const { setTextBackground, setTextColor, setAlbums } = useGrid();
+  const { setAlbums } = useGrid();
 
   const initialAlbums = use(initialAlbumsPromise);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+
     setAlbums((prev) => {
+      if (searchParams.get("autoFill") === "true") {
+        const newLastFMAlbums = [...(initialAlbums ?? [])];
+
+        const newGridAlbums = prev.grid.albums.map((a) => {
+          if (a.type === "placeholder" && newLastFMAlbums.length > 0) {
+            return newLastFMAlbums.shift()!;
+          }
+          return a;
+        });
+
+        return {
+          ...prev,
+          [containerKey]: {
+            ...prev[containerKey],
+            albums: newLastFMAlbums,
+          },
+          grid: {
+            ...prev.grid,
+            albums: newGridAlbums,
+          },
+        };
+      }
       return {
         ...prev,
         [containerKey]: {
@@ -81,6 +105,26 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
         },
       };
     });
+    return () => {
+      setAlbums((prev) => {
+        return {
+          ...prev,
+          [containerKey]: {
+            ...prev[containerKey],
+            albums: [],
+          },
+          grid: {
+            ...prev.grid,
+            albums: prev.grid.albums.map((a) => {
+              if (a.type === "lastfm") {
+                return newPlaceholderAlbum();
+              }
+              return a;
+            }),
+          }
+        };
+      });
+    }
   }, [initialAlbums, setAlbums]);
 
   return (
@@ -94,8 +138,7 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
           key={album.id}
           album={album}
           index={container.albums.length + index}
-          setTextBackground={setTextBackground}
-          setTextColor={setTextColor}
+          priority={true}
         />
       ))}
     </SortableContext>
@@ -105,9 +148,31 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
 function UserButton({ user }: { user: string | undefined }) {
   const router = useRouter();
 
+  const { setAlbums } = useGrid();
+
   function logout() {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.delete("lastfmUser");
+
+    setAlbums(prev => {
+      return {
+        ...prev,
+        lastfm: {
+          ...prev.lastfm,
+          albums: [],
+        },
+        grid: {
+          ...prev.grid,
+          albums: prev.grid.albums.map(album => {
+            if (album.type === "lastfm") {
+              return newPlaceholderAlbum()
+            }
+            return album;
+          })
+        }
+      }
+    })
+
     router.push(`/?${searchParams.toString()}`);
   }
   return (
@@ -132,7 +197,10 @@ function UserButton({ user }: { user: string | undefined }) {
             height: 1,
             position: "absolute",
           }}
-          className={cn("bg-neutral-400", !!user && "group-hover/button:bg-rose-700 ")}
+          className={cn(
+            "bg-neutral-400",
+            !!user && "group-hover/button:bg-rose-700 "
+          )}
           layoutId="underline"
           id="underline"
         />

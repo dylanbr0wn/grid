@@ -12,7 +12,7 @@ import { GridContext, isPlaceholderId } from "./context";
 import { cn } from "@/lib/util";
 
 export default function Grid() {
-  const { rows, columns, albums, setTextBackground, setTextColor } =
+  const { rows, columns, albums } =
     use(GridContext);
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
@@ -76,8 +76,6 @@ export default function Grid() {
                   album={album}
                   index={index}
                   disabled={isPlaceholderId(album.id)}
-                  setTextBackground={setTextBackground}
-                  setTextColor={setTextColor}
                   priority={true}
                 />
               ))}

@@ -16,6 +16,7 @@ export const ImageWithFallback = memo(function ImageWithFallback(props: ImagePro
       alt={alt}
       {...rest}
       unoptimized
+      crossOrigin="anonymous"
       onError={() => {
         const nextSrc = srcIndex + 1
         if (nextSrc >= srcSet.length) return

@@ -6,11 +6,12 @@ import NumberInput from "@/components/number-input";
 import { useGridSize } from "@/lib/grid";
 import { cn } from "@/lib/util";
 import * as motion from "motion/react-client";
-import { useGrid } from "./context";
-import { Album, CustomAlbum } from "../album";
+import { newPlaceholderAlbum, useGrid } from "./context";
+import { Album } from "../album";
+import { CustomAlbum } from "./custom";
+import { IconLayoutGridAdd, IconX } from "@tabler/icons-react";
 
 async function downloadGrid(columns: number, rows: number) {
-  console.log("Downloading grid image...");
   const node = document.getElementById("fm-grid");
   const dpr = window.devicePixelRatio;
   if (!node) return;
@@ -143,17 +144,64 @@ export default function Toolbar() {
     })
   }
 
+  function handleClear() {
+    setAlbums(albums => {
+      let customAlbums = albums['custom']?.albums || [];
+      const customAlbumsFromGrid = albums['grid'].albums.filter(a => a.type === 'custom');
+      customAlbums = [...customAlbumsFromGrid, ...customAlbums];
+
+      const lastfmAlbumsFromGrid = albums['grid'].albums.filter(a => a.type === 'lastfm');
+      let lastfmAlbums = albums['lastfm']?.albums || [];
+      lastfmAlbums = [...lastfmAlbumsFromGrid, ...lastfmAlbums];
+
+      const emptyGridAlbums = Array(rows * columns).fill(null).map(() => newPlaceholderAlbum());
+
+      return {
+        ...albums,
+        custom: {
+          ...albums.custom,
+          albums: customAlbums
+        },
+        lastfm: {
+          ...albums.lastfm,
+          albums: lastfmAlbums
+        },
+        grid: {
+          ...albums.grid,
+          albums: emptyGridAlbums
+        }
+      };
+    })
+  }
+
   return (
     <div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950 z-20">
-      <div className="w-1/3">
+      <div className="w-1/3 flex gap-3 items-center">
         <button
-          className="block p-2 w-32 text-base text-neutral-300 text-center bg-neutral-950 hover:bg-neutral-900 relative group"
+          className="p-2 text-base text-neutral-300 text-center bg-neutral-950 hover:bg-neutral-900 relative group flex justify-between items-center gap-3 whitespace-nowrap"
           onClick={handleAutoLoad}
         >
-          Auto fill
+          <IconLayoutGridAdd className="size-4" />
+          <span>Auto Fill Grid</span>
           <motion.div
             className={cn(
-              "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 transition-colors group-focus:bg-white group-focus:h-[3px]"
+              "absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 transition-colors group-focus:bg-white group-focus:h-0.75"
+            )}
+            layout
+            transition={{
+              duration: 0.15,
+            }}
+          />
+        </button>
+        <button
+          className="p-2 text-base text-rose-700 text-center bg-neutral-950 hover:bg-neutral-900 relative group flex justify-between items-center gap-3 whitespace-nowrap"
+          onClick={handleClear}
+        >
+          <IconX className="size-4" />
+          <span>Clear Grid</span>
+          <motion.div
+            className={cn(
+              "absolute right-0 left-0 bottom-0 h-px bg-rose-700 group-focus-within:h-0.5 group-focus-within:z-1 transition-colors group-focus:h-0.75"
             )}
             layout
             transition={{

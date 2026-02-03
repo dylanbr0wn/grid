@@ -5,6 +5,30 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
+export function getBrightnessStyle(brightness: number) {
+  if (brightness > 200) {
+    return {
+      textColor: "black",
+      textBackground: false,
+    };
+  } else if (brightness > 160) {
+    return {
+      textColor: "black",
+      textBackground: true,
+    };
+  } else if (brightness > 60) {
+    return {
+      textColor: "white",
+      textBackground: true,
+    };
+  } else {
+    return {
+      textColor: "white",
+      textBackground: false,
+    };
+  }
+}
+
 export function getImageBrightness(
 	img: HTMLImageElement
 ): number{
@@ -12,7 +36,9 @@ export function getImageBrightness(
 	const canvas = document.createElement('canvas')
 	canvas.width = img.naturalWidth
 	canvas.height = img.naturalHeight
-  img.crossOrigin = "Anonymous";
+  img.crossOrigin = "anonymous";
+
+  console.log("img width:", img.src, "height:", img.naturalHeight);
 
 	const ctx = canvas.getContext('2d')
 	if (!ctx) {
@@ -41,6 +67,7 @@ export function getImageBrightness(
 		colorSum / (canvas.width * canvas.height * 0.25)
 	)
 	canvas.remove()
+  console.log("brightness:", brightness);
 	return brightness
 }
 
