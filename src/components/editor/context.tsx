@@ -30,7 +30,6 @@ export type Container = {
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
-  sortable?: boolean;
 };
 
 export type ContainerMap = Record<UniqueIdentifier, Container>;
@@ -138,15 +137,14 @@ export function EditorContext({
       }),
     },
     custom: {
-      title: "Custom",
+      title: "Custom Albums",
       allowedTypes: ["custom"],
       albums: [newCustomAlbum()],
     },
     lastfm: {
       title: "Last.fm",
       allowedTypes: ["lastfm"],
-      albums: [],
-      sortable: true,
+      albums: []
     },
   });
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);

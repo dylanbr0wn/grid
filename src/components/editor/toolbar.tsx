@@ -49,7 +49,7 @@ export default function Toolbar() {
 
   const [loading, setLoading] = useState(false);
 
-  const { setAlbums } = useGrid()
+  const { setAlbums, albums } = useGrid()
 
   function cleanAndSetRows(value: number | null) {
     if (value === null) return;
@@ -174,6 +174,8 @@ export default function Toolbar() {
     })
   }
 
+  const gridIsEmpty = albums['grid'].albums.every(a => a.type === 'placeholder');
+
   return (
     <div className="flex h-20 w-full shrink-0 items-center p-5 gap-5 border-t border-neutral-800 bg-neutral-950 z-20">
       <div className="w-1/3 flex gap-3 items-center">
@@ -194,8 +196,14 @@ export default function Toolbar() {
           />
         </button>
         <button
-          className="p-2 text-base text-rose-700 text-center bg-neutral-950 hover:bg-neutral-900 relative group flex justify-between items-center gap-3 whitespace-nowrap"
+          className={
+            cn(
+              "p-2 text-base text-rose-700 text-center bg-neutral-950 hover:bg-neutral-900 relative group flex justify-between items-center gap-3 whitespace-nowrap",
+              gridIsEmpty && "opacity-50 pointer-events-none"
+            )
+          }
           onClick={handleClear}
+          disabled={gridIsEmpty}
         >
           <IconX className="size-4" />
           <span>Clear Grid</span>

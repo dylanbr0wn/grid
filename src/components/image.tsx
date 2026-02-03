@@ -17,10 +17,12 @@ export const ImageWithFallback = memo(function ImageWithFallback(props: ImagePro
       {...rest}
       unoptimized
       crossOrigin="anonymous"
-      onError={() => {
+      onError={(e) => {
+        e.stopPropagation();
         const nextSrc = srcIndex + 1
-        if (nextSrc >= srcSet.length) return
-        setSrcIndex(nextSrc)
+        if (nextSrc < srcSet.length) {
+          setSrcIndex(nextSrc)
+        }
       }}
     />
   )

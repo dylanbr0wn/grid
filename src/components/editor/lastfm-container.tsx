@@ -1,5 +1,5 @@
 "use client";
-import { sortAlbums, sortOptions, SortType, useSort } from "@/lib/sort";
+import { sortAlbums, SortType, useSort } from "@/lib/sort";
 import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
@@ -11,8 +11,16 @@ import * as motion from "motion/react-client";
 import { cn } from "@/lib/util";
 import Select from "../select";
 import { use, useEffect } from "react";
+import LastFMIcon from "../lastfm-icon";
 
 const containerKey = "lastfm";
+
+const sortOptions: { label: string; value: SortType }[] = [
+  { label: 'Plays', value: 'playcount' },
+  { label: 'Name', value: 'name' },
+  { label: 'Artist', value: 'artist' },
+  { label: 'Random', value: 'random' },
+]
 
 type LastFMPalleteProps = {
   children?: React.ReactNode;
@@ -45,14 +53,13 @@ export default function LastFMPallete({ children, user }: LastFMPalleteProps) {
         <>
           <UserButton user={user} />
           <div className="grow" />
-          {!!container.sortable && container.albums.length > 1 && (
-            <Select
+          <Select
               value={sort}
               items={sortOptions}
+              disabled={container.albums.length <= 1}
               onChange={(v) => updateSort(v as SortType)}
               icon={<div className="text-neutral-500">sort by</div>}
             />
-          )}
         </>
       }
     >
@@ -182,9 +189,9 @@ function UserButton({ user }: { user: string | undefined }) {
     >
       {!!user && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors group-hover/button:bg-neutral-900">
-          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-rose-700 group-hover/button:scale-100 scale-80">
+          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-[#D51007] group-hover/button:scale-100 scale-80">
             <IconX className="size-4  " />
-            <div>Logout</div>
+            <div>Clear</div>
           </div>
         </div>
       )}
@@ -199,7 +206,7 @@ function UserButton({ user }: { user: string | undefined }) {
           }}
           className={cn(
             "bg-neutral-400",
-            !!user && "group-hover/button:bg-rose-700 "
+            !!user && "group-hover/button:bg-[#D51007] "
           )}
           layoutId="underline"
           id="underline"
@@ -207,11 +214,11 @@ function UserButton({ user }: { user: string | undefined }) {
       )}
       <div
         className={cn(
-          "px-4 text-neutral-300",
-          user && "group-hover:blur group-hover:text-rose-700"
+          "px-4 text-neutral-300 flex gap-1 items-center",
+          user && "group-hover:blur group-hover:text-[#D51007]"
         )}
       >
-        {user || "Last.fm"}
+        <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" /><div>{user || "Last.fm"}</div>
       </div>
     </button>
   );

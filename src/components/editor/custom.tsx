@@ -20,6 +20,8 @@ import * as motion from "motion/react-client";
 import { Transform } from "@dnd-kit/utilities";
 import { DraggableSyntheticListeners } from "@dnd-kit/core";
 import AlbumCover from "../album-cover";
+import Select from "../select";
+import { sortAlbums, SortType, useSort } from "@/lib/sort";
 
 const containerKey = "custom";
 
@@ -72,12 +74,10 @@ export const CustomAlbum = memo(function CustomAlbum({
 
   const { addCustomAlbum, setTextBackground, setTextColor } = useGrid();
 
-  function handleAddCustomAlbum(
-    _album: CustomAlbum
-  ) {
+  function handleAddCustomAlbum(_album: CustomAlbum) {
     addCustomAlbum({
       ...album,
-      ..._album
+      ..._album,
     });
     setSearchQuery("");
     setOpen(false);
@@ -199,10 +199,53 @@ function useDebouncedValue<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+const sortOptions: { label: string; value: SortType }[] = [
+  { label: "Name", value: "name" },
+  { label: "Artist", value: "artist" },
+  { label: "Random", value: "random" },
+];
+
 export default function CustomPallete() {
   const { container } = useContainer(containerKey);
+  const { setAlbums } = useGrid();
+  const { sort, setSort } = useSort(`${containerKey}-sort`, "random");
+
+  function updateSort(newSort: SortType) {
+    setSort(newSort);
+    setAlbums((prev) => {
+      const sortedAlbums = [...container.albums.slice(0, -1)];
+
+      return {
+        ...prev,
+        [containerKey]: {
+          ...prev[containerKey],
+          albums: [
+            ...sortAlbums(sortedAlbums as CustomAlbum[], newSort),
+            container.albums[container.albums.length - 1],
+          ],
+        }
+      }
+    });
+  }
   return (
-    <AlbumPallete container={container}>
+    <AlbumPallete
+      container={container}
+      header={
+        <>
+          <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
+            {container.title}
+          </h5>
+          <div className="grow" />
+           <Select
+              value={sort}
+              items={sortOptions}
+              disabled={container.albums.length <= 2}
+              onChange={(v) => updateSort(v as SortType)}
+              icon={<div className="text-neutral-500">sort by</div>}
+            />
+        </>
+      }
+    >
       <SortableContext
         id={containerKey}
         items={container.albums}

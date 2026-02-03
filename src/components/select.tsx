@@ -12,6 +12,7 @@ type SelectProps = {
 	label?: string
 	description?: string
 	value?: string
+  disabled?: boolean
 	icon?: React.ReactNode
 }
 
@@ -23,10 +24,11 @@ export default function Select({
 	description,
 	value,
 	icon,
+  disabled = false,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
 	return (
-		<Field.Root className="flex h-full max-w-64 flex-col items-start gap-1">
+		<Field.Root disabled={disabled} className="flex h-full max-w-64 flex-col items-start gap-1">
 			{label && (
 				<Field.Label className="text-xs font-medium text-neutral-500">
 					{label}
@@ -36,7 +38,8 @@ export default function Select({
 				<BSelect.Trigger
 					className={cn(
 						'flex h-full min-w-36 items-center gap-2 pr-3 pl-3.5 text-sm text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
-						className
+						className,
+            disabled && 'opacity-50 pointer-events-none'
 					)}
 				>
 					{icon}

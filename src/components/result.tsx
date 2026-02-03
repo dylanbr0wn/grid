@@ -1,6 +1,6 @@
 "use client";
-import { ImageWithFallback } from "@/components/image";
-import { ReleaseGroupResponse, searchReleases } from "@/lib/music-brainz";
+
+import { searchReleases } from "@/lib/music-brainz";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import AlbumCover from "./album-cover";
