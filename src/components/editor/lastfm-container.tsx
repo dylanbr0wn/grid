@@ -55,7 +55,6 @@ export default function LastFMPallete({ children, user, sort: intialSort }: Last
       return newAlbums;
     });
   }
-  console.log(sort, user) // --- IGNORE ---
   return (
     <AlbumPallete
       container={container}

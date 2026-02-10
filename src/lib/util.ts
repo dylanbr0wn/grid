@@ -44,8 +44,6 @@ export function getImageBrightness(
 	canvas.height = img.naturalHeight
   img.crossOrigin = "anonymous";
 
-  console.log("img width:", img.src, "height:", img.naturalHeight);
-
 	const ctx = canvas.getContext('2d')
 	if (!ctx) {
 		return -1
@@ -73,7 +71,6 @@ export function getImageBrightness(
 		colorSum / (canvas.width * canvas.height * 0.25)
 	)
 	canvas.remove()
-  console.log("brightness:", brightness);
 	return brightness
 }
 
