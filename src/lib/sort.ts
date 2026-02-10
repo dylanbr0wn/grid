@@ -36,7 +36,7 @@ export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | und
   return albums
 }
 
-export function useSort(key: string = 'sort', defaultSort: SortType = 'playcount') {
+export function useSort(key: string = 'sort', defaultSort: SortType) {
   const [sort, setSort, { isPending }] = useParamsStore<SortType>(
     key,
     defaultSort

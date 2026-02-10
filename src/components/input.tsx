@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Field } from "@base-ui-components/react/field";
+import { Field } from "@base-ui/react/field";
 import { cn } from "@/lib/util";
 import * as motion from "motion/react-client";
 

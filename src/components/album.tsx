@@ -10,7 +10,7 @@ import type { Transform } from "@dnd-kit/utilities";
 
 import styles from "./album.module.scss";
 import { cn, getBrightnessStyle, getImageBrightness } from "@/lib/util";
-import { ContextMenu } from "@base-ui-components/react";
+import { ContextMenu } from "@base-ui/react";
 import { IconCheck, IconChevronRight } from "@tabler/icons-react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";

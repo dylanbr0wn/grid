@@ -5,32 +5,44 @@ import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { Album, SortableAlbum } from "../album";
 import { newPlaceholderAlbum, useContainer, useGrid } from "./context";
-import { IconX } from "@tabler/icons-react";
+import { IconLoader2, IconX } from "@tabler/icons-react";
 
 import * as motion from "motion/react-client";
-import { cn } from "@/lib/util";
-import Select from "../select";
+import { cn, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY } from "@/lib/util";
+
 import { use, useEffect } from "react";
 import LastFMIcon from "../lastfm-icon";
+import dynamic from "next/dynamic";
 
-const containerKey = "lastfm";
+const Select = dynamic(() => import("../select"), {
+  ssr: false,
+  loading: () => <div className="h-full px-3 flex items-center justify-center">
+    <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+  </div>
+});
 
-const sortOptions: { label: string; value: SortType }[] = [
-  { label: 'Plays', value: 'playcount' },
-  { label: 'Name', value: 'name' },
-  { label: 'Artist', value: 'artist' },
-  { label: 'Random', value: 'random' },
-]
+type SortOptions = {
+  [key in SortType]: string;
+};
+
+const sortOptions: SortOptions = {
+  playcount: "Plays",
+  name: "Name",
+  artist: "Artist",
+  random: "Random",
+  custom: "Custom",
+ };
 
 type LastFMPalleteProps = {
   children?: React.ReactNode;
   user?: string;
+  sort: SortType;
 };
 
-export default function LastFMPallete({ children, user }: LastFMPalleteProps) {
-  const { container } = useContainer(containerKey);
+export default function LastFMPallete({ children, user, sort: intialSort }: LastFMPalleteProps) {
+  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
   const { setAlbums } = useGrid();
-  const { sort, setSort } = useSort(`${containerKey}-sort`);
+  const { sort, setSort } = useSort(LAST_FM_SORT_KEY, intialSort);
 
   function updateSort(newSort: SortType) {
     setSort(newSort);
@@ -38,14 +50,14 @@ export default function LastFMPallete({ children, user }: LastFMPalleteProps) {
       const newAlbums = { ...prev };
       const sortedAlbums = [...container.albums];
 
-      newAlbums[containerKey].albums = sortAlbums(
+      newAlbums[LAST_FM_CONTAINER_KEY].albums = sortAlbums(
         sortedAlbums as Album[],
         newSort
       );
       return newAlbums;
     });
   }
-
+  console.log(sort, user) // --- IGNORE ---
   return (
     <AlbumPallete
       container={container}
@@ -54,12 +66,12 @@ export default function LastFMPallete({ children, user }: LastFMPalleteProps) {
           <UserButton user={user} />
           <div className="grow" />
           <Select
-              value={sort}
-              items={sortOptions}
-              disabled={container.albums.length <= 1}
-              onChange={(v) => updateSort(v as SortType)}
-              icon={<div className="text-neutral-500">sort by</div>}
-            />
+            value={sort}
+            items={sortOptions}
+            disabled={container.albums.length <= 1}
+            onChange={(v) => updateSort(v as SortType)}
+            icon={<div className="text-neutral-500">sort by</div>}
+          />
         </>
       }
     >
@@ -73,7 +85,7 @@ type LastFMAlbumProps = {
 };
 
 export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
-  const { container } = useContainer(containerKey);
+  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
   const { setAlbums } = useGrid();
 
   const initialAlbums = use(initialAlbumsPromise);
@@ -94,8 +106,8 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
 
         return {
           ...prev,
-          [containerKey]: {
-            ...prev[containerKey],
+          [LAST_FM_CONTAINER_KEY]: {
+            ...prev[LAST_FM_CONTAINER_KEY],
             albums: newLastFMAlbums,
           },
           grid: {
@@ -106,8 +118,8 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
       }
       return {
         ...prev,
-        [containerKey]: {
-          ...prev[containerKey],
+        [LAST_FM_CONTAINER_KEY]: {
+          ...prev[LAST_FM_CONTAINER_KEY],
           albums: initialAlbums ?? [],
         },
       };
@@ -116,8 +128,8 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
       setAlbums((prev) => {
         return {
           ...prev,
-          [containerKey]: {
-            ...prev[containerKey],
+          [LAST_FM_CONTAINER_KEY]: {
+            ...prev[LAST_FM_CONTAINER_KEY],
             albums: [],
           },
           grid: {
@@ -128,15 +140,15 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
               }
               return a;
             }),
-          }
+          },
         };
       });
-    }
+    };
   }, [initialAlbums, setAlbums]);
 
   return (
     <SortableContext
-      id={containerKey}
+      id={LAST_FM_CONTAINER_KEY}
       items={container.albums}
       strategy={rectSortingStrategy}
     >
@@ -161,7 +173,7 @@ function UserButton({ user }: { user: string | undefined }) {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.delete("lastfmUser");
 
-    setAlbums(prev => {
+    setAlbums((prev) => {
       return {
         ...prev,
         lastfm: {
@@ -170,15 +182,15 @@ function UserButton({ user }: { user: string | undefined }) {
         },
         grid: {
           ...prev.grid,
-          albums: prev.grid.albums.map(album => {
+          albums: prev.grid.albums.map((album) => {
             if (album.type === "lastfm") {
-              return newPlaceholderAlbum()
+              return newPlaceholderAlbum();
             }
             return album;
-          })
-        }
-      }
-    })
+          }),
+        },
+      };
+    });
 
     router.push(`/?${searchParams.toString()}`);
   }
@@ -218,7 +230,8 @@ function UserButton({ user }: { user: string | undefined }) {
           user && "group-hover:blur group-hover:text-[#D51007]"
         )}
       >
-        <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" /><div>{user || "Last.fm"}</div>
+        <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
+        <div>{user || "Last.fm"}</div>
       </div>
     </button>
   );

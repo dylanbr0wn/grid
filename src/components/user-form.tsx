@@ -1,20 +1,17 @@
 "use client";
-import Input from "@/components/input";
 import { cn } from "@/lib/util";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import * as motion from "motion/react-client";
-import { Field } from "@base-ui-components/react";
+import { Field } from "@base-ui/react";
 
 export default function UserForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // const searchParams = useSearchParams();
-
-  function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setLoading(true);
 

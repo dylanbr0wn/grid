@@ -5,7 +5,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import AlbumCover from "./album-cover";
 import { CustomAlbum } from "./editor/custom";
-import { ScrollArea } from "@base-ui-components/react";
+import { ScrollArea } from "@base-ui/react";
 
 type SearchResultProps = {
   query: string;

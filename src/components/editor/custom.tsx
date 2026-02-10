@@ -2,28 +2,33 @@
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import AlbumPallete from "../pallette";
 import { useContainer, useGrid } from "./context";
-import { Album, BaseAlbum, SortableAlbum } from "../album";
+import { BaseAlbum, SortableAlbum } from "../album";
 import { HTMLProps, memo, Suspense, useEffect, useState } from "react";
-import { type } from "arktype";
-import { ReleaseGroupResponse } from "@/lib/music-brainz";
 import {
   cn,
-  generateId,
+  CUSTOM_CONTAINER_KEY,
+  CUSTOM_SORT_KEY,
   getBrightnessStyle,
   getImageBrightness,
 } from "@/lib/util";
-import { Dialog, Field } from "@base-ui-components/react";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { Dialog, Field } from "@base-ui/react";
+import { IconLoader2, IconPlus, IconSearch } from "@tabler/icons-react";
 import { SearchResult } from "../result";
 
 import * as motion from "motion/react-client";
 import { Transform } from "@dnd-kit/utilities";
 import { DraggableSyntheticListeners } from "@dnd-kit/core";
 import AlbumCover from "../album-cover";
-import Select from "../select";
-import { sortAlbums, SortType, useSort } from "@/lib/sort";
 
-const containerKey = "custom";
+import { sortAlbums, SortType, useSort } from "@/lib/sort";
+import dynamic from "next/dynamic";
+
+const Select = dynamic(() => import("../select"), {
+  ssr: false,
+  loading: () => <div className="h-full px-3 flex items-center justify-center">
+    <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+  </div>
+});
 
 export type CustomAlbum = BaseAlbum & {
   type: "custom";
@@ -206,9 +211,9 @@ const sortOptions: { label: string; value: SortType }[] = [
 ];
 
 export default function CustomPallete() {
-  const { container } = useContainer(containerKey);
+  const { container } = useContainer(CUSTOM_CONTAINER_KEY);
   const { setAlbums } = useGrid();
-  const { sort, setSort } = useSort(`${containerKey}-sort`, "random");
+  const { sort, setSort } = useSort(CUSTOM_SORT_KEY, "random");
 
   function updateSort(newSort: SortType) {
     setSort(newSort);
@@ -217,8 +222,8 @@ export default function CustomPallete() {
 
       return {
         ...prev,
-        [containerKey]: {
-          ...prev[containerKey],
+        [CUSTOM_CONTAINER_KEY]: {
+          ...prev[CUSTOM_CONTAINER_KEY],
           albums: [
             ...sortAlbums(sortedAlbums as CustomAlbum[], newSort),
             container.albums[container.albums.length - 1],
@@ -247,7 +252,7 @@ export default function CustomPallete() {
       }
     >
       <SortableContext
-        id={containerKey}
+        id={CUSTOM_CONTAINER_KEY}
         items={container.albums}
         strategy={rectSortingStrategy}
       >

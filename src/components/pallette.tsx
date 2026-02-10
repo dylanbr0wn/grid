@@ -1,4 +1,5 @@
-import { ScrollArea } from "@base-ui-components/react";
+'use client';
+import { ScrollArea } from "@base-ui/react";
 import { Container } from "./editor/context";
 import { cn } from "@/lib/util";
 

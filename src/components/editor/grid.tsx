@@ -1,5 +1,5 @@
 "use client";
-import { ScrollArea } from "@base-ui-components/react";
+import { ScrollArea } from "@base-ui/react";
 import { memo, useCallback } from "react";
 import { SortableAlbum } from "../album";
 import {
@@ -10,10 +10,9 @@ import {
 } from "@dnd-kit/sortable";
 import { isPlaceholderId, useGrid } from "./context";
 import { cn } from "@/lib/util";
-import NumberInput from "../number-input";
 
 export default function Grid() {
-  const { rows, columns, albums, setColumns, setRows } = useGrid();
+  const { rows, columns, albums } = useGrid();
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {

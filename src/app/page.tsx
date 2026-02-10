@@ -3,10 +3,10 @@ import CustomPallete from '@/components/editor/custom'
 import Grid from '@/components/editor/grid'
 import Overlay from '@/components/editor/overlay'
 import LastFM from '@/components/editor/lastfm'
-import { SortType } from '@/lib/sort'
-import { redirect, RedirectType } from 'next/navigation'
-import { Separator } from '@base-ui-components/react'
+import { Separator } from '@base-ui/react'
 import Menu from '@/components/menu'
+
+export const dynamic = 'force-dynamic';
 
 export default async function Page({
   searchParams
@@ -14,19 +14,6 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const sp = await searchParams
-  let {
-    sort = "playcount"
-  } = sp
-
-  const { lastfmUser } = sp
-
-  if (sort && typeof sort !== 'string') {
-    sort = 'playcount'
-  }
-
-  if (lastfmUser && typeof lastfmUser !== "string") {
-    redirect('/', RedirectType.replace)
-  }
 
 	return (
 		<div className="flex h-full flex-col font-code relative">
@@ -35,7 +22,7 @@ export default async function Page({
         <div className="shrink-0 flex flex-col h-full overflow-hidden border-neutral-800 border-r">
           <CustomPallete />
           <Separator orientation="horizontal" className="h-px bg-neutral-800" />
-          <LastFM user={lastfmUser} sort={sort as SortType} />
+          <LastFM searchParams={sp} />
         </div>
         <div className="w-full h-full flex">
           <Menu />

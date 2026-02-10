@@ -1,13 +1,14 @@
+"use client";
 import { cn } from '@/lib/util'
-import { Field } from '@base-ui-components/react'
-import { Select as BSelect } from '@base-ui-components/react/select'
+import { Field } from '@base-ui/react'
+import { Select as BSelect } from '@base-ui/react/select'
 import { IconCheck, IconChevronDown } from '@tabler/icons-react'
 import * as motion from 'motion/react-client'
 import { useState } from 'react'
 
 type SelectProps = {
-	items: { label: string; value: string }[]
-	onChange: (value: string) => void
+	items: Record<string, string>
+	onChange: (value: string | null) => void
 	className?: string
 	label?: string
 	description?: string
@@ -37,7 +38,7 @@ export default function Select({
 			<BSelect.Root value={value} items={items} onValueChange={onChange} onOpenChange={setOpen}>
 				<BSelect.Trigger
 					className={cn(
-						'flex h-full min-w-36 items-center gap-2 pr-3 pl-3.5 text-sm text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-[popup-open]:bg-neutral-900 cursor-default relative',
+						'flex h-full min-w-36 items-center gap-2 pr-3 pl-3.5 text-sm text-neutral-300 select-none hover:bg-neutral-900 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-teal-400 data-popup-open:bg-neutral-900 cursor-default relative',
 						className,
             disabled && 'opacity-50 pointer-events-none'
 					)}
@@ -50,7 +51,7 @@ export default function Select({
 					</BSelect.Icon>
 					<motion.div
 						className={cn(
-							'absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 data transition-colors',
+							'absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 data transition-colors',
 							open && ' bg-white'
 						)}
 						layout
@@ -68,9 +69,9 @@ export default function Select({
 						side="bottom"
 						alignItemWithTrigger={false}
 					>
-						<BSelect.ScrollUpArrow className="top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center  bg-neutral-900 text-center text-xs before:absolute before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] data-[direction=down]:bottom-0 data-[direction=down]:before:bottom-[-100%]" />
-						<BSelect.Popup className="group max-h-[var(--available-height)] origin-[var(--transform-origin)] overflow-y-auto  bg-neutral-950 text-neutral-300 shadow-lg shadow-neutral-900  transition-[transform,scale,opacity] data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[side=none]:data-[ending-style]:transition-none data-[starting-style]:scale-90 data-[starting-style]:opacity-0 data-[side=none]:data-[starting-style]:scale-100 data-[side=none]:data-[starting-style]:opacity-100 data-[side=none]:data-[starting-style]:transition-none dark:shadow-none border border-neutral-700">
-							{items.map(({ label, value }) => (
+						<BSelect.ScrollUpArrow className="top-0 z-1 flex h-4 w-full cursor-default items-center justify-center  bg-neutral-900 text-center text-xs before:absolute before:-top-full before:left-0 before:h-full before:w-full before:content-[''] data-[direction=down]:bottom-0 data-[direction=down]:before:bottom-[-100%]" />
+						<BSelect.Popup className="group max-h-(--available-height) origin-[var(--transform-origin)] overflow-y-auto  bg-neutral-950 text-neutral-300 shadow-lg shadow-neutral-900  transition-[transform,scale,opacity] data-ending-style:scale-90 data-[ending-style]:opacity-0 data-[side=none]:data-[ending-style]:transition-none data-[starting-style]:scale-90 data-[starting-style]:opacity-0 data-[side=none]:data-[starting-style]:scale-100 data-[side=none]:data-[starting-style]:opacity-100 data-[side=none]:data-[starting-style]:transition-none dark:shadow-none border border-neutral-700">
+							{Object.entries(items).map(([value, label]) => (
 								<BSelect.Item
 									key={label}
 									value={value}
