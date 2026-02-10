@@ -20,7 +20,7 @@ import { Transform } from "@dnd-kit/utilities";
 import { DraggableSyntheticListeners } from "@dnd-kit/core";
 import AlbumCover from "../album-cover";
 
-import { sortAlbums, SortType, useSort } from "@/lib/sort";
+import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import dynamic from "next/dynamic";
 
 const Select = dynamic(() => import("../select"), {
@@ -204,11 +204,11 @@ function useDebouncedValue<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const sortOptions: { label: string; value: SortType }[] = [
-  { label: "Name", value: "name" },
-  { label: "Artist", value: "artist" },
-  { label: "Random", value: "random" },
-];
+const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
+  random: "Random",
+  name: "Name",
+  artist: "Artist",
+}
 
 export default function CustomPallete() {
   const { container } = useContainer(CUSTOM_CONTAINER_KEY);

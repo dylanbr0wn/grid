@@ -6,6 +6,10 @@ export type Sortable = {
   plays?: number
 }
 
+export type SortOptions = {
+  [key in SortType]: string;
+};
+
 export type SortType = 'playcount' | 'name' | 'artist' | 'random' | 'custom'
 
 export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | undefined): T[] {

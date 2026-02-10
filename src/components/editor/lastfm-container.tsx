@@ -1,5 +1,5 @@
 "use client";
-import { sortAlbums, SortType, useSort } from "@/lib/sort";
+import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
@@ -21,9 +21,7 @@ const Select = dynamic(() => import("../select"), {
   </div>
 });
 
-type SortOptions = {
-  [key in SortType]: string;
-};
+
 
 const sortOptions: SortOptions = {
   playcount: "Plays",
