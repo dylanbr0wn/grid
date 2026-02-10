@@ -3,9 +3,7 @@
 import { useState } from "react";
 import * as htmlToImage from "html-to-image";
 import NumberInput from "@/components/number-input";
-import { useGridSize } from "@/lib/grid";
 import { cn, PLACEHOLDER_IMG } from "@/lib/util";
-import * as motion from "motion/react-client";
 import { newPlaceholderAlbum, useGrid } from "./editor/context";
 import { Album } from "./album";
 import { CustomAlbum } from "./editor/custom";

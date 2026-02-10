@@ -1,6 +1,5 @@
 'use client'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-import Navbar from './navbar'
 import { Analytics } from '@vercel/analytics/next'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

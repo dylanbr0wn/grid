@@ -2,7 +2,6 @@
 import { cn } from "@/lib/util";
 import { NumberField } from "@base-ui/react";
 import { IconArrowsHorizontal } from "@tabler/icons-react";
-import * as motion from "motion/react-client";
 import { useId, useState } from "react";
 
 type NumberInputProps = {
