@@ -29,7 +29,7 @@ export const SearchResult = memo(function SearchResult({
           </button>
         )) : <div className="text-white">No results found.</div>}
       </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+      <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
         <ScrollArea.Thumb className="w-full bg-neutral-500" />
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>

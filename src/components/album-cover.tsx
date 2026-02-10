@@ -1,12 +1,14 @@
 "use client";
 
-import { cn, getBrightnessStyle, getImageBrightness } from "@/lib/util";
+import { cn, getBrightnessStyle, getImageBrightness, PLACEHOLDER_IMG } from "@/lib/util";
 import { HTMLProps, useMemo, useState } from "react";
 import { Album } from "./album";
 import { CustomAlbum } from "./editor/custom";
 import { ImageWithFallback } from "./image";
 import { CSS, Transform } from "@dnd-kit/utilities";
 import { DraggableSyntheticListeners } from "@dnd-kit/core";
+
+
 
 export type AlbumCoverProps = {
   priority?: boolean;
@@ -89,7 +91,7 @@ export default function AlbumCover({
       {album.img ? (
         <ImageWithFallback
           id={`${album.id}`}
-          src={album.img || "/placeholder.png"}
+          src={album.img || PLACEHOLDER_IMG}
           width={128}
           height={128}
           className="object-cover overflow-hidden w-32 h-32"

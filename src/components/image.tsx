@@ -1,6 +1,7 @@
 'use client'
 import Image from "next/image"
 import { memo, useState } from "react"
+import { PLACEHOLDER_IMG } from "../lib/util"
 
 type ImageProps = {srcSet?: string[]} & React.ComponentProps<typeof Image>
 
@@ -8,7 +9,7 @@ export const ImageWithFallback = memo(function ImageWithFallback(props: ImagePro
   const { src, alt, ...rest } = props
   const [srcIndex, setSrcIndex] = useState(0)
 
-  const srcSet = props.srcSet || [src, '/placeholder.png']
+  const srcSet = props.srcSet || [src, PLACEHOLDER_IMG]
 
   return (
     <Image

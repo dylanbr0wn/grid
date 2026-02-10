@@ -1,7 +1,7 @@
 import { Album } from '@/components/album'
 import { type } from 'arktype'
 import 'server-only'
-import { generateId } from './util'
+import { generateId, PLACEHOLDER_IMG } from './util'
 import { getCoverArtUrl } from './music-brainz'
 
 const apiURL = 'http://ws.audioscrobbler.com/2.0/'
@@ -89,7 +89,7 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]): Album[] {
         getCoverArtUrl(a.mbid),
         small,
         fallback,
-        '/placeholder.png'
+        PLACEHOLDER_IMG
       ].filter((url) => url && url.length > 0)
     )
 
@@ -102,7 +102,7 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]): Album[] {
       artist: a.artist.name,
       plays: parseInt(a.playcount),
       id: `${a.mbid}_${generateId()}` || `${a.artist.name}_${a.name}_${generateId()}`.replaceAll(' ', '-').toLowerCase(),
-      img: large || getCoverArtUrl(a.mbid) || small || fallback || '/placeholder.png',
+      img: large || getCoverArtUrl(a.mbid) || small || fallback || PLACEHOLDER_IMG,
       textColor: 'white',
       textBackground: false,
     }

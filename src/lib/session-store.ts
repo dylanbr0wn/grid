@@ -64,7 +64,16 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 			return value
 		},
 		enabled: typeof window !== 'undefined',
-		initialData: defaultValue,
+		initialData: () => {
+      const params = new URLSearchParams(searchParams.toString())
+      const raw = params.get(key)
+      if (typeof defaultValue === 'string') {
+        return (raw as T) ?? defaultValue
+      }
+      const value = raw ? (JSON.parse(raw) as T) : null
+      if (!value) return defaultValue
+      return value
+    },
 	})
 	const mutation = useMutation({
 		mutationKey: ['param-storage', key],

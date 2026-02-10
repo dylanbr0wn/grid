@@ -1,6 +1,6 @@
-'use client';
+"use client";
 import { ScrollArea } from "@base-ui-components/react";
-import { memo, use, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { SortableAlbum } from "../album";
 import {
   arrayMove,
@@ -8,12 +8,12 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { GridContext, isPlaceholderId } from "./context";
+import { isPlaceholderId, useGrid } from "./context";
 import { cn } from "@/lib/util";
+import NumberInput from "../number-input";
 
 export default function Grid() {
-  const { rows, columns, albums } =
-    use(GridContext);
+  const { rows, columns, albums, setColumns, setRows } = useGrid();
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {
@@ -41,12 +41,15 @@ export default function Grid() {
     [albums]
   );
 
+
+
   return (
     <ScrollArea.Root
-      className="h-[calc(100%-80px)] relative"
+      className="h-full relative w-full"
       style={
         {
           "--col-count": columns,
+          "--row-count": rows,
         } as React.CSSProperties
       }
     >
@@ -64,7 +67,7 @@ export default function Grid() {
           }
         >
           <BackgroundGrid rows={rows} columns={columns} />
-          <div className="grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
+          <div className="grid grid-cols-[repeat(var(--col-count),1fr)] grid-rows-[repeat(var(--row-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
             <SortableContext
               id="grid"
               items={albums["grid"].albums}
@@ -83,7 +86,7 @@ export default function Grid() {
           </div>
         </div>
       </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+      <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
         <ScrollArea.Thumb className="w-full bg-neutral-500" />
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>

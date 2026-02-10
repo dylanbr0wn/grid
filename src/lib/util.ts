@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+export const PLACEHOLDER_IMG = "/img/placeholder.png";
+
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }

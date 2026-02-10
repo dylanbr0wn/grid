@@ -4,7 +4,7 @@
 
 import { CustomAlbum } from "@/components/editor/custom";
 import { type } from "arktype";
-import { generateId } from "./util";
+import { generateId, PLACEHOLDER_IMG } from "./util";
 
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";
@@ -73,7 +73,7 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
         [
           getCoverArtUrl(rg.id, 'large'),
           getCoverArtUrl(rg.id, 'small'),
-          "/placeholder.png",
+          PLACEHOLDER_IMG,
         ].filter((url) => url && url.length > 0)
       );
     return {

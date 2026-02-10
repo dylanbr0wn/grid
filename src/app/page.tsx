@@ -6,7 +6,7 @@ import LastFM from '@/components/editor/lastfm'
 import { SortType } from '@/lib/sort'
 import { redirect, RedirectType } from 'next/navigation'
 import { Separator } from '@base-ui-components/react'
-import Toolbar from '@/components/editor/toolbar'
+import Menu from '@/components/menu'
 
 export default async function Page({
   searchParams
@@ -37,9 +37,9 @@ export default async function Page({
           <Separator orientation="horizontal" className="h-px bg-neutral-800" />
           <LastFM user={lastfmUser} sort={sort as SortType} />
         </div>
-        <div className="w-full h-full">
+        <div className="w-full h-full flex">
+          <Menu />
           <Grid />
-          <Toolbar />
         </div>
         <Overlay />
       </div>

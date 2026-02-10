@@ -34,6 +34,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - png files (image files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|placeholder.png).*)'
+    '/((?!api|_next/static|_next/image|favicon.ico|img|apple-touch-icon-precomposed.png).*)'
   ],
 }

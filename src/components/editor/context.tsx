@@ -48,6 +48,8 @@ type GridContextType = {
   setAlbum: SetAlbumFunc;
   setAlbums: React.Dispatch<React.SetStateAction<ContainerMap>>;
   addCustomAlbum: (album: CustomAlbum) => void;
+  setRows: (rows: number) => void;
+  setColumns: (columns: number) => void;
   albums: ContainerMap;
   activeAlbum?: Album | null;
   rows: number;
@@ -63,6 +65,8 @@ export const GridContext = createContext<GridContextType>({
   albums: {},
   rows: 0,
   columns: 0,
+  setRows: () => {},
+  setColumns: () => {},
 });
 
 export function useGrid() {
@@ -125,7 +129,7 @@ export function EditorContext({
   children: React.ReactNode;
 }) {
   const id = useId();
-  const { rows, columns } = useGridSize();
+  const { rows, columns, setRows, setColumns } = useGridSize();
   const [albums, setAlbums] = useState<ContainerMap>({
     grid: {
       title: "Grid",
@@ -440,6 +444,58 @@ export function EditorContext({
     });
   }
 
+  function updateRows(rows: number) {
+    setRows(rows);
+    setAlbums((albums) => {
+      const grid = albums["grid"];
+      const newGridAlbums = [...grid.albums];
+
+      if (rows * columns > grid.albums.length) {
+        newGridAlbums.push(
+          ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
+            return newPlaceholderAlbum();
+          })
+        );
+      } else if (rows * columns < grid.albums.length) {
+        newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
+      }
+
+      return {
+        ...albums,
+        grid: {
+          ...grid,
+          albums: newGridAlbums,
+        },
+      };
+    });
+  }
+
+  function updateColumns(columns: number) {
+    setColumns(columns);
+    setAlbums((albums) => {
+      const grid = albums["grid"];
+      const newGridAlbums = [...grid.albums];
+
+      if (rows * columns > grid.albums.length) {
+        newGridAlbums.push(
+          ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
+            return newPlaceholderAlbum();
+          })
+        );
+      } else if (rows * columns < grid.albums.length) {
+        newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
+      }
+
+      return {
+        ...albums,
+        grid: {
+          ...grid,
+          albums: newGridAlbums,
+        },
+      };
+    });
+  }
+
   return (
     <GridContext.Provider
       value={{
@@ -452,6 +508,8 @@ export function EditorContext({
         rows,
         addCustomAlbum,
         columns,
+        setColumns: updateColumns,
+        setRows: updateRows
       }}
     >
       <DndContext
