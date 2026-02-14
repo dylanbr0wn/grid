@@ -11,7 +11,6 @@ import {
   getImageBrightness,
   PLACEHOLDER_IMG,
 } from "@/lib/util";
-import { useGrid } from "./editor/context";
 
 type SearchResultProps = {
   query: string;

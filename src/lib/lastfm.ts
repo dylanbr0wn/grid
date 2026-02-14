@@ -1,8 +1,8 @@
-import { Album } from '@/components/album'
 import { type } from 'arktype'
 import 'server-only'
 import { generateId, PLACEHOLDER_IMG } from './util'
 import { getCoverArtUrl } from './music-brainz'
+import { LastFmAlbum } from '@/components/editor/lastfm-container'
 
 
 const apiURL = 'http://ws.audioscrobbler.com/2.0/'
@@ -77,7 +77,7 @@ export async function fetchAlbums(user: string, sort: string) {
   return parseAlbums(albums)
 }
 
-function parseAlbums(albums: (typeof albumInfo.infer)[]): Album[] {
+function parseAlbums(albums: (typeof albumInfo.infer)[]): LastFmAlbum[] {
   return albums.map((a) => {
     const large =
       a.image.find((i) => i.size === 'large')?.['#text'] ?? ''

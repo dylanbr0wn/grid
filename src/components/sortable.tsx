@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/util";
 import { UniqueIdentifier } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";

@@ -1,7 +1,6 @@
 "use client";
 import { ScrollArea } from "@base-ui/react";
 import { memo, useCallback } from "react";
-import { Album, AlbumProps, PlaceholderAlbum } from "../album";
 import {
   arrayMove,
   arraySwap,
@@ -12,6 +11,7 @@ import { isPlaceholderId, useGrid } from "./context";
 import { cn } from "@/lib/util";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
+import { LastFmAlbum, LastFmAlbumProps, PlaceholderAlbum } from "./lastfm-container";
 
 export default function Grid() {
   const { rows, columns, albums } = useGrid();
@@ -134,9 +134,9 @@ const BackgroundGrid = memo(function BackgroundGrid({
 
 type SortableAlbumProps = {
   disabled?: boolean;
-  album: Album | PlaceholderAlbum | CustomAlbum;
+  album: LastFmAlbum | PlaceholderAlbum | CustomAlbum;
   index: number;
-} & Pick<AlbumProps, "priority">;
+} & Pick<LastFmAlbumProps, "priority">;
 
 export function SortableAlbum({
   album,
@@ -173,7 +173,7 @@ export function SortableAlbum({
       <Sortable id={album.id} sortData={{
         album
       }}>
-        <Album
+        <LastFmAlbum
           album={album}
           data-index={index}
           data-id={album.id}

@@ -18,15 +18,16 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { createContext, use, useCallback, useId, useRef, useState } from "react";
-import { Album, AlbumTypes, PlaceholderAlbum } from "../album";
 import { useGridSize } from "@/lib/grid";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { generateId } from "@/lib/util";
 import { CustomAlbum } from "./custom";
+import { type LastFmAlbum, PlaceholderAlbum } from "./lastfm-container";
+import { AlbumTypes } from "@/lib/albums";
 
 export type Container = {
   title: string;
-  albums: (PlaceholderAlbum | Album | CustomAlbum)[];
+  albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum)[];
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
@@ -37,9 +38,9 @@ export type ContainerMap = Record<UniqueIdentifier, Container>;
 type SetAlbumFunc = (
   id: UniqueIdentifier,
   album:
-    | Album
+    | LastFmAlbum
     | CustomAlbum
-    | ((album: Album | CustomAlbum) => Album | CustomAlbum)
+    | ((album: LastFmAlbum | CustomAlbum) => LastFmAlbum | CustomAlbum)
 ) => void;
 
 type GridContextType = {
@@ -51,7 +52,7 @@ type GridContextType = {
   setRows: (rows: number) => void;
   setColumns: (columns: number) => void;
   albums: ContainerMap;
-  activeAlbum?: Album | null;
+  activeAlbum?: LastFmAlbum | null;
   rows: number;
   columns: number;
 };
@@ -151,8 +152,8 @@ export function EditorContext({
       albums: []
     },
   });
-  const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
-  const overflowItem = useRef<Album | PlaceholderAlbum | CustomAlbum | null>(
+  const [activeAlbum, setActiveAlbum] = useState<LastFmAlbum | null>(null);
+  const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
     null
   );
 
@@ -347,7 +348,7 @@ export function EditorContext({
       const newItems = albums[container].albums.map((item) =>
         item.id === id
           ? typeof album === "function"
-            ? album(item as Album)
+            ? album(item as LastFmAlbum)
             : album
           : item
       );
@@ -519,7 +520,7 @@ export function EditorContext({
         sensors={sensors}
         onDragStart={({ active }) => {
           if (!active.data.current) return;
-          setActiveAlbum(active.data.current.album as Album);
+          setActiveAlbum(active.data.current.album as LastFmAlbum);
         }}
         measuring={{
           droppable: {

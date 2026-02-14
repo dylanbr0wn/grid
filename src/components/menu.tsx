@@ -5,10 +5,10 @@ import * as htmlToImage from "html-to-image";
 import NumberInput from "@/components/number-input";
 import { cn, PLACEHOLDER_IMG } from "@/lib/util";
 import { newPlaceholderAlbum, useGrid } from "./editor/context";
-import { Album } from "./album";
 import { CustomAlbum } from "./editor/custom";
 import { IconDownload, IconLayoutGridAdd, IconX } from "@tabler/icons-react";
 import Image from "next/image";
+import { type LastFmAlbum } from "./editor/lastfm-container";
 
 async function downloadGrid(columns: number, rows: number) {
   const node = document.getElementById("fm-grid");
@@ -81,7 +81,7 @@ export default function Menu() {
       const lastIndex = albums["custom"]?.albums.length - 1 || 0;
       const customAlbums = albums["custom"]?.albums.slice(0, -1) || [];
       const albumsToAdd = customAlbums.slice(0, toAdd) as (
-        | Album
+        | LastFmAlbum
         | CustomAlbum
       )[];
 
@@ -108,7 +108,7 @@ export default function Menu() {
       const lastfmAlbums = albums["lastfm"]?.albums || [];
       const stillToAdd = totalCount - current.length;
       const lastfmToAdd = lastfmAlbums.slice(0, stillToAdd) as (
-        | Album
+        | LastFmAlbum
         | CustomAlbum
       )[];
 

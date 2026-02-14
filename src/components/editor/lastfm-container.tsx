@@ -3,17 +3,20 @@ import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { Album } from "../album";
 import { newPlaceholderAlbum, useContainer, useGrid } from "./context";
-import { IconLoader2, IconX } from "@tabler/icons-react";
+import { IconCheck, IconChevronRight, IconLoader2, IconX } from "@tabler/icons-react";
 
 import * as motion from "motion/react-client";
-import { cn, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY } from "@/lib/util";
+import { cn, getBrightnessStyle, getImageBrightness, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY } from "@/lib/util";
 
 import { use, useEffect } from "react";
 import LastFMIcon from "../lastfm-icon";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
+import { UniqueIdentifier } from "@dnd-kit/core";
+import { ContextMenu } from "@base-ui/react";
+import AlbumCover from "../album-cover";
+import { BaseAlbum } from "@/lib/albums";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -54,7 +57,7 @@ export default function LastFMPallete({
       const sortedAlbums = [...container.albums];
 
       newAlbums[LAST_FM_CONTAINER_KEY].albums = sortAlbums(
-        sortedAlbums as Album[],
+        sortedAlbums as LastFmAlbum[],
         newSort,
       );
       return newAlbums;
@@ -83,7 +86,7 @@ export default function LastFMPallete({
 }
 
 type LastFMAlbumProps = {
-  initialAlbumsPromise: Promise<Album[]>;
+  initialAlbumsPromise: Promise<LastFmAlbum[]>;
 };
 
 export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
@@ -153,7 +156,7 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
       items={container.albums}
       strategy={rectSortingStrategy}
     >
-      {(container.albums as Album[]).map((album, index) => (
+      {(container.albums as LastFmAlbum[]).map((album, index) => (
         <Sortable
           key={album.id}
           id={album.id}
@@ -161,7 +164,7 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
             album,
           }}
         >
-          <Album
+          <LastFmAlbum
             album={album}
             data-index={index}
             data-id={album.id}
@@ -245,3 +248,126 @@ function UserButton({ user }: { user: string | undefined }) {
     </button>
   );
 }
+
+
+export type PlaceholderAlbum = BaseAlbum & {
+  type: "placeholder";
+};
+
+export type LastFmAlbum = {
+  id: UniqueIdentifier;
+  type: "lastfm";
+  album: string;
+  mbid?: string;
+  img: string;
+  plays: number;
+  imgs: string[];
+
+  artist: string;
+  artistMbid?: string;
+
+  textColor?: string;
+  textBackground?: boolean;
+};
+
+export type LastFmAlbumProps = {
+  priority?: boolean;
+  album: LastFmAlbum;
+};
+
+export const LastFmAlbum = ({
+  album,
+  priority = false,
+  ...props
+}: LastFmAlbumProps) => {
+  const { setTextBackground, setTextColor } = useGrid();
+
+  if (!album) {
+    return null;
+  }
+
+  return (
+    <ContextMenu.Root>
+      <ContextMenu.Trigger>
+        <AlbumCover
+          src={album.img}
+          imgs={album.imgs}
+          name={album.album}
+          artist={album.artist}
+          width={128}
+          height={128}
+          id={`${album.id}-image`}
+          priority={priority}
+          textBackground={album.textBackground}
+          textColor={album.textColor}
+          onLoad={(ev: React.SyntheticEvent<HTMLImageElement>) => {
+            const img = ev.currentTarget;
+            const { textColor, textBackground } = getBrightnessStyle(
+              getImageBrightness(img),
+            );
+            setTextBackground?.(album.id, textBackground);
+            setTextColor?.(album.id, textColor);
+          }}
+          {...props}
+        />
+      </ContextMenu.Trigger>
+      <ContextMenu.Portal>
+        <ContextMenu.Positioner className="outline-none">
+          <ContextMenu.Popup className="origin-(--transform-origin)  bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-gray-200 outline outline-gray-200 dark:shadow-none dark:-outline-offset-1 dark:outline-gray-300 z-50">
+            <ContextMenu.SubmenuRoot>
+              <ContextMenu.SubmenuTrigger className="flex cursor-default items-center justify-between gap-4 py-2 pr-4 pl-4 text-sm leading-4 outline-none select-none data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-1 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1] data-[highlighted]:before:rounded-sm data-[highlighted]:before:bg-neutral-900 data-[popup-open]:relative data-[popup-open]:z-0 data-[popup-open]:before:absolute data-[popup-open]:before:inset-x-1 data-[popup-open]:before:inset-y-0 data-[popup-open]:before:z-[-1]  data-[popup-open]:before:bg-neutral-900 data-[highlighted]:data-[popup-open]:before:bg-neutral-900">
+                Text color <IconChevronRight className="size-3" />
+              </ContextMenu.SubmenuTrigger>
+              <ContextMenu.Portal>
+                <ContextMenu.Positioner
+                  className="outline-none"
+                  alignOffset={-4}
+                  sideOffset={-4}
+                >
+                  <ContextMenu.Popup className="origin-(--transform-origin) bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-neutral-200 outline-1 outline-neutral-200 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
+                    <ContextMenu.RadioGroup
+                      value={album.textColor}
+                      onValueChange={(value) => setTextColor?.(album.id, value)}
+                    >
+                      <ContextMenu.RadioItem
+                        value="white"
+                        className="grid cursor-default gap-2 py-2 pr-4 pl-2.5 grid-cols-[0.75rem_1fr] text-sm leading-4 outline-none select-none data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-1 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1] data-[highlighted]:before:bg-neutral-900"
+                      >
+                        <ContextMenu.RadioItemIndicator className="col-start-1">
+                          <IconCheck className="size-3" />
+                        </ContextMenu.RadioItemIndicator>
+                        <span className="col-start-2">White</span>
+                      </ContextMenu.RadioItem>
+                      <ContextMenu.RadioItem
+                        value="black"
+                        className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-[highlighted]:relative data-[highlighted]:z-0 data-[highlighted]:text-neutral-50 data-[highlighted]:before:absolute data-[highlighted]:before:inset-x-1 data-[highlighted]:before:inset-y-0 data-[highlighted]:before:z-[-1] data-[highlighted]:before:bg-neutral-900"
+                      >
+                        <ContextMenu.RadioItemIndicator className="col-start-1">
+                          <IconCheck className="size-3" />
+                        </ContextMenu.RadioItemIndicator>
+                        <span className="col-start-2">Black</span>
+                      </ContextMenu.RadioItem>
+                    </ContextMenu.RadioGroup>
+                  </ContextMenu.Popup>
+                </ContextMenu.Positioner>
+              </ContextMenu.Portal>
+            </ContextMenu.SubmenuRoot>
+            <ContextMenu.CheckboxItem
+              checked={!!album.textBackground}
+              className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-[highlighted=true]:relative data-[highlighted=true]:z-0 data-[highlighted=true]:text-neutral-50 data-[highlighted=true]:before:absolute data-[highlighted=true]:before:inset-x-1 data-[highlighted=true]:before:inset-y-0 data-[highlighted=true]:before:z-[-1] data-[highlighted=true]:before:bg-neutral-900"
+              onMouseUp={() =>
+                setTextBackground?.(album.id, !album.textBackground)
+              }
+            >
+              <ContextMenu.CheckboxItemIndicator className="col-start-1">
+                <IconCheck className="size-3" />
+              </ContextMenu.CheckboxItemIndicator>
+              <span className="col-start-2">Toggle text background</span>
+            </ContextMenu.CheckboxItem>
+          </ContextMenu.Popup>
+        </ContextMenu.Positioner>
+      </ContextMenu.Portal>
+    </ContextMenu.Root>
+  );
+};
+

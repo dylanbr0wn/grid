@@ -2,8 +2,7 @@
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import AlbumPallete from "../pallette";
 import { useContainer, useGrid } from "./context";
-import { BaseAlbum } from "../album";
-import { HTMLProps, memo, Suspense, useEffect, useState } from "react";
+import { memo, Suspense, useEffect, useState } from "react";
 import {
   cn,
   CUSTOM_CONTAINER_KEY,
@@ -17,13 +16,12 @@ import { IconLoader2, IconPlus, IconSearch } from "@tabler/icons-react";
 import { SearchResults } from "../result";
 
 import * as motion from "motion/react-client";
-import { Transform } from "@dnd-kit/utilities";
-import { DraggableSyntheticListeners } from "@dnd-kit/core";
 import AlbumCover from "../album-cover";
 
 import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
+import { BaseAlbum } from "@/lib/albums";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -82,7 +80,7 @@ export const CustomAlbum = memo(function CustomAlbum({
         artist={album.artist}
         width={128}
         height={128}
-        id={`${album.id}-image`}
+        id={`${album.id}-custom-album`}
         priority={priority}
         data-id={album.id}
         textBackground={album.textBackground}
