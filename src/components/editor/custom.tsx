@@ -2,7 +2,7 @@
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import AlbumPallete from "../pallette";
 import { useContainer, useGrid } from "./context";
-import { BaseAlbum, SortableAlbum } from "../album";
+import { BaseAlbum } from "../album";
 import { HTMLProps, memo, Suspense, useEffect, useState } from "react";
 import {
   cn,
@@ -10,10 +10,11 @@ import {
   CUSTOM_SORT_KEY,
   getBrightnessStyle,
   getImageBrightness,
+  PLACEHOLDER_IMG,
 } from "@/lib/util";
 import { Dialog, Field } from "@base-ui/react";
 import { IconLoader2, IconPlus, IconSearch } from "@tabler/icons-react";
-import { SearchResult } from "../result";
+import { SearchResults } from "../result";
 
 import * as motion from "motion/react-client";
 import { Transform } from "@dnd-kit/utilities";
@@ -22,12 +23,15 @@ import AlbumCover from "../album-cover";
 
 import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import dynamic from "next/dynamic";
+import { Sortable } from "../sortable";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
-  loading: () => <div className="h-full px-3 flex items-center justify-center">
-    <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-  </div>
+  loading: () => (
+    <div className="h-full px-3 flex items-center justify-center">
+      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+    </div>
+  ),
 });
 
 export type CustomAlbum = BaseAlbum & {
@@ -46,30 +50,11 @@ export type CustomAlbum = BaseAlbum & {
 type CustomAlbumProps = {
   album: CustomAlbum;
   priority?: boolean;
-  setNodeRef?(element: HTMLDivElement | null): void;
-  dragOverlay?: boolean;
-  disabled?: boolean;
-  dragging?: boolean;
-  index?: number;
-  transform?: Transform | null;
-  listeners?: DraggableSyntheticListeners;
-  transition?: string | undefined;
-  isOver?: boolean;
-} & HTMLProps<HTMLDivElement>;
+};
 
 export const CustomAlbum = memo(function CustomAlbum({
   album,
-  dragging,
-  dragOverlay,
-  disabled,
-  isOver,
-  index,
-  transition,
-  transform = null,
-  listeners,
-  setNodeRef,
   priority = false,
-  ...props
 }: CustomAlbumProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -88,31 +73,28 @@ export const CustomAlbum = memo(function CustomAlbum({
     setOpen(false);
   }
 
-  if (album.mbid) {
+  if (album.mbid && album.img && album.album && album.artist) {
     return (
       <AlbumCover
-        setNodeRef={setNodeRef}
-        album={album}
-        disabled={disabled}
-        dragging={dragging}
-        dragOverlay={dragOverlay}
-        isOver={isOver}
-        index={index}
-        transform={transform}
-        transition={transition}
-        listeners={listeners}
+        src={album.img || PLACEHOLDER_IMG}
+        imgs={album.imgs}
+        name={album.album}
+        artist={album.artist}
+        width={128}
+        height={128}
+        id={`${album.id}-image`}
         priority={priority}
-        data-index={index}
         data-id={album.id}
+        textBackground={album.textBackground}
+        textColor={album.textColor}
         onLoad={(ev: React.SyntheticEvent<HTMLImageElement, Event>) => {
           const img = ev.currentTarget;
           const { textColor, textBackground } = getBrightnessStyle(
-            getImageBrightness(img)
+            getImageBrightness(img),
           );
           setTextBackground?.(album.id, textBackground);
           setTextColor?.(album.id, textColor);
         }}
-        {...props}
       />
     );
   }
@@ -121,7 +103,7 @@ export const CustomAlbum = memo(function CustomAlbum({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         className={cn(
-          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50"
+          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50",
         )}
       >
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors">
@@ -142,7 +124,7 @@ export const CustomAlbum = memo(function CustomAlbum({
           <Dialog.Description className="mb-6 text-base text-gray-600"></Dialog.Description>
           <Field.Root
             className={cn(
-              "flex w-full flex-col gap-1 relative group items-center hover:bg-neutral-900 focus-within:z-1 focus-within:bg-neutral-900 text-neutral-300 pl-2"
+              "flex w-full flex-col gap-1 relative group items-center hover:bg-neutral-900 focus-within:z-1 focus-within:bg-neutral-900 text-neutral-300 pl-2",
             )}
           >
             <div className="w-full flex items-center gap-3">
@@ -160,7 +142,7 @@ export const CustomAlbum = memo(function CustomAlbum({
             <motion.div
               className={cn(
                 "absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 data transition-colors",
-                focused && " bg-white"
+                focused && " bg-white",
               )}
               layout
               transition={{
@@ -174,7 +156,7 @@ export const CustomAlbum = memo(function CustomAlbum({
           <Suspense
             fallback={<div className="text-white mt-4">Loading...</div>}
           >
-            <SearchResult
+            <SearchResults
               query={debouncedSearchQuery}
               onSelect={handleAddCustomAlbum}
             />
@@ -208,7 +190,7 @@ const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
   random: "Random",
   name: "Name",
   artist: "Artist",
-}
+};
 
 export default function CustomPallete() {
   const { container } = useContainer(CUSTOM_CONTAINER_KEY);
@@ -228,8 +210,8 @@ export default function CustomPallete() {
             ...sortAlbums(sortedAlbums as CustomAlbum[], newSort),
             container.albums[container.albums.length - 1],
           ],
-        }
-      }
+        },
+      };
     });
   }
   return (
@@ -241,13 +223,13 @@ export default function CustomPallete() {
             {container.title}
           </h5>
           <div className="grow" />
-           <Select
-              value={sort}
-              items={sortOptions}
-              disabled={container.albums.length <= 2}
-              onChange={(v) => updateSort(v as SortType)}
-              icon={<div className="text-neutral-500">sort by</div>}
-            />
+          <Select
+            value={sort}
+            items={sortOptions}
+            disabled={container.albums.length <= 2}
+            onChange={(v) => updateSort(v as SortType)}
+            icon={<div className="text-neutral-500">sort by</div>}
+          />
         </>
       }
     >
@@ -256,12 +238,25 @@ export default function CustomPallete() {
         items={container.albums}
         strategy={rectSortingStrategy}
       >
-        {container.albums.map((album, index) => (
-          <SortableAlbum
+        {(container.albums as CustomAlbum[]).map((album, index) => (
+          <Sortable
             key={album.id}
-            album={album}
-            index={container.albums.length + index}
-          />
+            id={album.id}
+            sortData={{
+              album,
+            }}
+            disabled={{
+              draggable: album.type === "custom" && !album.mbid,
+              droppable: album.mbid ? false : container.albums.length >= 2
+            }}
+          >
+            <CustomAlbum
+              album={album}
+              data-index={index}
+              data-id={album.id}
+              priority={true}
+            />
+          </Sortable>
         ))}
       </SortableContext>
     </AlbumPallete>

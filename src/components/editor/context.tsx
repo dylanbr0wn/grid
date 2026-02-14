@@ -170,7 +170,6 @@ export function EditorContext({
     if (overId == null) {
       return;
     }
-
     // Go into setAlbums to avoid closure issues
     setAlbums((albums) => {
       const overContainer = findContainer(overId, albums);
@@ -287,7 +286,6 @@ export function EditorContext({
     if (overId == null) {
       return;
     }
-
     // Go into setAlbums to avoid closure issues
     setAlbums((albums) => {
       const activeContainer = findContainer(active.id, albums);
@@ -365,6 +363,7 @@ export function EditorContext({
   }, []);
 
   const setTextColor = useCallback((id: UniqueIdentifier, color: string) => {
+
     setAlbums((albums) => {
       const container = Object.keys(albums).find((key) =>
         albums[key].albums.some((a) => a.id === id)
@@ -373,7 +372,7 @@ export function EditorContext({
 
       const itemIndex = albums[container].albums.findIndex((a) => a.id === id);
       if (itemIndex === -1) return albums;
-
+      console.log("Setting text color for", id, "to", color);
       const newItems = albums[container].albums.map((item, i) =>
         i === itemIndex
           ? {

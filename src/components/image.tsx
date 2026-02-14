@@ -3,28 +3,38 @@ import Image from "next/image"
 import { memo, useState } from "react"
 import { PLACEHOLDER_IMG } from "../lib/util"
 
-type ImageProps = {srcSet?: string[]} & React.ComponentProps<typeof Image>
+export type ImageWithFallbackProps = {imgs?: string[]} & React.ComponentProps<typeof Image>
 
-export const ImageWithFallback = memo(function ImageWithFallback(props: ImageProps) {
-  const { src, alt, ...rest } = props
+export const ImageWithFallback = memo(function ImageWithFallback({ src, alt, onLoad, ...rest }: ImageWithFallbackProps) {
+  const [loaded, setLoaded] = useState(false)
   const [srcIndex, setSrcIndex] = useState(0)
 
-  const srcSet = props.srcSet || [src, PLACEHOLDER_IMG]
+  const imgs = rest.imgs || [src, PLACEHOLDER_IMG]
 
   return (
     <Image
-      src={srcSet[srcIndex]}
+      blurDataURL={PLACEHOLDER_IMG}
+      src={imgs[srcIndex] || PLACEHOLDER_IMG}
       alt={alt}
-      {...rest}
+      onLoad={(ev) => {
+        if (!loaded)
+        setLoaded(true)
+
+        onLoad?.(ev)
+      }}
+      style={{
+        opacity: loaded ? 1 : 0,
+      }}
       unoptimized
       crossOrigin="anonymous"
       onError={(e) => {
         e.stopPropagation();
         const nextSrc = srcIndex + 1
-        if (nextSrc < srcSet.length) {
+        if (nextSrc < imgs.length) {
           setSrcIndex(nextSrc)
         }
       }}
+      {...rest}
     />
   )
 })

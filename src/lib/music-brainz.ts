@@ -72,7 +72,6 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
       .assert(
         [
           getCoverArtUrl(rg.id, 'large'),
-          getCoverArtUrl(rg.id, 'small'),
           PLACEHOLDER_IMG,
         ].filter((url) => url && url.length > 0)
       );
@@ -83,7 +82,7 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
         album: rg.title,
         artist: rg["artist-credit"].map((ac) => ac.artist.name).join(", "),
         artistMbid: rg["artist-credit"].map((ac) => ac.artist.id).join(", "),
-        img: imgs[0],
+        img: getCoverArtUrl(rg.id, 'large') || PLACEHOLDER_IMG,
         imgs,
       }
   })

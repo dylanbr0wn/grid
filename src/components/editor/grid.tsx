@@ -1,7 +1,7 @@
 "use client";
 import { ScrollArea } from "@base-ui/react";
 import { memo, useCallback } from "react";
-import { SortableAlbum } from "../album";
+import { Album, AlbumProps, PlaceholderAlbum } from "../album";
 import {
   arrayMove,
   arraySwap,
@@ -10,6 +10,8 @@ import {
 } from "@dnd-kit/sortable";
 import { isPlaceholderId, useGrid } from "./context";
 import { cn } from "@/lib/util";
+import { Sortable } from "../sortable";
+import { CustomAlbum } from "./custom";
 
 export default function Grid() {
   const { rows, columns, albums } = useGrid();
@@ -129,3 +131,55 @@ const BackgroundGrid = memo(function BackgroundGrid({
     </div>
   );
 });
+
+type SortableAlbumProps = {
+  disabled?: boolean;
+  album: Album | PlaceholderAlbum | CustomAlbum;
+  index: number;
+} & Pick<AlbumProps, "priority">;
+
+export function SortableAlbum({
+  album,
+  index,
+  priority = false,
+}: SortableAlbumProps) {
+  if (album.type === "custom") {
+    return (
+      <Sortable id={album.id} sortData={{
+        album
+      }} disabled={!album.mbid}>
+        <CustomAlbum
+          album={album}
+          data-index={index}
+          data-id={album.id}
+          priority={priority}
+        />
+      </Sortable>
+    );
+  }
+
+  if (album.type === "placeholder") {
+    return (
+      <Sortable id={album.id} disabled sortData={{
+        album
+      }}>
+        <div className="w-32 h-32 bg-transparent" />
+      </Sortable>
+    );
+  }
+
+  if (album.type === "lastfm") {
+    return (
+      <Sortable id={album.id} sortData={{
+        album
+      }}>
+        <Album
+          album={album}
+          data-index={index}
+          data-id={album.id}
+          priority={priority}
+        />
+      </Sortable>
+    );
+  }
+}

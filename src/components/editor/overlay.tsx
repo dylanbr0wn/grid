@@ -3,12 +3,12 @@
 import { DragOverlay } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { createPortal } from "react-dom";
-import { GridContext } from "./context";
-import { use } from "react";
+import {  useGrid } from "./context";
 import AlbumCover from "../album-cover";
+import { cn } from "@/lib/util";
 
 export default function Overlay() {
-  const { activeAlbum } = use(GridContext);
+  const { activeAlbum } = useGrid();
 
   if (typeof document === "undefined") {
     return null;
@@ -21,9 +21,22 @@ export default function Overlay() {
       dropAnimation={{ duration: 0.1, easing: "ease-in" }}
     >
       {activeAlbum ? (
-        <AlbumCover album={activeAlbum} dragOverlay priority={true} />
+        <div className={cn("z-50 opacity-100 scale-105 cursor-grabbing")}>
+          <AlbumCover
+            id={`${activeAlbum.id}-drag-overlay`}
+            src={activeAlbum.img}
+            imgs={activeAlbum.imgs}
+            name={activeAlbum.album}
+            artist={activeAlbum.artist}
+            width={128}
+            height={128}
+            priority={true}
+            textBackground={activeAlbum.textBackground}
+            textColor={activeAlbum.textColor}
+          />
+        </div>
       ) : null}
     </DragOverlay>,
-    document.body
+    document.body,
   );
 }

@@ -1,47 +1,36 @@
 "use client";
 
-import { cn, getBrightnessStyle, getImageBrightness, PLACEHOLDER_IMG } from "@/lib/util";
-import { HTMLProps, useMemo, useState } from "react";
-import { Album } from "./album";
-import { CustomAlbum } from "./editor/custom";
-import { ImageWithFallback } from "./image";
-import { CSS, Transform } from "@dnd-kit/utilities";
-import { DraggableSyntheticListeners } from "@dnd-kit/core";
-
-
+import { StaticImport } from "next/dist/shared/lib/get-img-props";
+import { ImageWithFallback, ImageWithFallbackProps } from "./image";
+import { cn, getBrightnessStyle, getImageBrightness } from "@/lib/util";
+import { useMemo, useState } from "react";
 
 export type AlbumCoverProps = {
   priority?: boolean;
-  dragOverlay?: boolean;
-  disabled?: boolean;
-  dragging?: boolean;
-  isOver?: boolean;
-  setNodeRef?(element: HTMLDivElement | null): void;
-  onLoad?(ev: React.SyntheticEvent<HTMLImageElement, Event>): void;
-  album: Album | CustomAlbum;
-  index?: number;
-  transform?: Transform | null;
-  listeners?: DraggableSyntheticListeners;
-  transition?: string | undefined;
-} & HTMLProps<HTMLDivElement>;
+  imgs: string[] | undefined;
+  name: string;
+  artist: string;
+  textColor?: string;
+  textBackground?: boolean;
+  src?: string | StaticImport;
+} & Omit<ImageWithFallbackProps, "src" | "alt">;
 
 export default function AlbumCover({
-  album,
-  onLoad,
   priority,
-  dragOverlay,
-  dragging,
-  disabled,
-  isOver,
-  setNodeRef,
-  transform = null,
-  transition,
-  listeners,
-  index,
+  imgs,
+  name,
+  artist,
+  src,
+  textColor,
+  textBackground,
+  width,
+  height,
+  onLoad,
+  className,
   ...props
 }: AlbumCoverProps) {
-  const [textColor, setTextColor] = useState<string>("white");
-  const [textBackground, setTextBackground] = useState<string>("black");
+   const [_color, setTextColor] = useState<string>("white");
+  const [_backgroundColor, setTextBackground] = useState<string>("transparent");
 
   function onLoadFallback(ev: React.SyntheticEvent<HTMLImageElement, Event>) {
     const img = ev.currentTarget;
@@ -58,52 +47,33 @@ export default function AlbumCover({
     setTextColor(textColor);
   }
 
-  const color = album.textColor || textColor;
+  const color = textColor || _color;
   const backgroundColor = useMemo(() => {
-    if (album.textBackground !== undefined) {
-      return album.textBackground ? (color === "white" ? "black" : "white") : "transparent";
+    if (textBackground !== undefined) {
+      return textBackground ? (color === "white" ? "black" : "white") : "transparent";
     }
-    return textBackground;
-  }, [album.textBackground, textBackground, color])
+    return _backgroundColor;
+  }, [textBackground, _backgroundColor, color])
 
   return (
-    <div
-      className={cn(
-        "flex grow items-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square relative font-code touch-manipulation cursor-grab select-none",
-        dragging && !dragOverlay && "opacity-50 z-0",
-        dragOverlay && "z-50 opacity-100 scale-105 cursor-grabbing",
-        disabled && "cursor-not-allowed",
-        isOver &&
-          "after:absolute after:inset-0 after:z-10 after:bg-white after:bg-opacity-10"
-      )}
-      {...props}
-      style={
-        {
-          transition,
-          "--index": index,
-          transform: CSS.Transform.toString(transform),
-        } as React.CSSProperties
-      }
-      {...listeners}
-      ref={setNodeRef}
-      tabIndex={0}
-    >
-      {album.img ? (
+    <div className={cn(
+      "flex grow items-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square relative font-code touch-manipulation cursor-grab select-none",
+      className
+    )} {...props}>
+      {src ? (
         <ImageWithFallback
-          id={`${album.id}`}
-          src={album.img || PLACEHOLDER_IMG}
-          width={128}
-          height={128}
+          src={src}
           className="object-cover overflow-hidden w-32 h-32"
-          srcSet={album.imgs}
-          onLoad={onLoad ?? onLoadFallback}
-          alt={`${album.album} by ${album.artist} album cover`}
+          imgs={imgs}
           decoding="sync"
+          onLoad={onLoad || onLoadFallback}
           fetchPriority={priority ? "high" : "auto"}
           loading={priority ? "eager" : "lazy"}
+          alt={`${name} by ${artist}`}
+          width={width}
+          height={height}
         />
       ) : (
-        // <div className='w-full h-full bg-indigo-500'/>
         <div className="w-full h-full bg-neutral-950" />
       )}
       <div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
@@ -123,14 +93,16 @@ export default function AlbumCover({
               } as React.CSSProperties
             }
           >
-            {album.album}
+            {name}
           </span>
         </div>
         <div
           className="text-[7px]/[7px] font-medium "
-          style={{
-            color,
-          }}
+          style={
+            {
+              color,
+            } as React.CSSProperties
+          }
         >
           <span
             className="wrap-break-word"
@@ -140,7 +112,7 @@ export default function AlbumCover({
               } as React.CSSProperties
             }
           >
-            {album.artist}
+            {artist}
           </span>
         </div>
       </div>

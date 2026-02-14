@@ -3,7 +3,7 @@ import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { Album, SortableAlbum } from "../album";
+import { Album } from "../album";
 import { newPlaceholderAlbum, useContainer, useGrid } from "./context";
 import { IconLoader2, IconX } from "@tabler/icons-react";
 
@@ -13,15 +13,16 @@ import { cn, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY } from "@/lib/util";
 import { use, useEffect } from "react";
 import LastFMIcon from "../lastfm-icon";
 import dynamic from "next/dynamic";
+import { Sortable } from "../sortable";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
-  loading: () => <div className="h-full px-3 flex items-center justify-center">
-    <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-  </div>
+  loading: () => (
+    <div className="h-full px-3 flex items-center justify-center">
+      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+    </div>
+  ),
 });
-
-
 
 const sortOptions: SortOptions = {
   playcount: "Plays",
@@ -29,7 +30,7 @@ const sortOptions: SortOptions = {
   artist: "Artist",
   random: "Random",
   custom: "Custom",
- };
+};
 
 type LastFMPalleteProps = {
   children?: React.ReactNode;
@@ -37,7 +38,11 @@ type LastFMPalleteProps = {
   sort: SortType;
 };
 
-export default function LastFMPallete({ children, user, sort: intialSort }: LastFMPalleteProps) {
+export default function LastFMPallete({
+  children,
+  user,
+  sort: intialSort,
+}: LastFMPalleteProps) {
   const { container } = useContainer(LAST_FM_CONTAINER_KEY);
   const { setAlbums } = useGrid();
   const { sort, setSort } = useSort(LAST_FM_SORT_KEY, intialSort);
@@ -50,7 +55,7 @@ export default function LastFMPallete({ children, user, sort: intialSort }: Last
 
       newAlbums[LAST_FM_CONTAINER_KEY].albums = sortAlbums(
         sortedAlbums as Album[],
-        newSort
+        newSort,
       );
       return newAlbums;
     });
@@ -89,7 +94,6 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-
     setAlbums((prev) => {
       if (searchParams.get("autoFill") === "true") {
         const newLastFMAlbums = [...(initialAlbums ?? [])];
@@ -149,13 +153,21 @@ export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
       items={container.albums}
       strategy={rectSortingStrategy}
     >
-      {container.albums.map((album, index) => (
-        <SortableAlbum
+      {(container.albums as Album[]).map((album, index) => (
+        <Sortable
           key={album.id}
-          album={album}
-          index={container.albums.length + index}
-          priority={true}
-        />
+          id={album.id}
+          sortData={{
+            album,
+          }}
+        >
+          <Album
+            album={album}
+            data-index={index}
+            data-id={album.id}
+            priority={true}
+          />
+        </Sortable>
       ))}
     </SortableContext>
   );
@@ -215,7 +227,7 @@ function UserButton({ user }: { user: string | undefined }) {
           }}
           className={cn(
             "bg-neutral-400",
-            !!user && "group-hover/button:bg-[#D51007] "
+            !!user && "group-hover/button:bg-[#D51007] ",
           )}
           layoutId="underline"
           id="underline"
@@ -224,7 +236,7 @@ function UserButton({ user }: { user: string | undefined }) {
       <div
         className={cn(
           "px-4 text-neutral-300 flex gap-1 items-center",
-          user && "group-hover:blur group-hover:text-[#D51007]"
+          user && "group-hover:blur group-hover:text-[#D51007]",
         )}
       >
         <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
