@@ -17,6 +17,7 @@ import {
 import { useGrid } from "@/hooks/grid";
 import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
 import dynamic from "next/dynamic";
+import { cn } from "@/lib/util";
 
 
 const Background = dynamic(() => import("./background"), {
@@ -151,6 +152,7 @@ export function SortableAlbum({
         sortData={{
           album,
         }}
+        className="pointer-events-none"
       >
         <div className="w-32 h-32 bg-transparent" />
       </Sortable>

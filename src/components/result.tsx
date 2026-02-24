@@ -27,10 +27,6 @@ export const SearchResults = memo(function SearchResults({
     refetchOnWindowFocus: false,
   });
 
-  if (!albums || albums.length === 0) {
-    return <div className="text-white">No results found.</div>;
-  }
-
   return (
     <ScrollArea.Root className="h-full relative w-lg">
       <ScrollArea.Viewport className="max-h-100 min-h-0 mt-4 bg-neutral-950 overflow-auto grid-cols-4 grid w-lg grid-flow-dense items-start">
@@ -43,7 +39,10 @@ export const SearchResults = memo(function SearchResults({
             />
           ))
         ) : (
-          <div className="text-white">No results found.</div>
+          <>
+            {query && albums.length === 0 && <div className="col-span-4 text-neutral-500">no results found.</div>}
+            {!query && <div className="col-span-4 text-neutral-500 w-full"></div>}
+          </>
         )}
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">

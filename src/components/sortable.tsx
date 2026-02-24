@@ -43,7 +43,6 @@ export function Sortable({
     return (
       <div
         ref={setNodeRef}
-        className={cn("pointer-events-none", className)}
         style={{
           transform: CSS.Transform.toString(transform),
           transition,
