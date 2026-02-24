@@ -17,7 +17,6 @@ import {
 import { useGrid } from "@/hooks/grid";
 import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
 import dynamic from "next/dynamic";
-import { IconLoader3 } from "@tabler/icons-react";
 
 
 const Background = dynamic(() => import("./background"), {
@@ -36,6 +35,9 @@ export default function Grid() {
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {
       const overItem = albums["grid"].albums[overIndex];
+       if (overIndex < 0 || !overItem) {
+        return null;
+      }
 
       let newRects = arrayMove(rects, overIndex, activeIndex);
       if (isPlaceholderId(overItem.id)) {

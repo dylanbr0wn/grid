@@ -27,6 +27,7 @@ export default function NumberInput({
   leftIcon,
   rightIcon,
   placeholder,
+  required = false,
 }: NumberInputProps) {
   const id = useId();
   return (
@@ -37,6 +38,7 @@ export default function NumberInput({
       min={min}
       max={max}
       step={step}
+      aria-required={required}
       onValueChange={(value) => onChange?.(value)}
       className="flex flex-col items-start w-1/2"
     >
@@ -57,6 +59,7 @@ export default function NumberInput({
         <span className="text-sm">{leftIcon}</span>
         <NumberField.Input
           placeholder={placeholder}
+          required={required}
           className={cn(
             "w-full outline-none text-left text-base tabular-nums placeholder:text-xs"
           )}

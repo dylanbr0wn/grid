@@ -1,7 +1,7 @@
 'use client';
 import { ScrollArea } from "@base-ui/react";
-import { Container } from "./editor/context";
 import { cn } from "@/lib/util";
+import { Container } from "@/context/grid";
 
 function calcHeight(albumCount: number) {
   const rows = Math.ceil(albumCount / 3);

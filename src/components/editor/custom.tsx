@@ -187,6 +187,7 @@ export default function CustomPallete() {
   function updateSort(newSort: SortType) {
     setSort(newSort);
     setAlbums((prev) => {
+      const container = prev[CUSTOM_CONTAINER_KEY];
       const sortedAlbums = [...container.albums.slice(0, -1)];
 
       return {
@@ -214,7 +215,7 @@ export default function CustomPallete() {
             value={sort}
             items={sortOptions}
             disabled={container.albums.length <= 2}
-            onChange={(v) => updateSort(v as SortType)}
+            onChange={(v) => v && updateSort(v as SortType)}
             icon={<div className="text-neutral-500">sort by</div>}
           />
         </>

@@ -411,6 +411,8 @@ export function EditorContext({
           grid: {
             ...grid,
             albums: newGridAlbums,
+            maxLength: rows * columns,
+            minLength: rows * columns,
           },
         };
       });

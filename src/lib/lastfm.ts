@@ -39,6 +39,8 @@ export async function fetchWeeklyAlbumChart(user: string) {
   const response = await fetch(url, { cache: 'no-store' })
 
   if (!response.ok) {
+    const safeUrl = new URL(url)
+    safeUrl.searchParams.set('api_key', 'REDACTED')
     console.error(
       'Last.fm API response not ok:',
       response.status,

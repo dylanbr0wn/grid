@@ -19,6 +19,7 @@ export function Sortable({
   id,
   disabled,
   sortData,
+  className,
   ...props
 }: SortableProps) {
   const {
@@ -42,7 +43,7 @@ export function Sortable({
     return (
       <div
         ref={setNodeRef}
-        className={cn("pointer-events-none")}
+        className={cn("pointer-events-none", className)}
         style={{
           transform: CSS.Transform.toString(transform),
           transition,
@@ -61,7 +62,7 @@ export function Sortable({
         isDragging && "opacity-50 z-0",
         isOver &&
           "after:absolute after:inset-0 after:z-10 after:bg-white after:bg-opacity-10",
-        props.className,
+        className,
       )}
       style={
         {

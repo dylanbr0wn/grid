@@ -30,8 +30,8 @@ async function downloadGrid(columns: number, rows: number) {
   });
   const date = new Date();
   const link = document.createElement("a");
-  link.download = `grid_${date.getDate().toString().padStart(2, "0")}${date
-    .getMonth()
+  link.download = `grid_${date.getDate().toString().padStart(2, "0")}${(date
+    .getMonth() + 1)
     .toString()
     .padStart(2, "0")}${date.getFullYear()}_${date
     .getHours()

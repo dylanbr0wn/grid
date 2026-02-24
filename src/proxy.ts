@@ -12,6 +12,11 @@ export function proxy(request: NextRequest) {
   // This removes the leading slash. e.g., "/dylan" becomes "dylan"
   const user = pathname.substring(1).split('/')[0];
 
+  const usernamePattern = /^[A-Za-z0-9_-]+$/;
+  if (!usernamePattern.test(user)) {
+    return NextResponse.next();
+  }
+
   if (user) {
     // Construct the new URL for redirection
     const newUrl = new URL(request.url);
@@ -20,7 +25,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(newUrl);
   }
 
-  return NextResponse.next();;
+  return NextResponse.next();
 }
 
 export const config = {

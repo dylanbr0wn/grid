@@ -5,16 +5,16 @@ import { PLACEHOLDER_IMG } from "../../lib/util"
 
 export type ImageWithFallbackProps = {imgs?: string[]} & React.ComponentProps<typeof Image>
 
-export const ImageWithFallback = memo(function ImageWithFallback({ src, alt, onLoad, ...rest }: ImageWithFallbackProps) {
+export const ImageWithFallback = memo(function ImageWithFallback({ src, alt, onLoad, imgs, ...rest }: ImageWithFallbackProps) {
   const [loaded, setLoaded] = useState(false)
   const [srcIndex, setSrcIndex] = useState(0)
 
-  const imgs = rest.imgs || [src, PLACEHOLDER_IMG]
+  const srcSet = imgs || [src, PLACEHOLDER_IMG]
 
   return (
     <Image
       blurDataURL={PLACEHOLDER_IMG}
-      src={imgs[srcIndex] || PLACEHOLDER_IMG}
+      src={srcSet[srcIndex] || PLACEHOLDER_IMG}
       alt={alt}
       onLoad={(ev) => {
         if (!loaded)
@@ -30,7 +30,7 @@ export const ImageWithFallback = memo(function ImageWithFallback({ src, alt, onL
       onError={(e) => {
         e.stopPropagation();
         const nextSrc = srcIndex + 1
-        if (nextSrc < imgs.length) {
+        if (nextSrc < srcSet.length) {
           setSrcIndex(nextSrc)
         }
       }}

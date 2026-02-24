@@ -1,6 +1,5 @@
 // /Users/dylan/vault/grid/grid/src/lib/music-brainz.ts
 // Minimal MusicBrainz client for searching and fetching releases.
-// Respects MusicBrainz rate limit (1 req/sec) and sets a proper User-Agent.
 
 import { type } from "arktype";
 import { generateId, PLACEHOLDER_IMG } from "./util";

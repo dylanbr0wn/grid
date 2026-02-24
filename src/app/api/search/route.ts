@@ -1,10 +1,13 @@
 import { searchReleases } from "@/lib/music-brainz";
+import { type } from "arktype";
+
+const limitParam = type("number").atLeast(1).atMost(100);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query") || "";
-  const limit = parseInt(searchParams.get("limit") || "25", 10);
-  const offset = parseInt(searchParams.get("offset") || "0", 10);
+  const limit = limitParam.assert(searchParams.get("limit") || "25");
+  const offset = limitParam.assert(searchParams.get("offset") || "0");
 
   try {
     const results = await searchReleases(query, limit, offset);
