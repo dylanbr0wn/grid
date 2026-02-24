@@ -4,13 +4,13 @@ import { searchReleases } from "@/lib/music-brainz";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { memo, useState } from "react";
 import AlbumCover from "./album/album-cover";
-import { CustomAlbum } from "./editor/custom";
 import { ScrollArea } from "@base-ui/react";
 import {
   getBrightnessStyle,
   getImageBrightness,
   PLACEHOLDER_IMG,
 } from "@/lib/util";
+import { CustomAlbum } from "@/lib/albums";
 
 type SearchResultProps = {
   query: string;
