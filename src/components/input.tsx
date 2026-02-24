@@ -52,7 +52,7 @@ export default function Input({
         />
         <motion.div
           className={cn(
-            "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400  transition-colors peer-focus:bg-white peer-focus:h-[3px]"
+            "absolute right-0 left-0 bottom-0 h-px bg-neutral-400  transition-colors peer-focus:bg-white peer-focus:h-0.75"
           )}
           layout
           transition={{

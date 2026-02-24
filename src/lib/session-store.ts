@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export function useParamsStore<T>(key: string, defaultValue: T) {
 	const queryClient = useQueryClient()
+
 	const query = useQuery<T | undefined>({
 		queryKey: ['param-storage', key],
 		queryFn: () => {
@@ -17,6 +18,7 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 		},
 		initialData: defaultValue,
 	})
+
 	const mutation = useMutation({
 		mutationKey: ['param-storage', key],
 		mutationFn: async (value: T | undefined) => {
@@ -42,6 +44,7 @@ export function useParamsStore<T>(key: string, defaultValue: T) {
 			queryClient.invalidateQueries({ queryKey: ['param-storage', key] })
 		},
 	})
+
 	const { data } = query
 	const { mutate } = mutation
 

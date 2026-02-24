@@ -17,72 +17,19 @@ import {
   arraySwap,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { createContext, use, useCallback, useId, useRef, useState } from "react";
-import { useGridSize } from "@/lib/grid";
+import {  useCallback, useEffect, useId, useRef, useState } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { generateId } from "@/lib/util";
-import { CustomAlbum } from "./custom";
-import { type LastFmAlbum, PlaceholderAlbum } from "./lastfm-container";
-import { AlbumTypes } from "@/lib/albums";
+import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, } from "@/lib/albums";
+import { useGridRows, useGridColumns } from "@/hooks/grid";
+import { ContainerMap, GridContext, SetAlbumFunc } from "@/context/grid";
 
-export type Container = {
-  title: string;
-  albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum)[];
-  allowedTypes: AlbumTypes[];
-  maxLength?: number;
-  minLength?: number;
-};
 
-export type ContainerMap = Record<UniqueIdentifier, Container>;
 
-type SetAlbumFunc = (
-  id: UniqueIdentifier,
-  album:
-    | LastFmAlbum
-    | CustomAlbum
-    | ((album: LastFmAlbum | CustomAlbum) => LastFmAlbum | CustomAlbum)
-) => void;
 
-type GridContextType = {
-  setTextBackground: (id: UniqueIdentifier, background: boolean) => void;
-  setTextColor: (id: UniqueIdentifier, color: string) => void;
-  setAlbum: SetAlbumFunc;
-  setAlbums: React.Dispatch<React.SetStateAction<ContainerMap>>;
-  addCustomAlbum: (album: CustomAlbum) => void;
-  setRows: (rows: number) => void;
-  setColumns: (columns: number) => void;
-  albums: ContainerMap;
-  activeAlbum?: LastFmAlbum | null;
-  rows: number;
-  columns: number;
-};
 
-export const GridContext = createContext<GridContextType>({
-  setTextBackground: () => {},
-  setTextColor: () => {},
-  setAlbum: () => {},
-  setAlbums: () => {},
-  addCustomAlbum: () => {},
-  albums: {},
-  rows: 0,
-  columns: 0,
-  setRows: () => {},
-  setColumns: () => {},
-});
 
-export function useGrid() {
-  return use(GridContext);
-}
 
-export function useContainer(id: UniqueIdentifier) {
-  const { albums } = useGrid()
-
-  const container = albums[id]
-
-    return {
-      container,
-    }
-}
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
@@ -130,14 +77,15 @@ export function EditorContext({
   children: React.ReactNode;
 }) {
   const id = useId();
-  const { rows, columns, setRows, setColumns } = useGridSize();
+  const { rows, setRows } = useGridRows();
+  const { columns, setColumns } = useGridColumns();
   const [albums, setAlbums] = useState<ContainerMap>({
     grid: {
       title: "Grid",
       allowedTypes: ["placeholder", "lastfm", "custom"],
       maxLength: rows * columns,
       minLength: rows * columns,
-      albums: new Array(rows * columns).fill(0).map(() => {
+      albums: Array.from({ length: rows * columns }).map(() => {
         return newPlaceholderAlbum();
       }),
     },
@@ -373,7 +321,6 @@ export function EditorContext({
 
       const itemIndex = albums[container].albums.findIndex((a) => a.id === id);
       if (itemIndex === -1) return albums;
-      console.log("Setting text color for", id, "to", color);
       const newItems = albums[container].albums.map((item, i) =>
         i === itemIndex
           ? {
@@ -444,57 +391,47 @@ export function EditorContext({
     });
   }
 
-  function updateRows(rows: number) {
-    setRows(rows);
-    setAlbums((albums) => {
-      const grid = albums["grid"];
-      const newGridAlbums = [...grid.albums];
+   function updateDimensions(rows: number, columns: number) {
+      setAlbums((albums) => {
+        const grid = albums["grid"];
+        const newGridAlbums = [...grid.albums];
 
-      if (rows * columns > grid.albums.length) {
-        newGridAlbums.push(
-          ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
-            return newPlaceholderAlbum();
-          })
-        );
-      } else if (rows * columns < grid.albums.length) {
-        newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
-      }
+        if (rows * columns > grid.albums.length) {
+          newGridAlbums.push(
+            ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
+              return newPlaceholderAlbum();
+            })
+          );
+        } else if (rows * columns < grid.albums.length) {
+          newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
+        }
 
-      return {
-        ...albums,
-        grid: {
-          ...grid,
-          albums: newGridAlbums,
-        },
-      };
-    });
-  }
+        return {
+          ...albums,
+          grid: {
+            ...grid,
+            albums: newGridAlbums,
+          },
+        };
+      });
+    }
 
   function updateColumns(columns: number) {
     setColumns(columns);
-    setAlbums((albums) => {
-      const grid = albums["grid"];
-      const newGridAlbums = [...grid.albums];
-
-      if (rows * columns > grid.albums.length) {
-        newGridAlbums.push(
-          ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
-            return newPlaceholderAlbum();
-          })
-        );
-      } else if (rows * columns < grid.albums.length) {
-        newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
-      }
-
-      return {
-        ...albums,
-        grid: {
-          ...grid,
-          albums: newGridAlbums,
-        },
-      };
-    });
+    updateDimensions(rows, columns);
   }
+
+  function updateRows(rows: number) {
+    setRows(rows);
+    updateDimensions(rows, columns);
+  }
+
+
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    updateDimensions(rows, columns);
+  }, [rows, columns]);
 
   return (
     <GridContext.Provider
@@ -505,8 +442,8 @@ export function EditorContext({
         albums,
         setAlbums,
         activeAlbum,
-        rows,
         addCustomAlbum,
+        rows,
         columns,
         setColumns: updateColumns,
         setRows: updateRows

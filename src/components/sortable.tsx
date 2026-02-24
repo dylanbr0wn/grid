@@ -35,21 +35,24 @@ export function Sortable({
     data: sortData,
   });
 
-  const canDrag = typeof disabled === "boolean" ? !disabled : !disabled?.draggable;
+  const canDrag =
+    typeof disabled === "boolean" ? !disabled : !disabled?.draggable;
 
   if (!canDrag) {
-    <div
-      ref={setNodeRef}
-      className={cn("pointer-events-none")}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-      {...props}
-      {...attributes}
-    >
-      {children}
-    </div>;
+    return (
+      <div
+        ref={setNodeRef}
+        className={cn("pointer-events-none")}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+        }}
+        {...props}
+        {...attributes}
+      >
+        {children}
+      </div>
+    );
   }
 
   return (

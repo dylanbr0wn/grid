@@ -13,7 +13,6 @@ export function proxy(request: NextRequest) {
   const user = pathname.substring(1).split('/')[0];
 
   if (user) {
-    console.log(`Redirecting old route: ${pathname} to /?lastfmUser=${user}`);
     // Construct the new URL for redirection
     const newUrl = new URL(request.url);
     newUrl.pathname = '/';

@@ -7,11 +7,28 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { isPlaceholderId, useGrid } from "./context";
-import { cn } from "@/lib/util";
+import { isPlaceholderId } from "./context";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
-import { LastFmAlbum, LastFmAlbumProps, PlaceholderAlbum } from "./lastfm-container";
+import {
+  LastFmAlbum,
+  LastFmAlbumProps,
+} from "./lastfm-container";
+import { useGrid } from "@/hooks/grid";
+import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
+import dynamic from "next/dynamic";
+import { IconLoader3 } from "@tabler/icons-react";
+
+
+const Background = dynamic(() => import("./background"), {
+  ssr: false,
+  loading: () => (
+    null
+    // <div className="h-full px-3 flex items-center justify-center">
+    //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+    // </div>
+  ),
+});
 
 export default function Grid() {
   const { rows, columns, albums } = useGrid();
@@ -39,10 +56,8 @@ export default function Grid() {
         scaleY: newRect.height / oldRect.height,
       };
     },
-    [albums]
+    [albums],
   );
-
-
 
   return (
     <ScrollArea.Root
@@ -58,7 +73,7 @@ export default function Grid() {
         <div
           id="fm-grid"
           className={
-            "shrink-0 grid h-full relative select-none outline outline-neutral-800 -outline-offset-1 place-items-center"
+            "shrink-0 grid h-full relative select-none place-items-start"
           }
           style={
             {
@@ -67,7 +82,7 @@ export default function Grid() {
             } as React.CSSProperties
           }
         >
-          <BackgroundGrid rows={rows} columns={columns} />
+          <Background />
           <div className="grid grid-cols-[repeat(var(--col-count),1fr)] grid-rows-[repeat(var(--row-count),1fr)] auto-rows-min h-full col-span-full row-span-full">
             <SortableContext
               id="grid"
@@ -94,47 +109,11 @@ export default function Grid() {
   );
 }
 
-type BackgroundGridProps = {
-  rows: number;
-  columns: number;
-};
 
-const BackgroundGrid = memo(function BackgroundGrid({
-  rows,
-  columns,
-}: BackgroundGridProps) {
-  const albums = new Array(rows * columns).fill(0);
-  return (
-    <div
-      className={
-        "shrink-0 col-span-full row-span-full grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full -z-1 pointer-events-none select-none overflow-hidden no-export"
-      }
-      style={
-        {
-          width: columns * 128,
-          height: rows * 128,
-        } as React.CSSProperties
-      }
-    >
-      {albums.map((_, index) => {
-        return (
-          <div
-            key={index}
-            className={cn(
-              "w-32 h-32 bg-neutral-950 -z-1 border-neutral-800 -translate-x-[0.5px] -translate-y-[0.5px]",
-              index % columns > 0 && "border-l",
-              index >= columns && "border-t"
-            )}
-          />
-        );
-      })}
-    </div>
-  );
-});
 
 type SortableAlbumProps = {
   disabled?: boolean;
-  album: LastFmAlbum | PlaceholderAlbum | CustomAlbum;
+  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType;
   index: number;
 } & Pick<LastFmAlbumProps, "priority">;
 
@@ -145,9 +124,13 @@ export function SortableAlbum({
 }: SortableAlbumProps) {
   if (album.type === "custom") {
     return (
-      <Sortable id={album.id} sortData={{
-        album
-      }} disabled={!album.mbid}>
+      <Sortable
+        id={album.id}
+        sortData={{
+          album,
+        }}
+        disabled={!album.mbid}
+      >
         <CustomAlbum
           album={album}
           data-index={index}
@@ -160,9 +143,13 @@ export function SortableAlbum({
 
   if (album.type === "placeholder") {
     return (
-      <Sortable id={album.id} disabled sortData={{
-        album
-      }}>
+      <Sortable
+        id={album.id}
+        disabled
+        sortData={{
+          album,
+        }}
+      >
         <div className="w-32 h-32 bg-transparent" />
       </Sortable>
     );
@@ -170,9 +157,12 @@ export function SortableAlbum({
 
   if (album.type === "lastfm") {
     return (
-      <Sortable id={album.id} sortData={{
-        album
-      }}>
+      <Sortable
+        id={album.id}
+        sortData={{
+          album,
+        }}
+      >
         <LastFmAlbum
           album={album}
           data-index={index}

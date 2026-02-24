@@ -1,7 +1,6 @@
 "use client";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import AlbumPallete from "../pallette";
-import { useContainer, useGrid } from "./context";
 import { memo, Suspense, useEffect, useState } from "react";
 import {
   cn,
@@ -16,12 +15,13 @@ import { IconLoader2, IconPlus, IconSearch } from "@tabler/icons-react";
 import { SearchResults } from "../result";
 
 import * as motion from "motion/react-client";
-import AlbumCover from "../album-cover";
+import AlbumCover from "../album/album-cover";
 
 import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
-import { BaseAlbum } from "@/lib/albums";
+import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
+import { useContainer, useGrid } from "@/hooks/grid";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -32,21 +32,10 @@ const Select = dynamic(() => import("../select"), {
   ),
 });
 
-export type CustomAlbum = BaseAlbum & {
-  type: "custom";
-  album?: string;
-  mbid?: string;
-  img?: string;
-  imgs?: string[];
-  plays?: number;
-  artist?: string;
-  artistMbid?: string;
-  textColor?: string;
-  textBackground?: boolean;
-};
+
 
 type CustomAlbumProps = {
-  album: CustomAlbum;
+  album: CustomAlbumType;
   priority?: boolean;
 };
 
@@ -62,7 +51,7 @@ export const CustomAlbum = memo(function CustomAlbum({
 
   const { addCustomAlbum, setTextBackground, setTextColor } = useGrid();
 
-  function handleAddCustomAlbum(_album: CustomAlbum) {
+  function handleAddCustomAlbum(_album: CustomAlbumType) {
     addCustomAlbum({
       ...album,
       ..._album,
@@ -101,7 +90,7 @@ export const CustomAlbum = memo(function CustomAlbum({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         className={cn(
-          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50",
+          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50 z-20",
         )}
       >
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors">
@@ -205,7 +194,7 @@ export default function CustomPallete() {
         [CUSTOM_CONTAINER_KEY]: {
           ...prev[CUSTOM_CONTAINER_KEY],
           albums: [
-            ...sortAlbums(sortedAlbums as CustomAlbum[], newSort),
+            ...sortAlbums(sortedAlbums as CustomAlbumType[], newSort),
             container.albums[container.albums.length - 1],
           ],
         },
@@ -236,7 +225,7 @@ export default function CustomPallete() {
         items={container.albums}
         strategy={rectSortingStrategy}
       >
-        {(container.albums as CustomAlbum[]).map((album, index) => (
+        {(container.albums as CustomAlbumType[]).map((album, index) => (
           <Sortable
             key={album.id}
             id={album.id}

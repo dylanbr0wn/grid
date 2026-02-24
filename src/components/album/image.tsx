@@ -1,7 +1,7 @@
 'use client'
 import Image from "next/image"
 import { memo, useState } from "react"
-import { PLACEHOLDER_IMG } from "../lib/util"
+import { PLACEHOLDER_IMG } from "../../lib/util"
 
 export type ImageWithFallbackProps = {imgs?: string[]} & React.ComponentProps<typeof Image>
 

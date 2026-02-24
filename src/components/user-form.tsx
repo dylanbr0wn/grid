@@ -11,11 +11,10 @@ export default function UserForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function onSubmit(e: React.SubmitEvent) {
+  function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-
-    const form = e.target as HTMLFormElement;
+    const form = e.target
     const formData = new FormData(form);
     const username = formData.get("lastfm-username") as string;
     if (!username) {
@@ -36,9 +35,6 @@ export default function UserForm() {
         name="lastfm-username"
         className={cn("flex w-full flex-col items-start gap-1")}
       >
-        {/* <Field.Label className="text-sm font-medium text-neutral-500">
-              Last.fm Username
-            </Field.Label> */}
         <div className="hover:bg-neutral-900 focus-within:z-1 focus-within:bg-neutral-900 text-neutral-300 pl-2 relative w-full">
           <Field.Control
             required
@@ -49,7 +45,7 @@ export default function UserForm() {
           />
           <motion.div
             className={cn(
-              "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400  transition-colors peer-focus:bg-white peer-focus:h-[3px]"
+              "absolute right-0 left-0 bottom-0 h-px bg-neutral-400  transition-colors peer-focus:bg-white peer-focus:h-0.75"
             )}
             layout
             transition={{
@@ -70,7 +66,7 @@ export default function UserForm() {
         {loading ? "Working..." : "Import"}
         <motion.div
           className={cn(
-            "absolute right-0 left-0 bottom-0 h-[1px] bg-neutral-400 group-focus-within:h-[2px] group-focus-within:z-1 transition-colors group-focus:bg-white group-focus:h-[3px]"
+            "absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 transition-colors group-focus:bg-white group-focus:h-0.75"
           )}
           layout
           transition={{
@@ -81,10 +77,3 @@ export default function UserForm() {
     </form>
   );
 }
-
-// function FormInput() {
-//   // const searchParams = useSearchParams();
-//   return (
-
-//   );
-// }

@@ -28,13 +28,13 @@ export default function AlbumPallete({
   return (
     <div
       className={cn(
-        "min-h-[184px] relative flex flex-col",
+        "min-h-46 relative flex flex-col",
         Math.ceil(container.albums.length / 3) <= 3 && "shrink-0",
         Math.ceil(container.albums.length / 3) > 3 && "min-h-1/2"
       )}
       style={{ width: 3 * 128 + 16, height: height  + 40 }}
     >
-      <div className="w-full h-[39px] border-b border-neutral-800 flex items-center shrink-0 gap-1">
+      <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
         {header ?? (
           <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
             {container.title}
@@ -48,7 +48,7 @@ export default function AlbumPallete({
         <ScrollArea.Viewport className="w-full max-h-full grid grid-cols-3 px-2 relative overscroll-contain overflow-x-hidden pt-2">
           {children}
         </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-[hovering]:opacity-100 data-[hovering]:delay-0 data-[hovering]:duration-75 data-[scrolling]:opacity-100 data-[scrolling]:delay-0 data-[scrolling]:duration-75">
+        <ScrollArea.Scrollbar className="flex w-1 justify-center bg-neutral-900 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
           <ScrollArea.Thumb className="w-full bg-neutral-500" />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>

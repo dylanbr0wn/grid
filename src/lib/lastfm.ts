@@ -2,7 +2,7 @@ import { type } from 'arktype'
 import 'server-only'
 import { generateId, PLACEHOLDER_IMG } from './util'
 import { getCoverArtUrl } from './music-brainz'
-import { LastFmAlbum } from '@/components/editor/lastfm-container'
+import { LastFmAlbum } from './albums'
 
 
 const apiURL = 'http://ws.audioscrobbler.com/2.0/'

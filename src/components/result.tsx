@@ -3,7 +3,7 @@
 import { searchReleases } from "@/lib/music-brainz";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { memo, useState } from "react";
-import AlbumCover from "./album-cover";
+import AlbumCover from "./album/album-cover";
 import { CustomAlbum } from "./editor/custom";
 import { ScrollArea } from "@base-ui/react";
 import {

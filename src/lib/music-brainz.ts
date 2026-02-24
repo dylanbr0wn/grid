@@ -2,9 +2,9 @@
 // Minimal MusicBrainz client for searching and fetching releases.
 // Respects MusicBrainz rate limit (1 req/sec) and sets a proper User-Agent.
 
-import { CustomAlbum } from "@/components/editor/custom";
 import { type } from "arktype";
 import { generateId, PLACEHOLDER_IMG } from "./util";
+import { CustomAlbum } from "./albums";
 
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";

@@ -3,9 +3,9 @@
 import { DragOverlay } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { createPortal } from "react-dom";
-import {  useGrid } from "./context";
-import AlbumCover from "../album-cover";
+import AlbumCover from "../album/album-cover";
 import { cn } from "@/lib/util";
+import { useGrid } from "@/hooks/grid";
 
 export default function Overlay() {
   const { activeAlbum } = useGrid();
