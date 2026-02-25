@@ -100,7 +100,7 @@ export function EditorContext({
       albums: []
     },
   });
-  const [activeAlbum, setActiveAlbum] = useState<LastFmAlbum | null>(null);
+  const [activeAlbum, setActiveAlbum] = useState<LastFmAlbum | CustomAlbum | null>(null);
   const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
     null
   );
@@ -459,7 +459,7 @@ export function EditorContext({
         sensors={sensors}
         onDragStart={({ active }) => {
           if (!active.data.current) return;
-          setActiveAlbum(active.data.current.album as LastFmAlbum);
+          setActiveAlbum(active.data.current.album as LastFmAlbum | CustomAlbum);
         }}
         measuring={{
           droppable: {

@@ -3,7 +3,7 @@
 
 import { type } from "arktype";
 import { generateId, PLACEHOLDER_IMG } from "./util";
-import { CustomAlbum } from "./albums";
+import { customAlbum, CustomAlbum } from "./albums";
 
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";
@@ -85,7 +85,7 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
         imgs,
       }
   })
-  return albums;
+  return customAlbum.array().assert(albums);
 }
 
 export function getCoverArtUrl(releaseGroupId: string, size: 'small' | 'large' = 'large') {

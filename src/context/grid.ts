@@ -29,7 +29,7 @@ type GridContextType = {
   setRows: (rows: number) => void;
   setColumns: (columns: number) => void;
   albums: ContainerMap;
-  activeAlbum?: LastFmAlbum | null;
+  activeAlbum?: LastFmAlbum | CustomAlbum | null;
   rows: number;
   columns: number;
 };

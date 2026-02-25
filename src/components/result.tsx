@@ -1,6 +1,5 @@
 "use client";
 
-import { searchReleases } from "@/lib/music-brainz";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { memo, useState } from "react";
 import AlbumCover from "./album/album-cover";
@@ -10,7 +9,7 @@ import {
   getImageBrightness,
   PLACEHOLDER_IMG,
 } from "@/lib/util";
-import { CustomAlbum } from "@/lib/albums";
+import { customAlbum, CustomAlbum } from "@/lib/albums";
 
 type SearchResultProps = {
   query: string;
@@ -21,9 +20,21 @@ export const SearchResults = memo(function SearchResults({
   query,
   onSelect,
 }: SearchResultProps) {
-  const { data: albums } = useSuspenseQuery({
+  const { data: albums } = useSuspenseQuery<CustomAlbum[]>({
     queryKey: ["music-brainz", "search-releases", query],
-    queryFn: () => searchReleases(query),
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+        if (!res.ok) {
+          throw new Error(`Search API error: ${res.status} ${res.statusText}`);
+        }
+        const albums = customAlbum.array().assert(await res.json());
+        return albums;
+      } catch (error) {
+        console.error("Error searching releases:", error);
+        return [] as CustomAlbum[];
+      }
+    },
     refetchOnWindowFocus: false,
   });
 

@@ -7,7 +7,7 @@ import { newPlaceholderAlbum } from "./editor/context";
 import { IconDownload, IconLayoutGridAdd, IconX } from "@tabler/icons-react";
 import Image from "next/image";
 import { useGrid, useGridColumns, useGridRows } from "@/hooks/grid";
-import { CustomAlbum, LastFmAlbum } from "@/lib/albums";
+import { CustomAlbum, LastFmAlbum, PlaceholderAlbum } from "@/lib/albums";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { gridToJpeg, gridToPng } from "@/lib/export";
@@ -62,7 +62,7 @@ export default function Menu() {
   function handleAutoLoad() {
     setAlbums((albums) => {
       const totalCount = rows * columns;
-      let current = albums["grid"].albums.filter(
+      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum)[] = albums["grid"].albums.filter(
         (a) => a.type !== "placeholder",
       );
       const toAdd = totalCount - current.length;
@@ -112,6 +112,15 @@ export default function Menu() {
       )[];
 
       current = [...current, ...lastfmToAdd];
+
+      if (current.length < totalCount) {
+        // if still not enough, fill the rest with placeholders
+        const emptySlots = totalCount - current.length;
+        const placeholders = Array(emptySlots)
+          .fill(null)
+          .map(() => newPlaceholderAlbum());
+        current = [...current, ...placeholders];
+      }
 
       return {
         ...albums,
