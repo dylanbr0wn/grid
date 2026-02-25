@@ -26,8 +26,8 @@ export default function Overlay() {
             id={`${activeAlbum.id}-drag-overlay`}
             src={activeAlbum.img}
             imgs={activeAlbum.imgs}
-            name={activeAlbum.album}
-            artist={activeAlbum.artist}
+            name={activeAlbum.album ?? "Unknown Album"}
+            artist={activeAlbum.artist ?? "Unknown Artist"}
             width={128}
             height={128}
             priority={true}
