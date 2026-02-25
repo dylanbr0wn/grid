@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import * as htmlToImage from "html-to-image";
 import NumberInput from "@/components/number-input";
-import { cn, PLACEHOLDER_IMG } from "@/lib/util";
+import { cn } from "@/lib/util";
 import { newPlaceholderAlbum } from "./editor/context";
 import { IconDownload, IconLayoutGridAdd, IconX } from "@tabler/icons-react";
 import Image from "next/image";
@@ -11,27 +10,23 @@ import { useGrid, useGridColumns, useGridRows } from "@/hooks/grid";
 import { CustomAlbum, LastFmAlbum } from "@/lib/albums";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
+import { gridToJpeg, gridToPng } from "@/lib/export";
 
-async function downloadGrid(columns: number, rows: number) {
+async function downloadGrid(columns: number, rows: number, format: "jpeg" | "png" = "jpeg") {
   const node = document.getElementById("fm-grid");
   const dpr = window.devicePixelRatio;
   if (!node) return;
-  const dataUrl = await htmlToImage.toJpeg(node, {
-    canvasHeight: (rows * 128 * 2) / dpr,
-    canvasWidth: (columns * 128 * 2) / dpr,
-    backgroundColor: "#000000",
-    imagePlaceholder: PLACEHOLDER_IMG,
-    quality: 1,
-    type: "image/jpeg",
-    includeQueryParams: true,
-    filter: (node) => {
-      return !(node as HTMLElement).classList?.contains("no-export");
-    },
-  });
+  let dataUrl: string;
+  if (format === "jpeg") {
+    dataUrl = await gridToJpeg(node, columns * 128 * dpr + 16, rows * 128 * dpr + 16);
+  } else {
+    dataUrl = await gridToPng(node, columns * 128 * dpr + 16, rows * 128 * dpr + 16);
+  }
   const date = new Date();
   const link = document.createElement("a");
-  link.download = `grid_${date.getDate().toString().padStart(2, "0")}${(date
-    .getMonth() + 1)
+  link.download = `grid_${date.getDate().toString().padStart(2, "0")}${(
+    date.getMonth() + 1
+  )
     .toString()
     .padStart(2, "0")}${date.getFullYear()}_${date
     .getHours()
@@ -201,7 +196,12 @@ export default function Menu() {
   return (
     <AnimatePresence>
       {!isPendingColumns && !isPendingRows && (
-        <motion.div className="relative shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div
+          className="relative shrink-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <div className="flex flex-col -translate-x-px w-50 h-full">
             <div className="flex flex-col justify-center h-full">
               <div className="items-center gap-2 p-1 flex">
@@ -271,7 +271,16 @@ export default function Menu() {
                 data-loading={loading}
               >
                 <IconDownload className="size-4" />
-                <span>{loading ? "Loading..." : "Download .PNG"}</span>
+                <span>{loading ? "Loading..." : ".JPEG"}</span>
+              </button>
+              <button
+                disabled={loading}
+                onClick={download}
+                className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
+                data-loading={loading}
+              >
+                <IconDownload className="size-4" />
+                <span>{loading ? "Loading..." : ".PNG"}</span>
               </button>
             </div>
           </div>
