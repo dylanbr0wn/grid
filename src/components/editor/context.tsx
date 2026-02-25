@@ -140,8 +140,9 @@ export function EditorContext({
 
       // If the type is not allowed in the over container, do nothing, it doesnt belong here
       if (
+        active.data.current?.album?.type &&
         !overItems.allowedTypes.includes(
-          active.data.current?.album.type as AlbumTypes
+          active.data.current.album.type as AlbumTypes
         )
       ) {
         return albums;
@@ -296,7 +297,7 @@ export function EditorContext({
       const newItems = albums[container].albums.map((item) =>
         item.id === id
           ? typeof album === "function"
-            ? album(item as LastFmAlbum)
+            ? album(item)
             : album
           : item
       );

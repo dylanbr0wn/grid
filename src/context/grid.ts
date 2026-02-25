@@ -17,7 +17,8 @@ export type SetAlbumFunc = (
   album:
     | LastFmAlbum
     | CustomAlbum
-    | ((album: LastFmAlbum | CustomAlbum) => LastFmAlbum | CustomAlbum)
+    | PlaceholderAlbum
+    | ((album: LastFmAlbum | CustomAlbum | PlaceholderAlbum) => LastFmAlbum | CustomAlbum | PlaceholderAlbum)
 ) => void;
 
 type GridContextType = {
