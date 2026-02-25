@@ -1,6 +1,6 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useState } from "react";
 import AlbumCover from "./album/album-cover";
 import { ScrollArea } from "@base-ui/react";
@@ -10,6 +10,7 @@ import {
   PLACEHOLDER_IMG,
 } from "@/lib/util";
 import { customAlbum, CustomAlbum } from "@/lib/albums";
+import { type } from "arktype";
 
 type SearchResultProps = {
   query: string;
@@ -20,16 +21,23 @@ export const SearchResults = memo(function SearchResults({
   query,
   onSelect,
 }: SearchResultProps) {
-  const { data: albums } = useSuspenseQuery<CustomAlbum[]>({
+  const { data: albums, error } = useQuery<CustomAlbum[]>({
     queryKey: ["music-brainz", "search-releases", query],
     queryFn: async () => {
       try {
+        if (query.length === 0) {
+          return [];
+        }
         const res = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
         if (!res.ok) {
           throw new Error(`Search API error: ${res.status} ${res.statusText}`);
         }
-        const albums = customAlbum.array().assert(await res.json());
-        return albums;
+        const parseJson = type("string.json.parse").to(customAlbum.array());
+        const out = parseJson(await res.text());
+        if (out instanceof type.errors) {
+          throw new Error(`Search API response validation error: ${out.summary}`);
+        }
+        return out;
       } catch (error) {
         console.error("Error searching releases:", error);
         return [] as CustomAlbum[];
@@ -37,6 +45,14 @@ export const SearchResults = memo(function SearchResults({
     },
     refetchOnWindowFocus: false,
   });
+
+  if (error) {
+    return <div className="text-rose-600">Something went wrong.</div>;
+  }
+
+  if (!albums) {
+    return <div className="text-neutral-500">Loading...</div>;
+  }
 
   return (
     <ScrollArea.Root className="h-full relative w-lg">
@@ -72,7 +88,7 @@ function SearchResultItem({ album, onSelect }: SearchResultItemProps) {
   const [textBackground, setTextBackground] = useState(false);
   const [textColor, setTextColor] = useState("white");
   return (
-    <button className="bg-black z-30" onClick={() => onSelect?.(album)} key={album.id}>
+    <button type="button" className="bg-black z-30" onClick={() => onSelect?.(album)} key={album.id}>
       <AlbumCover
         src={album.img || PLACEHOLDER_IMG}
         imgs={album.imgs}

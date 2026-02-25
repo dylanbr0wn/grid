@@ -140,14 +140,10 @@ export const CustomAlbum = memo(function CustomAlbum({
               }}
             />
           </Field.Root>
-          <Suspense
-            fallback={<div className="text-white mt-4">Loading...</div>}
-          >
-            <SearchResults
+          <SearchResults
               query={debouncedSearchQuery}
               onSelect={handleAddCustomAlbum}
             />
-          </Suspense>
           <Dialog.Close className="absolute top-0 right-0 h-8 w-8 bg-red-500 text-base font-medium text-white select-none hover:bg-red-700 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-red-900">
             x
           </Dialog.Close>
