@@ -1,22 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/auth";
 
-export async function proxy(request: NextRequest) {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    })
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-    // THIS IS NOT SECURE!
-    // This is the recommended approach to optimistically redirect users
-    // We recommend handling auth checks in each page/route
-    if(!session) {
-        return NextResponse.redirect(new URL("/", request.url));
-    }
-
+    // Exclude specific known paths like the root, /search, etc.
+  if (pathname === '/') {
     return NextResponse.next();
+  }
+
+  // Extract the username, assuming it's the first part of the path
+  // This removes the leading slash. e.g., "/dylan" becomes "dylan"
+  const user = pathname.substring(1).split('/')[0];
+
+  const usernamePattern = /^[A-Za-z0-9_-]+$/;
+  if (!usernamePattern.test(user)) {
+    return NextResponse.next();
+  }
+
+  if (user) {
+    // Construct the new URL for redirection
+    const newUrl = new URL(request.url);
+    newUrl.pathname = '/';
+    newUrl.searchParams.set('lastfmUser', user);
+    return NextResponse.redirect(newUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/spotify"], // Specify the routes the middleware applies to
-};
+    matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - png files (image files)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.well-known|img|apple-touch-icon-precomposed.png).*)'
+  ],
+}
