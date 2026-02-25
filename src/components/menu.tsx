@@ -34,7 +34,7 @@ async function downloadGrid(columns: number, rows: number, format: "jpeg" | "png
     .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}${date
     .getSeconds()
     .toString()
-    .padStart(2, "0")}.jpeg`;
+    .padStart(2, "0")}.${format}`;
   link.href = dataUrl;
   link.click(); // Triggers the download
   link.remove();
@@ -47,11 +47,11 @@ export default function Menu() {
   const { isPending: isPendingRows } = useGridRows();
   const { isPending: isPendingColumns } = useGridColumns();
 
-  async function download() {
+  async function download(type: "jpeg" | "png" = "jpeg") {
     if (!columns || !rows) return;
     setLoading(true);
     try {
-      await downloadGrid(columns, rows);
+      await downloadGrid(columns, rows, type);
     } catch (e) {
       console.error(e);
     }
@@ -275,7 +275,7 @@ export default function Menu() {
               </div>
               <button
                 disabled={loading}
-                onClick={download}
+                onClick={() => download("jpeg")}
                 className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
                 data-loading={loading}
               >
@@ -284,7 +284,7 @@ export default function Menu() {
               </button>
               <button
                 disabled={loading}
-                onClick={download}
+                onClick={() => download("png")}
                 className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
                 data-loading={loading}
               >

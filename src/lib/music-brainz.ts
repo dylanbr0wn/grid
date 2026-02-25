@@ -58,7 +58,7 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
   if (query.length === 0) {
     return []
   }
-  const response = await request("/release-group", { query, limit, offset, inc: "artists+labels+recordings+isrcs" });
+  const response = await request("/release-group", { query, limit, offset });
   const out = ReleaseGroupResponse(response);
 
   if (out instanceof type.errors) {
@@ -81,7 +81,7 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
         album: rg.title,
         artist: rg["artist-credit"].map((ac) => ac.artist.name).join(", "),
         artistMbid: rg["artist-credit"].map((ac) => ac.artist.id).join(", "),
-        img: getCoverArtUrl(rg.id, 'large') || PLACEHOLDER_IMG,
+        img: getCoverArtUrl(rg.id, 'large') ?? PLACEHOLDER_IMG,
         imgs,
       }
   })

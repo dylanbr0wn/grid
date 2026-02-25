@@ -24,7 +24,7 @@ const albumInfo = type({
   },
 })
 
-const weeklyAlbumChart = type({
+const parseWeeklyAlbumChart = type("string.json.parse").to(type({
   topalbums: {
     album: albumInfo.array(),
     '@attr': {
@@ -32,7 +32,7 @@ const weeklyAlbumChart = type({
       total: 'string',
     },
   },
-})
+}))
 
 export async function fetchWeeklyAlbumChart(user: string) {
   const url = `${apiURL}?method=user.getTopAlbums&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json&period=7day&limit=100`
@@ -50,8 +50,7 @@ export async function fetchWeeklyAlbumChart(user: string) {
     throw new Error('Failed to fetch data from Last.fm')
   }
 
-  const maybeWeeklyAlbumChart = await response.json()
-  const out = weeklyAlbumChart(maybeWeeklyAlbumChart)
+  const out = parseWeeklyAlbumChart(await response.text())
 
   if (out instanceof type.errors) {
     throw new Error(out.summary)
@@ -104,7 +103,7 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]): LastFmAlbum[] {
       artistMbid: a.artist.mbid,
       artist: a.artist.name,
       plays: parseInt(a.playcount),
-      id: `${a.mbid}_${generateId()}` || `${a.artist.name}_${a.name}_${generateId()}`.replaceAll(' ', '-').toLowerCase(),
+      id: `${a.mbid || `${a.artist.name}_${a.name}`}_${generateId()}`.replaceAll(' ', '-').toLowerCase(),
       img: large || getCoverArtUrl(a.mbid) || small || fallback || PLACEHOLDER_IMG,
       textColor: 'white',
       textBackground: false,

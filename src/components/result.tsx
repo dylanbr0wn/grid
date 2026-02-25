@@ -24,7 +24,6 @@ export const SearchResults = memo(function SearchResults({
   const { data: albums, error } = useQuery<CustomAlbum[]>({
     queryKey: ["music-brainz", "search-releases", query],
     queryFn: async () => {
-      try {
         if (query.length === 0) {
           return [];
         }
@@ -38,10 +37,6 @@ export const SearchResults = memo(function SearchResults({
           throw new Error(`Search API response validation error: ${out.summary}`);
         }
         return out;
-      } catch (error) {
-        console.error("Error searching releases:", error);
-        return [] as CustomAlbum[];
-      }
     },
     refetchOnWindowFocus: false,
   });
