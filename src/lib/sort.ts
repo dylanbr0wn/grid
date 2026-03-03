@@ -1,5 +1,3 @@
-import { useParamsStore } from "./session-store"
-
 export type Sortable = {
   album?: string
   artist?: string
@@ -38,12 +36,4 @@ export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | und
       })
   }
   return albums
-}
-
-export function useSort(key: string = 'sort', defaultSort: SortType) {
-  const [sort, setSort, { isPending }] = useParamsStore<SortType>(
-    key,
-    defaultSort
-  )
-  return { sort, setSort, isPending }
 }

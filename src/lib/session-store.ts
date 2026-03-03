@@ -1,62 +1,41 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { SortType } from './sort';
 
-export function useParamsStore<T>(key: string, defaultValue: T) {
-	const queryClient = useQueryClient()
+type GridParams = {
+  user: string | undefined;
+  setUser: (user: string | undefined) => void;
 
-	const query = useQuery<T | undefined>({
-		queryKey: ['param-storage', key],
-		queryFn: () => {
-			const params = new URLSearchParams(window.location.search)
-			const raw = params.get(key)
-      if (typeof defaultValue === 'string') {
-        return (raw as T) ?? defaultValue
-      }
-			const value = raw ? (JSON.parse(raw) as T) : null
-			if (!value) return defaultValue
-			return value
-		},
-		initialData: defaultValue,
-	})
+  sort: SortType;
+  setSort: (sort: SortType) => void;
 
-	const mutation = useMutation({
-		mutationKey: ['param-storage', key],
-		mutationFn: async (value: T | undefined) => {
-			if (typeof window === 'undefined') return
-			const params = new URLSearchParams(window.location.search)
+  autofill: boolean;
+  setAutofill: (autofill: boolean) => void;
 
-			if (value === undefined) {
-				window.sessionStorage.removeItem(key)
-			} else {
-				if (typeof value === 'string') {
-					params.set(key, value)
-				} else {
-					params.set(key, JSON.stringify(value))
-				}
-				window.history.pushState(null, '', `?${params.toString()}`)
-			}
-		},
-		onMutate: (value) => {
-			if (typeof window === 'undefined') return
-			queryClient.setQueryData(['param-storage', key], value)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['param-storage', key] })
-		},
-	})
+  columns: number;
+  setColumns: (columns: number) => void;
 
-	const { data } = query
-	const { mutate } = mutation
-
-	return [data ?? defaultValue, mutate, query, mutation] as const
+  rows: number;
+  setRows: (rows: number) => void;
 }
 
-export async function withSessionCache<T>(key: string, value: Promise<T>): Promise<T> {
-  const raw = window.sessionStorage.getItem(key)
-  if (raw) {
-    return Promise.resolve(JSON.parse(raw) as T)
-  }
-  const res = await value
-  window.sessionStorage.setItem(key, JSON.stringify(res))
-  return res
-}
+export const useGridParams = create<GridParams>()(
+  persist((set) => ({
+    user: '',
+    sort: 'playcount',
+    autofill: false,
+    rows: 5,
+    columns: 5,
+    setRows: (rows: number) => set({ rows }),
+    setColumns: (columns: number) => set({ columns }),
+    setAutofill: (autofill: boolean) => set({ autofill }),
+    setUser: (user: string | undefined) => set({ user }),
+    setSort: (sort: SortType) => set({ sort }),
+  }),
+    {
+      name: 'grid-params-storage', // name of the item in the storage (must be unique)
+      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+    },
+  )
+)

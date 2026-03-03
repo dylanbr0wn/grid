@@ -25,7 +25,7 @@ export default async function Page({
               orientation="horizontal"
               className="h-px bg-neutral-800"
             />
-            <LastFM searchParams={sp} />
+            <LastFM />
           </div>
           <div className="w-full h-full flex">
             <Menu />

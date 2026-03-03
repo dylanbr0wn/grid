@@ -5,15 +5,11 @@ import * as motion from "motion/react-client";
 import { cn } from "@/lib/util";
 
 export default function Background() {
-  const { rows, isPending: isPendingRows } = useGridRows();
-  const { columns, isPending: isPendingColumns } = useGridColumns();
-  if (isPendingRows || isPendingColumns) {
-    return null;
-  }
+  const { rows } = useGridRows();
+  const { columns } = useGridColumns();
   return (
     <AnimatePresence>
-      {!isPendingColumns && !isPendingRows && (
-        <motion.div
+      <motion.div
           className={
             "shrink-0 col-span-full row-span-full grid grid-cols-[repeat(var(--col-count),1fr)] auto-rows-min h-full -z-1 pointer-events-none select-none overflow-hidden no-export outline outline-neutral-800 -outline-offset-1"
           }
@@ -38,7 +34,6 @@ export default function Background() {
             />
           ))}
         </motion.div>
-      )}
     </AnimatePresence>
   );
 }

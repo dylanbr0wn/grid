@@ -7,7 +7,7 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { isPlaceholderId } from "./context";
+import { isPlaceholderId } from "@/lib/albums";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
 import {

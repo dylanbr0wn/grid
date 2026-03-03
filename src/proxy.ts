@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { LAST_FM_USER_KEY } from "./lib/util";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -21,7 +22,7 @@ export function proxy(request: NextRequest) {
     // Construct the new URL for redirection
     const newUrl = new URL(request.url);
     newUrl.pathname = '/';
-    newUrl.searchParams.set('lastfmUser', user);
+    newUrl.searchParams.set(LAST_FM_USER_KEY, user);
     return NextResponse.redirect(newUrl);
   }
 

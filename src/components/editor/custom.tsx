@@ -17,7 +17,7 @@ import { SearchResults } from "../result";
 import * as motion from "motion/react-client";
 import AlbumCover from "../album/album-cover";
 
-import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
+import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
@@ -31,8 +31,6 @@ const Select = dynamic(() => import("../select"), {
     </div>
   ),
 });
-
-
 
 type CustomAlbumProps = {
   album: CustomAlbumType;
@@ -141,9 +139,9 @@ export const CustomAlbum = memo(function CustomAlbum({
             />
           </Field.Root>
           <SearchResults
-              query={debouncedSearchQuery}
-              onSelect={handleAddCustomAlbum}
-            />
+            query={debouncedSearchQuery}
+            onSelect={handleAddCustomAlbum}
+          />
           <Dialog.Close className="absolute top-0 right-0 h-8 w-8 bg-red-500 text-base font-medium text-white select-none hover:bg-red-700 focus-visible:outline focus-visible:-outline-offset-1 focus-visible:outline-blue-800 active:bg-red-900">
             x
           </Dialog.Close>
@@ -177,8 +175,7 @@ const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
 
 export default function CustomPallete() {
   const { container } = useContainer(CUSTOM_CONTAINER_KEY);
-  const { setAlbums } = useGrid();
-  const { sort, setSort } = useSort(CUSTOM_SORT_KEY, "random");
+  const { setAlbums, sort, setSort } = useGrid();
 
   function updateSort(newSort: SortType) {
     setSort(newSort);
@@ -200,20 +197,23 @@ export default function CustomPallete() {
   }
   return (
     <AlbumPallete
-      container={container}
+      title={container.title}
+      length={container.albums.length}
       header={
         <>
           <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
             {container.title}
           </h5>
           <div className="grow" />
-          <Select
-            value={sort}
-            items={sortOptions}
-            disabled={container.albums.length <= 2}
-            onChange={(v) => v && updateSort(v as SortType)}
-            icon={<div className="text-neutral-500">sort by</div>}
-          />
+          {sort && (
+            <Select
+              value={sort}
+              items={sortOptions}
+              disabled={container.albums.length <= 2}
+              onChange={(v) => v && updateSort(v as SortType)}
+              icon={<div className="text-neutral-500">sort by</div>}
+            />
+          )}
         </>
       }
     >
@@ -231,7 +231,7 @@ export default function CustomPallete() {
             }}
             disabled={{
               draggable: album.type === "custom" && !album.mbid,
-              droppable: album.mbid ? false : container.albums.length >= 2
+              droppable: album.mbid ? false : container.albums.length >= 2,
             }}
           >
             <CustomAlbum

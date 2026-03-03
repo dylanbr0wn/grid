@@ -5,28 +5,23 @@ import { useState } from "react";
 
 import * as motion from "motion/react-client";
 import { Field } from "@base-ui/react";
+import { useGrid } from "@/hooks/grid";
 
 export default function UserForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser } = useGrid()
 
   function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
-    const form = e.target
-    const formData = new FormData(form);
-    const username = formData.get("lastfm-username") as string;
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get("lastfm-username")?.toString().trim();
     if (!username) {
-      setError("Please enter a valid username.");
-      setLoading(false);
+      setError("Please enter a username");
       return;
     }
-
-    const params = new URLSearchParams(window.location.search);
-
-    params.set("lastfmUser", username);
-    router.push(`/?${params.toString()}`);
+    setUser(username);
   }
 
   return (

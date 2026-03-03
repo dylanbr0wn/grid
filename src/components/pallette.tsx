@@ -14,7 +14,8 @@ function calcHeight(albumCount: number) {
 }
 
 type AlbumPalleteProps = {
-  container: Container;
+  title: string;
+  length: number;
   children?: React.ReactNode;
   header?: React.ReactNode;
 };
@@ -22,22 +23,23 @@ type AlbumPalleteProps = {
 export default function AlbumPallete({
   children,
   header,
-  container,
+  title,
+  length,
 }: AlbumPalleteProps) {
-  const height = calcHeight(container.albums.length);
+  const height = calcHeight(length);
   return (
     <div
       className={cn(
         "min-h-46 relative flex flex-col",
-        Math.ceil(container.albums.length / 3) <= 3 && "shrink-0",
-        Math.ceil(container.albums.length / 3) > 3 && "min-h-1/2"
+        Math.ceil(length / 3) <= 3 && "shrink-0",
+        Math.ceil(length / 3) > 3 && "min-h-1/2"
       )}
       style={{ width: 3 * 128 + 16, height: height  + 40 }}
     >
       <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
         {header ?? (
           <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
-            {container.title}
+            {title}
           </h5>
         )}
       </div>
