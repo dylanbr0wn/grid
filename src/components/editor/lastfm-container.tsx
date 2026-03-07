@@ -25,7 +25,6 @@ import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { ContextMenu } from "@base-ui/react";
 import AlbumCover from "../album/album-cover";
-import { useContainer } from "@/hooks/grid";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
 import { useGridStore } from "@/lib/session-store";
 import { useAlbumsStore } from "@/lib/albums-store";
@@ -54,16 +53,17 @@ type LastFMPalleteProps = {
 export default function LastFMPallete({
   children,
 }: LastFMPalleteProps) {
-  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
-  const sort = useGridStore((state) => state.sort);
-  const setSort = useGridStore((state) => state.setSort);
+  const albums = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].albums);
+  const title = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].title);
+  const sort = useAlbumsStore((state) => state.albums[LAST_FM_CONTAINER_KEY].sort);
+  const setSort = useAlbumsStore((state) => state.setSort);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
   function updateSort(newSort: SortType) {
-    setSort(newSort);
+    setSort(LAST_FM_CONTAINER_KEY, newSort);
     setAlbums((prev) => {
       const newAlbums = { ...prev };
-      const sortedAlbums = [...container.albums];
+      const sortedAlbums = [...albums];
 
       newAlbums[LAST_FM_CONTAINER_KEY].albums = sortAlbums(
         sortedAlbums as LastFmAlbumType[],
@@ -74,8 +74,8 @@ export default function LastFMPallete({
   }
   return (
     <AlbumPallete
-      title={container.title}
-      length={container.albums.length}
+      title={title}
+      length={albums.length}
       header={
         <>
           <UserButton />
@@ -84,7 +84,7 @@ export default function LastFMPallete({
             <Select
               value={sort}
               items={sortOptions}
-              disabled={container.albums.length <= 1}
+              disabled={albums.length <= 1}
               onChange={(v) => updateSort(v as SortType)}
               icon={<div className="text-neutral-500">sort by</div>}
             />
@@ -97,33 +97,7 @@ export default function LastFMPallete({
   );
 }
 
-export function LastFMAlbums() {
-  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
-  return (
-    <SortableContext
-      id={LAST_FM_CONTAINER_KEY}
-      items={container.albums}
-      strategy={rectSortingStrategy}
-    >
-      {(container.albums as LastFmAlbumType[]).map((album, index) => (
-        <Sortable
-          key={album.id}
-          id={album.id}
-          sortData={{
-            album,
-          }}
-        >
-          <LastFmAlbum
-            album={album}
-            data-index={index}
-            data-id={album.id}
-            priority={true}
-          />
-        </Sortable>
-      ))}
-    </SortableContext>
-  );
-}
+
 
 function UserButton() {
   const user = useGridStore((state) => state.user);

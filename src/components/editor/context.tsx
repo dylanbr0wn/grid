@@ -20,9 +20,9 @@ import {
 import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
-import { useGridRows, useGridColumns } from "@/hooks/grid";
 import { ContainerMap } from "@/context/grid";
 import { useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/session-store";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
@@ -49,8 +49,8 @@ export function EditorContext({
   children: React.ReactNode;
 }) {
   const id = useId();
-  const { rows } = useGridRows();
-  const { columns } = useGridColumns();
+  const rows = useGridStore((s) => s.rows);
+  const columns = useGridStore((s) => s.columns);
   const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
   const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
     null
@@ -241,7 +241,8 @@ export function EditorContext({
   // Sync grid dimensions whenever rows/columns change in the params store
   useEffect(() => {
     updateDimensions(rows, columns);
-  }, [rows, columns, updateDimensions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <DndContext

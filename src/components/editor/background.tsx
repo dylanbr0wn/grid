@@ -1,12 +1,12 @@
-import { useGridColumns, useGridRows } from "@/hooks/grid";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 
 import { cn } from "@/lib/util";
+import { useGridStore } from "@/lib/session-store";
 
 export default function Background() {
-  const { rows } = useGridRows();
-  const { columns } = useGridColumns();
+  const rows = useGridStore((state) => state.rows);
+  const columns = useGridStore((state) => state.columns);
   return (
     <AnimatePresence>
       <motion.div

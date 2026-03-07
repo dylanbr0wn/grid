@@ -9,10 +9,11 @@ import { useAlbumsStore } from "@/lib/albums-store";
 import { type } from "arktype";
 import { lastFmAlbum } from "@/lib/albums";
 import { IconLoader2, IconX } from "@tabler/icons-react";
+import { SortType } from "@/lib/sort";
 
 const FieldError = motion.create(Field.Error, { forwardMotionProps: true });
 
-export async function fetchLastFmAlbums(user: string, sort: string) {
+export async function fetchLastFmAlbums(user: string, sort: SortType) {
   const url = new URL("/api/lastfm", window.location.origin);
   if (user) {
     url.searchParams.set("user", user);
@@ -58,7 +59,6 @@ export default function UserForm() {
   const [error, setError] = useState<string | null>(null);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const setUser = useGridStore((state) => state.setUser);
-  const sort = useGridStore((state) => state.sort);
   const autofill = useGridStore((state) => state.autofill);
   const setInitialized = useGridStore((state) => state.setInitialized);
   const initialized = useGridStore((state) => state.initialized);
@@ -71,7 +71,11 @@ export default function UserForm() {
       setLoading(true);
       const formData = new FormData(e.currentTarget);
       const username = formData.get("lastfm-username")?.toString().trim();
-      const albums = await fetchLastFmAlbums(username || "", sort);
+      const sort = useAlbumsStore.getState().albums[LAST_FM_CONTAINER_KEY].sort;
+      if (!sort) {
+        console.warn("No sort type set, defaulting to 'playcount'");
+      }
+      const albums = await fetchLastFmAlbums(username || "", sort || "playcount");
       setUser(username || "");
       setAlbums((prev) => {
         if (autofill) {
@@ -113,14 +117,17 @@ export default function UserForm() {
 
   useEffect(() => {
     const user = useGridStore.getState().user;
-    const sort = useGridStore.getState().sort;
+    const sort = useAlbumsStore.getState().albums[LAST_FM_CONTAINER_KEY].sort;
     const autofill = useGridStore.getState().autofill;
     if (!user) {
       setInitialized(true);
       return;
     }
+    if (!sort) {
+      console.warn("No sort type set, defaulting to 'playcount'");
+    }
     setLoading(true);
-    fetchLastFmAlbums(user, sort)
+    fetchLastFmAlbums(user, sort || "playcount")
       .then((albums) => {
         setAlbums((prev) => {
           if (autofill) {

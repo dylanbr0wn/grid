@@ -1,22 +1,22 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
 
-import { useGridStore } from "../lib/session-store";
+// import { useGridStore } from "../lib/session-store";
 import { useAlbumsStore } from "../lib/albums-store";
 
-export function useGridRows() {
-  const rows = useGridStore((state) => state.rows);
-  const setRows = useGridStore((state) => state.setRows);
-  return { rows, setRows };
-}
+// export function useGridRows() {
+//   const rows = useGridStore((state) => state.rows);
+//   const setRows = useGridStore((state) => state.setRows);
+//   return { rows, setRows };
+// }
 
-export function useGridColumns() {
-  const columns = useGridStore((state) => state.columns);
-  const setColumns = useGridStore((state) => state.setColumns);
-  return {
-    columns,
-    setColumns,
-  }
-}
+// export function useGridColumns() {
+//   const columns = useGridStore((state) => state.columns);
+//   const setColumns = useGridStore((state) => state.setColumns);
+//   return {
+//     columns,
+//     setColumns,
+//   }
+// }
 
 /**
  * Returns the full albums and params state as a flat object, matching the
@@ -35,9 +35,3 @@ export function useGridColumns() {
 //   const initialized = useGridStore((s) => s.initialized);
 //   return { ...store, rows, columns, setColumns, setRows, sort, setSort, user, setUser, initialized };
 // }
-
-export function useContainer(id: UniqueIdentifier) {
-  const container = useAlbumsStore((s) => s.albums[id]);
-  return { container };
-}
-

@@ -63,9 +63,9 @@ export default function Menu() {
   const albums = useAlbumsStore((state) => state.albums);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const columns = useGridStore((state) => state.columns);
-  const setColumns = useGridStore((state) => state.setColumns);
+  const setColumns = useAlbumsStore((state) => state.setColumns);
   const rows = useGridStore((state) => state.rows);
-  const setRows = useGridStore((state) => state.setRows);
+  const setRows = useAlbumsStore((state) => state.setRows);
 
   async function download(type: "jpeg" | "png" = "jpeg") {
     if (!columns || !rows) return;

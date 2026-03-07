@@ -1,4 +1,5 @@
 import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum } from "@/lib/albums";
+import { SortType } from "@/lib/sort";
 import { UniqueIdentifier } from "@dnd-kit/core";
 import { createContext } from "react";
 
@@ -8,6 +9,7 @@ export type Container = {
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
+  sort: SortType | undefined;
 };
 
 export type ContainerMap = Record<UniqueIdentifier, Container>;

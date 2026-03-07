@@ -21,7 +21,6 @@ import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
-import { useContainer } from "@/hooks/grid";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { useGridStore } from "@/lib/session-store";
 
@@ -178,13 +177,14 @@ const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
 };
 
 export default function CustomPallete() {
-  const { container } = useContainer(CUSTOM_CONTAINER_KEY);
-  const setSort = useGridStore((state) => state.setSort);
-  const sort = useGridStore((state) => state.sort);
+  const setSort = useAlbumsStore((state) => state.setSort);
+  const sort = useAlbumsStore((state) => state.albums[CUSTOM_CONTAINER_KEY].sort);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
+  const albums = useAlbumsStore(state => state.albums[CUSTOM_CONTAINER_KEY].albums);
+  const title = useAlbumsStore(state => state.albums[CUSTOM_CONTAINER_KEY].title);
 
   function updateSort(newSort: SortType) {
-    setSort(newSort);
+    setSort(CUSTOM_CONTAINER_KEY, newSort);
     setAlbums((prev) => {
       const container = prev[CUSTOM_CONTAINER_KEY];
       const sortedAlbums = [...container.albums.slice(0, -1)];
@@ -203,19 +203,19 @@ export default function CustomPallete() {
   }
   return (
     <AlbumPallete
-      title={container.title}
-      length={container.albums.length}
+      title={title}
+      length={albums.length}
       header={
         <>
           <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
-            {container.title}
+            {title}
           </h5>
           <div className="grow" />
           {sort && (
             <Select
               value={sort}
               items={sortOptions}
-              disabled={container.albums.length <= 2}
+              disabled={albums.length <= 2}
               onChange={(v) => v && updateSort(v as SortType)}
               icon={<div className="text-neutral-500">sort by</div>}
             />
@@ -225,10 +225,10 @@ export default function CustomPallete() {
     >
       <SortableContext
         id={CUSTOM_CONTAINER_KEY}
-        items={container.albums}
+        items={albums}
         strategy={rectSortingStrategy}
       >
-        {(container.albums as CustomAlbumType[]).map((album, index) => (
+        {(albums as CustomAlbumType[]).map((album, index) => (
           <Sortable
             key={album.id}
             id={album.id}
@@ -237,7 +237,7 @@ export default function CustomPallete() {
             }}
             disabled={{
               draggable: album.type === "custom" && !album.mbid,
-              droppable: album.mbid ? false : container.albums.length >= 2,
+              droppable: album.mbid ? false : albums.length >= 2,
             }}
           >
             <CustomAlbum
