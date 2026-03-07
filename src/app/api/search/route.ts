@@ -12,12 +12,18 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("query") || "";
     const limit = parseLimit(searchParams.get("limit") || "25");
     if (limit instanceof type.errors) {
-      throw new Error(`Invalid limit parameter: ${limit.summary}`);
+      return new Response(JSON.stringify({ error: limit.summary }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const offset = parseOffset(searchParams.get("offset") || "0");
     if (offset instanceof type.errors) {
-      throw new Error(`Invalid offset parameter: ${offset.summary}`);
+      return new Response(JSON.stringify({ error: offset.summary }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const results = await searchReleases(query, limit, offset);

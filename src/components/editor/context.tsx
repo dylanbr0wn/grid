@@ -17,19 +17,11 @@ import {
   arraySwap,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import {  useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { generateId } from "@/lib/util";
-import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, } from "@/lib/albums";
-import { useGridRows, useGridColumns } from "@/hooks/grid";
-import { ContainerMap, GridContext, SetAlbumFunc } from "@/context/grid";
-
-
-
-
-
-
-
+import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
+import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/grid-store";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
@@ -50,57 +42,15 @@ function findContainer(id: UniqueIdentifier, containers: ContainerMap) {
 }
 
 
-
-const PLACEHOLDER_ID = "placeholder";
-
-export function newPlaceholderAlbum(): PlaceholderAlbum {
-  return {
-    id: `${PLACEHOLDER_ID}_${generateId()}`,
-    type: "placeholder",
-  };
-}
-
-function newCustomAlbum(): CustomAlbum {
-  return {
-    id: `custom_${generateId()}`,
-    type: "custom",
-  };
-}
-
-export function isPlaceholderId(id: UniqueIdentifier) {
-  return typeof id === "string" && id.startsWith(PLACEHOLDER_ID);
-}
-
 export function EditorContext({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const id = useId();
-  const { rows, setRows } = useGridRows();
-  const { columns, setColumns } = useGridColumns();
-  const [albums, setAlbums] = useState<ContainerMap>({
-    grid: {
-      title: "Grid",
-      allowedTypes: ["placeholder", "lastfm", "custom"],
-      maxLength: rows * columns,
-      minLength: rows * columns,
-      albums: Array.from({ length: rows * columns }).map(() => {
-        return newPlaceholderAlbum();
-      }),
-    },
-    custom: {
-      title: "Custom Albums",
-      allowedTypes: ["custom"],
-      albums: [newCustomAlbum()],
-    },
-    lastfm: {
-      title: "Last.fm",
-      allowedTypes: ["lastfm"],
-      albums: []
-    },
-  });
-  const [activeAlbum, setActiveAlbum] = useState<LastFmAlbum | CustomAlbum | null>(null);
+  const rows = useGridStore((s) => s.rows);
+  const columns = useGridStore((s) => s.columns);
+  const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
   const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
     null
   );
@@ -225,7 +175,7 @@ export function EditorContext({
         },
       };
     });
-  }, []);
+  }, [setAlbums]);
 
   const onDragEnd = useCallback(({ active, over }: DragEndEvent) => {
     overflowItem.current = null;
@@ -285,195 +235,36 @@ export function EditorContext({
         },
       };
     });
-  }, []);
+  }, [setActiveAlbum, setAlbums]);
 
-  const setAlbum = useCallback<SetAlbumFunc>((id, album) => {
-    setAlbums((albums) => {
-      const container = Object.keys(albums).find((key) =>
-        albums[key].albums.some((a) => a.id === id)
-      );
-      if (!container) return albums;
-
-      const newItems = albums[container].albums.map((item) =>
-        item.id === id
-          ? typeof album === "function"
-            ? album(item)
-            : album
-          : item
-      );
-
-      return {
-        ...albums,
-        [container]: {
-          ...albums[container],
-          albums: newItems,
-        },
-      };
-    });
-  }, []);
-
-  const setTextColor = useCallback((id: UniqueIdentifier, color: string) => {
-
-    setAlbums((albums) => {
-      const container = Object.keys(albums).find((key) =>
-        albums[key].albums.some((a) => a.id === id)
-      );
-      if (!container) return albums;
-
-      const itemIndex = albums[container].albums.findIndex((a) => a.id === id);
-      if (itemIndex === -1) return albums;
-      const newItems = albums[container].albums.map((item, i) =>
-        i === itemIndex
-          ? {
-              ...item,
-              textColor: color,
-            }
-          : item
-      );
-
-      return {
-        ...albums,
-        [container]: {
-          ...albums[container],
-          albums: newItems,
-        },
-      };
-    });
-  }, []);
-
-  const setTextBackground = useCallback(
-    (id: UniqueIdentifier, background: boolean) => {
-      setAlbums((albums) => {
-        const container = Object.keys(albums).find((key) =>
-          albums[key].albums.some((a) => a.id === id)
-        );
-        if (!container) return albums;
-
-        const itemIndex = albums[container].albums.findIndex(
-          (a) => a.id === id
-        );
-        if (itemIndex === -1) return albums;
-
-        const newItems = albums[container].albums.map((item, i) =>
-          i === itemIndex
-            ? {
-                ...item,
-                textBackground: background,
-              }
-            : item
-        );
-
-        return {
-          ...albums,
-          [container]: {
-            ...albums[container],
-            albums: newItems,
-          },
-        };
-      });
-    },
-    []
-  );
-
-  function addCustomAlbum(album: CustomAlbum) {
-    setAlbums((albums) => {
-      const customContainer = albums["custom"];
-      return {
-        ...albums,
-        custom: {
-          ...customContainer,
-          albums: [
-            ...customContainer.albums.slice(0, customContainer.albums.length - 1),
-            album,
-            ...customContainer.albums.slice(customContainer.albums.length - 1),
-          ],
-        },
-      };
-    });
-  }
-
-   function updateDimensions(rows: number, columns: number) {
-      setAlbums((albums) => {
-        const grid = albums["grid"];
-        const newGridAlbums = [...grid.albums];
-
-        if (rows * columns > grid.albums.length) {
-          newGridAlbums.push(
-            ...new Array(rows * columns - grid.albums.length).fill(0).map(() => {
-              return newPlaceholderAlbum();
-            })
-          );
-        } else if (rows * columns < grid.albums.length) {
-          newGridAlbums.splice(rows * columns, grid.albums.length - rows * columns);
-        }
-
-        return {
-          ...albums,
-          grid: {
-            ...grid,
-            albums: newGridAlbums,
-            maxLength: rows * columns,
-            minLength: rows * columns,
-          },
-        };
-      });
-    }
-
-  function updateColumns(columns: number) {
-    setColumns(columns);
-    updateDimensions(rows, columns);
-  }
-
-  function updateRows(rows: number) {
-    setRows(rows);
-    updateDimensions(rows, columns);
-  }
-
-
-
+  // update dimensions on mount to ensure we have the correct number of placeholders, and to fix any potential issues with stale dimensions after hot reload
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateDimensions(rows, columns);
-  }, [rows, columns]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <GridContext.Provider
-      value={{
-        setTextColor,
-        setTextBackground,
-        setAlbum,
-        albums,
-        setAlbums,
-        activeAlbum,
-        addCustomAlbum,
-        rows,
-        columns,
-        setColumns: updateColumns,
-        setRows: updateRows
+    <DndContext
+      id={id}
+      accessibility={{
+        screenReaderInstructions,
       }}
+      sensors={sensors}
+      onDragStart={({ active }) => {
+        if (!active.data.current) return;
+        setActiveAlbum(active.data.current.album as LastFmAlbum | CustomAlbum);
+      }}
+      measuring={{
+        droppable: {
+          strategy: MeasuringStrategy.Always,
+        },
+      }}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragCancel={() => setActiveAlbum(null)}
+      modifiers={[restrictToWindowEdges]}
     >
-      <DndContext
-        id={id}
-        accessibility={{
-          screenReaderInstructions,
-        }}
-        sensors={sensors}
-        onDragStart={({ active }) => {
-          if (!active.data.current) return;
-          setActiveAlbum(active.data.current.album as LastFmAlbum | CustomAlbum);
-        }}
-        measuring={{
-          droppable: {
-            strategy: MeasuringStrategy.Always,
-          },
-        }}
-        onDragEnd={onDragEnd}
-        onDragOver={onDragOver}
-        onDragCancel={() => setActiveAlbum(null)}
-        modifiers={[restrictToWindowEdges]}
-      >
-        {children}
-      </DndContext>
-    </GridContext.Provider>
+      {children}
+    </DndContext>
   );
 }

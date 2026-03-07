@@ -5,6 +5,7 @@ export const PLACEHOLDER_IMG = "/img/placeholder.png";
 export const CUSTOM_CONTAINER_KEY = "custom";
 export const CUSTOM_SORT_KEY = `${CUSTOM_CONTAINER_KEY}-sort`
 export const LAST_FM_CONTAINER_KEY = "lastfm";
+export const LAST_FM_USER_KEY = `${LAST_FM_CONTAINER_KEY}-user`
 export const LAST_FM_SORT_KEY = `${LAST_FM_CONTAINER_KEY}-sort`
 
 export function cn(...inputs: ClassValue[]) {

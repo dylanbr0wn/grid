@@ -1,4 +1,4 @@
-import { useParamsStore } from "./session-store"
+import { type } from "arktype";
 
 export type Sortable = {
   album?: string
@@ -10,7 +10,9 @@ export type SortOptions = {
   [key in SortType]: string;
 };
 
-export type SortType = 'playcount' | 'name' | 'artist' | 'random' | 'custom'
+export const sortType = type("'playcount' | 'name' | 'artist' | 'random' | 'custom'")
+
+export type SortType = type.infer<typeof sortType>
 
 export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | undefined): T[] {
   switch (sort) {
@@ -38,12 +40,4 @@ export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | und
       })
   }
   return albums
-}
-
-export function useSort(key: string = 'sort', defaultSort: SortType) {
-  const [sort, setSort, { isPending }] = useParamsStore<SortType>(
-    key,
-    defaultSort
-  )
-  return { sort, setSort, isPending }
 }

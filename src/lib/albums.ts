@@ -1,8 +1,5 @@
-import type {
-  UniqueIdentifier,
-} from "@dnd-kit/core";
 import { type } from "arktype";
-
+import { generateId } from "./util";
 
 export type AlbumTypes = "lastfm" | "placeholder" | "custom" ;
 
@@ -25,31 +22,20 @@ export const customAlbum = type({
   "textBackground?": "boolean",
 })
 
-export type CustomAlbum = BaseAlbum & {
-  type: "custom";
-  album?: string;
-  mbid?: string;
-  img?: string;
-  imgs?: string[];
-  plays?: number;
-  artist?: string;
-  artistMbid?: string;
-  textColor?: string;
-  textBackground?: boolean;
-};
+export type CustomAlbum = type.infer<typeof customAlbum>;
 
 export const placeholderAlbum = type({
   "type": "'placeholder'",
   "id": "string",
 })
 
-export type PlaceholderAlbum = BaseAlbum & {
-  type: "placeholder";
-};
+export type PlaceholderAlbum = type.infer<typeof placeholderAlbum>;
+
+export const uniqueIdentifier = type("string | number");
 
 export const lastFmAlbum = type({
   "type": "'lastfm'",
-  "id": "string",
+  "id": uniqueIdentifier,
   "mbid?": "string",
   "album": "string",
   "artist": "string",
@@ -61,18 +47,28 @@ export const lastFmAlbum = type({
   "textBackground?": "boolean",
 })
 
-export type LastFmAlbum = {
-  id: UniqueIdentifier;
-  type: "lastfm";
-  album: string;
-  mbid?: string;
-  img: string;
-  plays: number;
-  imgs: string[];
 
-  artist: string;
-  artistMbid?: string;
 
-  textColor?: string;
-  textBackground?: boolean;
-};
+type UniqueIdentifier = type.infer<typeof uniqueIdentifier>;
+
+export type LastFmAlbum = type.infer<typeof lastFmAlbum>;
+
+const PLACEHOLDER_PREFIX = "placeholder";
+
+export function isPlaceholderId(id: string | number): boolean {
+  return typeof id === "string" && id.startsWith(PLACEHOLDER_PREFIX);
+}
+
+export function newPlaceholderAlbum(): PlaceholderAlbum {
+  return {
+    id: `${PLACEHOLDER_PREFIX}_${generateId()}`,
+    type: "placeholder",
+  };
+}
+
+export function newCustomAlbum(): CustomAlbum {
+  return {
+    id: `custom_${generateId()}`,
+    type: "custom",
+  };
+}

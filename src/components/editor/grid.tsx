@@ -1,23 +1,23 @@
 "use client";
 import { ScrollArea } from "@base-ui/react";
-import { memo, useCallback } from "react";
+import { useCallback } from "react";
 import {
   arrayMove,
   arraySwap,
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { isPlaceholderId } from "./context";
+import { isPlaceholderId } from "@/lib/albums";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
 import {
   LastFmAlbum,
   LastFmAlbumProps,
 } from "./lastfm-container";
-import { useGrid } from "@/hooks/grid";
 import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
 import dynamic from "next/dynamic";
-import { cn } from "@/lib/util";
+import { useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/grid-store";
 
 
 const Background = dynamic(() => import("./background"), {
@@ -31,7 +31,9 @@ const Background = dynamic(() => import("./background"), {
 });
 
 export default function Grid() {
-  const { rows, columns, albums } = useGrid();
+  const albums = useAlbumsStore((state) => state.albums);
+  const columns = useGridStore((state) => state.columns);
+  const rows = useGridStore((state) => state.rows);
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {

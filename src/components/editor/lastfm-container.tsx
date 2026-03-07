@@ -1,22 +1,29 @@
 "use client";
-import { sortAlbums, SortOptions, SortType, useSort } from "@/lib/sort";
-import { useRouter } from "next/navigation";
+import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
 import AlbumPallete from "../pallette";
-import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { newPlaceholderAlbum } from "./context";
-import { IconCheck, IconChevronRight, IconLoader2, IconX } from "@tabler/icons-react";
+import { newPlaceholderAlbum } from "@/lib/albums";
+import {
+  IconCheck,
+  IconChevronRight,
+  IconLoader2,
+  IconX,
+} from "@tabler/icons-react";
 
 import * as motion from "motion/react-client";
-import { cn, getBrightnessStyle, getImageBrightness, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY } from "@/lib/util";
+import {
+  cn,
+  getBrightnessStyle,
+  getImageBrightness,
+  LAST_FM_CONTAINER_KEY,
+} from "@/lib/util";
 
-import { use, useEffect } from "react";
 import LastFMIcon from "../lastfm-icon";
 import dynamic from "next/dynamic";
-import { Sortable } from "../sortable";
 import { ContextMenu } from "@base-ui/react";
 import AlbumCover from "../album/album-cover";
-import { useContainer, useGrid } from "@/hooks/grid";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
+import { useGridStore } from "@/lib/grid-store";
+import { useAlbumsStore } from "@/lib/albums-store";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -37,24 +44,22 @@ const sortOptions: SortOptions = {
 
 type LastFMPalleteProps = {
   children?: React.ReactNode;
-  user?: string;
-  sort: SortType;
 };
 
 export default function LastFMPallete({
   children,
-  user,
-  sort: intialSort,
 }: LastFMPalleteProps) {
-  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
-  const { setAlbums } = useGrid();
-  const { sort, setSort } = useSort(LAST_FM_SORT_KEY, intialSort);
+  const albums = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].albums);
+  const title = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].title);
+  const sort = useAlbumsStore((state) => state.albums[LAST_FM_CONTAINER_KEY].sort);
+  const setSort = useAlbumsStore((state) => state.setSort);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
   function updateSort(newSort: SortType) {
-    setSort(newSort);
+    setSort(LAST_FM_CONTAINER_KEY, newSort);
     setAlbums((prev) => {
       const newAlbums = { ...prev };
-      const sortedAlbums = [...container.albums];
+      const sortedAlbums = [...albums];
 
       newAlbums[LAST_FM_CONTAINER_KEY].albums = sortAlbums(
         sortedAlbums as LastFmAlbumType[],
@@ -65,18 +70,21 @@ export default function LastFMPallete({
   }
   return (
     <AlbumPallete
-      container={container}
+      title={title}
+      length={albums.length}
       header={
         <>
-          <UserButton user={user} />
+          <UserButton />
           <div className="grow" />
-          <Select
-            value={sort}
-            items={sortOptions}
-            disabled={container.albums.length <= 1}
-            onChange={(v) => updateSort(v as SortType)}
-            icon={<div className="text-neutral-500">sort by</div>}
-          />
+          {sort && (
+            <Select
+              value={sort}
+              items={sortOptions}
+              disabled={albums.length <= 1}
+              onChange={(v) => updateSort(v as SortType)}
+              icon={<div className="text-neutral-500">sort by</div>}
+            />
+          )}
         </>
       }
     >
@@ -85,106 +93,15 @@ export default function LastFMPallete({
   );
 }
 
-type LastFMAlbumProps = {
-  initialAlbumsPromise: Promise<LastFmAlbumType[]>;
-};
 
-export function LastFMAlbums({ initialAlbumsPromise }: LastFMAlbumProps) {
-  const { container } = useContainer(LAST_FM_CONTAINER_KEY);
-  const { setAlbums } = useGrid();
 
-  const initialAlbums = use(initialAlbumsPromise);
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    setAlbums((prev) => {
-      if (searchParams.get("autofill") === "true") {
-        const newLastFMAlbums = [...(initialAlbums ?? [])];
-
-        const newGridAlbums = prev.grid.albums.map((a) => {
-          if (a.type === "placeholder" && newLastFMAlbums.length > 0) {
-            return newLastFMAlbums.shift()!;
-          }
-          return a;
-        });
-
-        return {
-          ...prev,
-          [LAST_FM_CONTAINER_KEY]: {
-            ...prev[LAST_FM_CONTAINER_KEY],
-            albums: newLastFMAlbums,
-          },
-          grid: {
-            ...prev.grid,
-            albums: newGridAlbums,
-          },
-        };
-      }
-      return {
-        ...prev,
-        [LAST_FM_CONTAINER_KEY]: {
-          ...prev[LAST_FM_CONTAINER_KEY],
-          albums: initialAlbums ?? [],
-        },
-      };
-    });
-    return () => {
-      setAlbums((prev) => {
-        return {
-          ...prev,
-          [LAST_FM_CONTAINER_KEY]: {
-            ...prev[LAST_FM_CONTAINER_KEY],
-            albums: [],
-          },
-          grid: {
-            ...prev.grid,
-            albums: prev.grid.albums.map((a) => {
-              if (a.type === "lastfm") {
-                return newPlaceholderAlbum();
-              }
-              return a;
-            }),
-          },
-        };
-      });
-    };
-  }, [initialAlbums, setAlbums]);
-
-  return (
-    <SortableContext
-      id={LAST_FM_CONTAINER_KEY}
-      items={container.albums}
-      strategy={rectSortingStrategy}
-    >
-      {(container.albums as LastFmAlbumType[]).map((album, index) => (
-        <Sortable
-          key={album.id}
-          id={album.id}
-          sortData={{
-            album,
-          }}
-        >
-          <LastFmAlbum
-            album={album}
-            data-index={index}
-            data-id={album.id}
-            priority={true}
-          />
-        </Sortable>
-      ))}
-    </SortableContext>
-  );
-}
-
-function UserButton({ user }: { user: string | undefined }) {
-  const router = useRouter();
-
-  const { setAlbums } = useGrid();
+function UserButton() {
+  const user = useGridStore((state) => state.user);
+  const setUser = useGridStore((state) => state.setUser);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
+  const initialized = useGridStore((state) => state.initialized);
 
   function logout() {
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.delete("lastfmUser");
-
     setAlbums((prev) => {
       return {
         ...prev,
@@ -203,8 +120,7 @@ function UserButton({ user }: { user: string | undefined }) {
         },
       };
     });
-
-    router.push(`/?${searchParams.toString()}`);
+    setUser(undefined);
   }
   return (
     <button
@@ -236,7 +152,7 @@ function UserButton({ user }: { user: string | undefined }) {
           id="underline"
         />
       )}
-      <div
+      {initialized && <div
         className={cn(
           "px-4 text-neutral-300 flex gap-1 items-center",
           user && "group-hover:blur group-hover:text-[#D51007]",
@@ -244,13 +160,10 @@ function UserButton({ user }: { user: string | undefined }) {
       >
         <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
         <div>{user || "Last.fm"}</div>
-      </div>
+      </div>}
     </button>
   );
 }
-
-
-
 
 export type LastFmAlbumProps = {
   priority?: boolean;
@@ -262,7 +175,8 @@ export const LastFmAlbum = ({
   priority = false,
   ...props
 }: LastFmAlbumProps) => {
-  const { setTextBackground, setTextColor } = useGrid();
+  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
+  const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
   if (!album) {
     return null;
@@ -352,4 +266,3 @@ export const LastFmAlbum = ({
     </ContextMenu.Root>
   );
 };
-
