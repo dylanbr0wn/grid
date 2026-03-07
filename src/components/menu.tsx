@@ -346,7 +346,7 @@ export default function Menu() {
               <span>{loading.png ? "Loading..." : ".PNG"}</span>
             </button>
             <button
-              disabled={loading.png}
+              disabled={loading.copy}
               onClick={copyToClipboard}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
               data-loading={loading.copy}
