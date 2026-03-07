@@ -6,15 +6,8 @@ import LastFM from "@/components/editor/lastfm";
 import { Separator } from "@base-ui/react";
 import Menu from "@/components/menu";
 
-export const dynamic = "force-dynamic";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const sp = await searchParams;
-
+export default function Page() {
   return (
     <div className="flex h-full flex-col font-code relative">
       <EditorContext>
