@@ -1,5 +1,4 @@
-// /Users/dylan/vault/grid/grid/src/lib/music-brainz.ts
-// Minimal MusicBrainz client for searching and fetching releases.
+"server only";
 
 import { type } from "arktype";
 import { generateId, PLACEHOLDER_IMG } from "./util";

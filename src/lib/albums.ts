@@ -22,27 +22,14 @@ export const customAlbum = type({
   "textBackground?": "boolean",
 })
 
-export type CustomAlbum = BaseAlbum & {
-  type: "custom";
-  album?: string;
-  mbid?: string;
-  img?: string;
-  imgs?: string[];
-  plays?: number;
-  artist?: string;
-  artistMbid?: string;
-  textColor?: string;
-  textBackground?: boolean;
-};
+export type CustomAlbum = type.infer<typeof customAlbum>;
 
 export const placeholderAlbum = type({
   "type": "'placeholder'",
   "id": "string",
 })
 
-export type PlaceholderAlbum = BaseAlbum & {
-  type: "placeholder";
-};
+export type PlaceholderAlbum = type.infer<typeof placeholderAlbum>;
 
 export const uniqueIdentifier = type("string | number");
 

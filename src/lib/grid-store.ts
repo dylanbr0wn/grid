@@ -21,7 +21,7 @@ type GridParams = {
 
 export const useGridStore = create<GridParams>()(
   persist((set) => ({
-    user: '',
+    user: undefined,
     autofill: false,
     rows: 5,
     columns: 5,

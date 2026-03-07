@@ -217,6 +217,17 @@ export const useAlbumsStore = create<AlbumsState>()(
       addCustomAlbum: (album) =>
         set((state) => {
           const custom = state.albums[CUSTOM_CONTAINER_KEY];
+          if (custom.albums.length === 0) {
+            return {
+              albums: {
+                ...state.albums,
+                [CUSTOM_CONTAINER_KEY]: {
+                  ...custom,
+                  albums: [album],
+                },
+              },
+            };
+          }
           return {
             albums: {
               ...state.albums,

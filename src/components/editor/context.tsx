@@ -237,7 +237,7 @@ export function EditorContext({
     });
   }, [setActiveAlbum, setAlbums]);
 
-  // Sync grid dimensions whenever rows/columns change in the params store
+  // update dimensions on mount to ensure we have the correct number of placeholders, and to fix any potential issues with stale dimensions after hot reload
   useEffect(() => {
     updateDimensions(rows, columns);
     // eslint-disable-next-line react-hooks/exhaustive-deps

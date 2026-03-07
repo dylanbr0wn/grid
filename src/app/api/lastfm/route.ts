@@ -2,7 +2,7 @@ import { LastFmAlbum, lastFmAlbum } from "@/lib/albums";
 import { albumInfo, apiURL, weeklyAlbumChart } from "@/lib/lastfm";
 import { getCoverArtUrl } from "@/lib/music-brainz";
 import { sortType } from "@/lib/sort";
-import { generateId, PLACEHOLDER_IMG } from "@/lib/util";
+import { LAST_FM_SORT_KEY, LAST_FM_USER_KEY, PLACEHOLDER_IMG } from "@/lib/util";
 import { type } from "arktype";
 import { NextRequest } from "next/server";
 
@@ -31,7 +31,7 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]): LastFmAlbum[] {
       artistMbid: a.artist.mbid,
       artist: a.artist.name,
       plays: parseInt(a.playcount),
-      id: `${a.mbid || `${a.artist.name}_${a.name}`}_${generateId()}`.replaceAll(' ', '-').toLowerCase(),
+      id: `${a.mbid || `${a.artist.name}_${a.name}`}`.replaceAll(' ', '-').toLowerCase(),
       img: large || getCoverArtUrl(a.mbid) || small || fallback || PLACEHOLDER_IMG,
       textColor: 'white',
       textBackground: false,
@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
 
-    const user = userParam(searchParams.get("user"))
-    const sort = sortType(searchParams.get("sort"));
+    const user = userParam(searchParams.get(LAST_FM_USER_KEY))
+    const sort = sortType(searchParams.get(LAST_FM_SORT_KEY));
     if (user instanceof type.errors) {
       return new Response(JSON.stringify({ error: user.summary }), {
         status: 400,
@@ -66,7 +66,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const url = `${apiURL}?method=user.getTopAlbums&user=${user}&api_key=${process.env.LAST_FM_API_KEY}&format=json&period=7day&limit=100`
+    const url = new URL(apiURL)
+    url.searchParams.set('method', 'user.getTopAlbums')
+    url.searchParams.set('user', user)
+    url.searchParams.set('api_key', process.env.LAST_FM_API_KEY || '')
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('period', '7day')
+    url.searchParams.set('limit', '100')
+
     const response = await fetch(url, { cache: 'no-store' })
 
     if (!response.ok) {
@@ -76,7 +83,7 @@ export async function GET(request: NextRequest) {
         'Last.fm API response not ok:',
         response.status,
         await response.text(),
-        url
+        safeUrl
       )
       if (response.status === 404) {
         return new Response(JSON.stringify({ error: `User ${user} not found` }), {
@@ -90,10 +97,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const out = weeklyAlbumChart(await response.text())
+    const body = await response.text()
+
+    const out = weeklyAlbumChart(body)
 
     if (out instanceof type.errors) {
-      console.error('Last.fm API response validation error:', out.summary, await response.text(), url)
+      const safeUrl = new URL(url)
+      safeUrl.searchParams.set('api_key', 'REDACTED')
+      console.error('Last.fm API response validation error:', out.summary, body, safeUrl)
       return new Response(JSON.stringify({ error: `Last.fm API response validation error: ${out.summary}` }), {
         status: 500,
         headers: { "Content-Type": "application/json" },

@@ -331,7 +331,7 @@ export default function Menu() {
               disabled={loading.jpeg}
               onClick={() => download("jpeg")}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
-              data-loading={loading}
+              data-loading={loading.jpeg}
             >
               <IconDownload className="size-4" />
               <span>{loading.jpeg ? "Loading..." : ".JPEG"}</span>
@@ -340,7 +340,7 @@ export default function Menu() {
               disabled={loading.png}
               onClick={() => download("png")}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
-              data-loading={loading}
+              data-loading={loading.png}
             >
               <IconDownload className="size-4" />
               <span>{loading.png ? "Loading..." : ".PNG"}</span>
@@ -349,7 +349,7 @@ export default function Menu() {
               disabled={loading.png}
               onClick={copyToClipboard}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
-              data-loading={loading}
+              data-loading={loading.copy}
             >
               <IconCopy className="size-4" />
               <span>{loading.copy ? "Loading..." : "Copy to Clipboard"}</span>

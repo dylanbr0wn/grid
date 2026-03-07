@@ -1,5 +1,5 @@
 "use client";
-import { cn, LAST_FM_CONTAINER_KEY } from "@/lib/util";
+import { cn, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY, LAST_FM_USER_KEY } from "@/lib/util";
 import { useEffect, useRef, useState } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
@@ -16,22 +16,23 @@ const FieldError = motion.create(Field.Error, { forwardMotionProps: true });
 export async function fetchLastFmAlbums(user: string, sort: SortType) {
   const url = new URL("/api/lastfm", window.location.origin);
   if (user) {
-    url.searchParams.set("user", user);
+    url.searchParams.set(LAST_FM_USER_KEY, user);
   }
   if (sort) {
-    url.searchParams.set("sort", sort);
+    url.searchParams.set(LAST_FM_SORT_KEY, sort);
   }
 
   const response = await fetch(url);
 
   if (!response.ok) {
     const parseError = type("string.json.parse").to({ error: "string" });
-    const errorData = parseError(await response.text());
+    const body = await response.text();
+    const errorData = parseError(body);
     if (errorData instanceof type.errors) {
       console.warn(
         "Last.fm API error response validation error:",
         errorData.summary,
-        await response.text(),
+        body,
         url,
       );
       throw new Error(
