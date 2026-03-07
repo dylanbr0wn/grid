@@ -291,7 +291,7 @@ export const useAlbumsStore = create<AlbumsState>()(
     {
       name: "grid-albums-storage",
       storage: createJSONStorage(() => localStorage),
-      // Only persist grid and custom containers; lastfm is always re-fetched
+      // Only persist the custom albums and the sort type for the lastfm container, not the albums themselves (which can be large and are easily re-fetched)
       partialize: (state) => ({
         albums: {
           custom: state.albums.custom,
