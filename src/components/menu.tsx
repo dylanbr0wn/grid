@@ -20,7 +20,7 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { gridToBlob, gridToJpeg, gridToPng } from "@/lib/export";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 
 async function downloadGrid(
   columns: number,

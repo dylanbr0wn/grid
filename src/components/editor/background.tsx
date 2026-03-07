@@ -2,7 +2,7 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 
 import { cn } from "@/lib/util";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 
 export default function Background() {
   const rows = useGridStore((state) => state.rows);

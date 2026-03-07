@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
 import { Field } from "@base-ui/react";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { type } from "arktype";
 import { lastFmAlbum } from "@/lib/albums";

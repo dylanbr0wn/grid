@@ -1,8 +1,6 @@
 "use client";
 import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
-import { useRouter } from "next/navigation";
 import AlbumPallete from "../pallette";
-import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { newPlaceholderAlbum } from "@/lib/albums";
 import {
   IconCheck,
@@ -17,16 +15,14 @@ import {
   getBrightnessStyle,
   getImageBrightness,
   LAST_FM_CONTAINER_KEY,
-  LAST_FM_SORT_KEY,
 } from "@/lib/util";
 
 import LastFMIcon from "../lastfm-icon";
 import dynamic from "next/dynamic";
-import { Sortable } from "../sortable";
 import { ContextMenu } from "@base-ui/react";
 import AlbumCover from "../album/album-cover";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 import { useAlbumsStore } from "@/lib/albums-store";
 
 const Select = dynamic(() => import("../select"), {

@@ -1,6 +1,6 @@
 "use client";
 import { ScrollArea } from "@base-ui/react";
-import { memo, useCallback } from "react";
+import { useCallback } from "react";
 import {
   arrayMove,
   arraySwap,
@@ -17,7 +17,7 @@ import {
 import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
 import dynamic from "next/dynamic";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 
 
 const Background = dynamic(() => import("./background"), {

@@ -1,7 +1,7 @@
 "use client";
 import LastFMPallete from "./lastfm-container";
 import UserForm from "../user-form";
-import { useGridStore } from "@/lib/session-store";
+import { useGridStore } from "@/lib/grid-store";
 import LastFMAlbums from "./lastfm-albums";
 
 export default function LastFM() {

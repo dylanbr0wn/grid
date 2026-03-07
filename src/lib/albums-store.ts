@@ -2,16 +2,38 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { UniqueIdentifier } from "@dnd-kit/core";
-import { ContainerMap, SetAlbumFunc } from "@/context/grid";
 import {
+  AlbumTypes,
   CustomAlbum,
   LastFmAlbum,
   newCustomAlbum,
   newPlaceholderAlbum,
+  PlaceholderAlbum,
 } from "./albums";
-import { useGridStore } from "./session-store";
+import { useGridStore } from "./grid-store";
 import { CUSTOM_CONTAINER_KEY, LAST_FM_CONTAINER_KEY } from "./util";
 import { sortAlbums, SortType } from "./sort";
+
+export type Container = {
+  title: string;
+  albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum)[];
+  allowedTypes: AlbumTypes[];
+  maxLength?: number;
+  minLength?: number;
+  sort: SortType | undefined;
+};
+
+export type ContainerMap = Record<UniqueIdentifier, Container>;
+
+export type SetAlbumFunc = (
+  id: UniqueIdentifier,
+  album:
+    | LastFmAlbum
+    | CustomAlbum
+    | PlaceholderAlbum
+    | ((album: LastFmAlbum | CustomAlbum | PlaceholderAlbum) => LastFmAlbum | CustomAlbum | PlaceholderAlbum)
+) => void;
+
 
 export type AlbumsState = {
   albums: ContainerMap;

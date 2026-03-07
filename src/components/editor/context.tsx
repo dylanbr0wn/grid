@@ -20,9 +20,8 @@ import {
 import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
-import { ContainerMap } from "@/context/grid";
-import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/session-store";
+import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/grid-store";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `

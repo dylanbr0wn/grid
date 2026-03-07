@@ -1,11 +1,10 @@
 "use client";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import AlbumPallete from "../pallette";
-import { memo, Suspense, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   cn,
   CUSTOM_CONTAINER_KEY,
-  CUSTOM_SORT_KEY,
   getBrightnessStyle,
   getImageBrightness,
   PLACEHOLDER_IMG,
@@ -22,7 +21,6 @@ import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/session-store";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
