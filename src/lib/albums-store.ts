@@ -6,7 +6,7 @@ import {
   AlbumTypes,
   CustomAlbum,
   LastFmAlbum,
-  newCustomAlbum,
+  newCustomAddAlbum,
   newPlaceholderAlbum,
   PlaceholderAlbum,
 } from "./albums";
@@ -71,7 +71,7 @@ function initialContainerMap(): ContainerMap {
     [CUSTOM_CONTAINER_KEY]: {
       title: "Custom Albums",
       allowedTypes: ["custom"],
-      albums: [newCustomAlbum()],
+      albums: [newCustomAddAlbum()],
       sort: "name",
     },
     [LAST_FM_CONTAINER_KEY]: {

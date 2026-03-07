@@ -10,24 +10,22 @@ import {
 import { isPlaceholderId } from "@/lib/albums";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
+import { LastFmAlbum, LastFmAlbumProps } from "./lastfm-container";
 import {
-  LastFmAlbum,
-  LastFmAlbumProps,
-} from "./lastfm-container";
-import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
+  CustomAlbum as CustomAlbumType,
+  LastFmAlbum as LastFmAlbumType,
+  PlaceholderAlbum as PlaceholderAlbumType,
+} from "@/lib/albums";
 import dynamic from "next/dynamic";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { useGridStore } from "@/lib/grid-store";
 
-
 const Background = dynamic(() => import("./background"), {
   ssr: false,
-  loading: () => (
-    null
-    // <div className="h-full px-3 flex items-center justify-center">
-    //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    // </div>
-  ),
+  loading: () => null,
+  // <div className="h-full px-3 flex items-center justify-center">
+  //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+  // </div>
 });
 
 export default function Grid() {
@@ -38,7 +36,7 @@ export default function Grid() {
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {
       const overItem = albums["grid"].albums[overIndex];
-       if (overIndex < 0 || !overItem) {
+      if (overIndex < 0 || !overItem) {
         return null;
       }
 
@@ -114,8 +112,6 @@ export default function Grid() {
   );
 }
 
-
-
 type SortableAlbumProps = {
   disabled?: boolean;
   album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType;
@@ -129,20 +125,13 @@ export function SortableAlbum({
 }: SortableAlbumProps) {
   if (album.type === "custom") {
     return (
-      <Sortable
-        id={album.id}
-        sortData={{
-          album,
-        }}
+      <CustomAlbum
+        album={album}
+        data-index={index}
+        data-id={album.id}
+        priority={priority}
         disabled={!album.mbid}
-      >
-        <CustomAlbum
-          album={album}
-          data-index={index}
-          data-id={album.id}
-          priority={priority}
-        />
-      </Sortable>
+      />
     );
   }
 
@@ -163,19 +152,12 @@ export function SortableAlbum({
 
   if (album.type === "lastfm") {
     return (
-      <Sortable
-        id={album.id}
-        sortData={{
-          album,
-        }}
-      >
-        <LastFmAlbum
-          album={album}
-          data-index={index}
-          data-id={album.id}
-          priority={priority}
-        />
-      </Sortable>
+      <LastFmAlbum
+        album={album}
+        data-id={album.id}
+        data-index={index}
+        priority={priority}
+      />
     );
   }
 }

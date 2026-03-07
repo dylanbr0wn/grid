@@ -19,9 +19,10 @@ import {
 } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
+import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isCustomAddId, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
 import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
 import { useGridStore } from "@/lib/grid-store";
+import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
@@ -225,6 +226,21 @@ export function EditorContext({
           activeIndex,
           overIndex
         );
+      }
+
+      if (overContainer === CUSTOM_CONTAINER_KEY) {
+        console.log("here")
+        // make sure the custom add album stays at the end
+        const customAddIndex = newAlbums.findIndex((a) =>
+          isCustomAddId(a.id)
+        );
+        console.log(customAddIndex, newAlbums.length - 1, newAlbums )
+        if (customAddIndex !== -1 && customAddIndex !== newAlbums.length - 1) {
+          const placeholder = newAlbums[customAddIndex];
+          newAlbums.splice(customAddIndex, 1);
+          newAlbums.push(placeholder);
+
+        }
       }
 
       return {

@@ -1,10 +1,10 @@
 import { EditorContext } from "@/components/editor/context";
-import CustomPallete from "@/components/editor/custom";
 import Grid from "@/components/editor/grid";
 import Overlay from "@/components/editor/overlay";
 import LastFM from "@/components/editor/lastfm";
 import { Separator } from "@base-ui/react";
 import Menu from "@/components/menu";
+import CustomPallete from "@/components/editor/custom-albums";
 
 
 export default function Page() {

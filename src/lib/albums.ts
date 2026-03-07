@@ -54,6 +54,7 @@ type UniqueIdentifier = type.infer<typeof uniqueIdentifier>;
 export type LastFmAlbum = type.infer<typeof lastFmAlbum>;
 
 const PLACEHOLDER_PREFIX = "placeholder";
+const CUSTOM_ADD_PREFIX = "custom_add";
 
 export function isPlaceholderId(id: string | number): boolean {
   return typeof id === "string" && id.startsWith(PLACEHOLDER_PREFIX);
@@ -66,9 +67,13 @@ export function newPlaceholderAlbum(): PlaceholderAlbum {
   };
 }
 
-export function newCustomAlbum(): CustomAlbum {
+export function isCustomAddId(id: string | number): boolean {
+  return typeof id === "string" && id.startsWith(CUSTOM_ADD_PREFIX);
+}
+
+export function newCustomAddAlbum(): CustomAlbum {
   return {
-    id: `custom_${generateId()}`,
+    id: `${CUSTOM_ADD_PREFIX}_${generateId()}`,
     type: "custom",
   };
 }

@@ -1,7 +1,6 @@
 "use client";
 import { LAST_FM_CONTAINER_KEY } from "@/lib/util";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import { Sortable } from "../sortable";
 import { LastFmAlbum } from "./lastfm-container";
 
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
@@ -30,20 +29,12 @@ export default function LastFMAlbums() {
       strategy={rectSortingStrategy}
     >
       {(albums as LastFmAlbumType[]).map((album, index) => (
-        <Sortable
+        <LastFmAlbum
+          data-id={album.id}
+          data-index={index}
           key={album.id}
-          id={album.id}
-          sortData={{
-            album,
-          }}
-        >
-          <LastFmAlbum
-            album={album}
-            data-index={index}
-            data-id={album.id}
-            priority={true}
-          />
-        </Sortable>
+          album={album}
+        />
       ))}
     </SortableContext>
   );
