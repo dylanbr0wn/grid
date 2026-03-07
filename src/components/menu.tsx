@@ -3,7 +3,12 @@
 import { useState } from "react";
 import NumberInput from "@/components/number-input";
 import { cn } from "@/lib/util";
-import { IconDownload, IconLayoutGridAdd, IconX } from "@tabler/icons-react";
+import {
+  IconCopy,
+  IconDownload,
+  IconLayoutGridAdd,
+  IconX,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import {
   CustomAlbum,
@@ -13,7 +18,7 @@ import {
 } from "@/lib/albums";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
-import { gridToJpeg, gridToPng } from "@/lib/export";
+import { gridToBlob, gridToJpeg, gridToPng } from "@/lib/export";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { useGridStore } from "@/lib/session-store";
 
@@ -58,7 +63,11 @@ async function downloadGrid(
 }
 
 export default function Menu() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    jpeg: false,
+    png: false,
+    copy: false,
+  });
 
   const albums = useAlbumsStore((state) => state.albums);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
@@ -69,14 +78,40 @@ export default function Menu() {
 
   async function download(type: "jpeg" | "png" = "jpeg") {
     if (!columns || !rows) return;
-    setLoading(true);
+    setLoading((prev) => ({ ...prev, [type]: true }));
     try {
       await downloadGrid(columns, rows, type);
     } catch (e) {
       console.error(e);
     }
 
-    setLoading(false);
+    setLoading((prev) => ({ ...prev, [type]: false }));
+  }
+
+  async function copyToClipboard() {
+    if (!columns || !rows) return;
+    setLoading((prev) => ({ ...prev, copy: true }));
+    try {
+      const node = document.getElementById("fm-grid");
+      const dpr = window.devicePixelRatio;
+      if (!node) return;
+      const blob = await gridToBlob(
+        node,
+        columns * 128 * dpr + 16,
+        rows * 128 * dpr + 16,
+      );
+      if (blob) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+      } else {
+        console.error("Failed to generate image blob for clipboard.");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading((prev) => ({ ...prev, copy: false }));
+    }
   }
 
   function handleAutoLoad() {
@@ -293,22 +328,31 @@ export default function Menu() {
               Export
             </div>
             <button
-              disabled={loading}
+              disabled={loading.jpeg}
               onClick={() => download("jpeg")}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
               data-loading={loading}
             >
               <IconDownload className="size-4" />
-              <span>{loading ? "Loading..." : ".JPEG"}</span>
+              <span>{loading.jpeg ? "Loading..." : ".JPEG"}</span>
             </button>
             <button
-              disabled={loading}
+              disabled={loading.png}
               onClick={() => download("png")}
               className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
               data-loading={loading}
             >
               <IconDownload className="size-4" />
-              <span>{loading ? "Loading..." : ".PNG"}</span>
+              <span>{loading.png ? "Loading..." : ".PNG"}</span>
+            </button>
+            <button
+              disabled={loading.png}
+              onClick={copyToClipboard}
+              className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
+              data-loading={loading}
+            >
+              <IconCopy className="size-4" />
+              <span>{loading.copy ? "Loading..." : "Copy to Clipboard"}</span>
             </button>
           </div>
         </div>

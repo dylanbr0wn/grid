@@ -30,3 +30,18 @@ export async function gridToPng(node: HTMLElement, width: number, height: number
     },
   });
 }
+
+export async function gridToBlob(node: HTMLElement, width: number, height: number) {
+  return await htmlToImage.toBlob(node, {
+    canvasHeight: height,
+    canvasWidth: width,
+    backgroundColor: "#000000",
+    imagePlaceholder: PLACEHOLDER_IMG,
+    quality: 1,
+    type: "image/png",
+    includeQueryParams: true,
+    filter: (node) => {
+      return !(node as HTMLElement).classList?.contains("no-export");
+    }
+  });
+}
