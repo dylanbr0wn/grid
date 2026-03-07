@@ -18,15 +18,20 @@ type GridParams = {
 
   rows: number;
   setRows: (rows: number) => void;
+
+  initialized: boolean;
+  setInitialized: (initialized: boolean) => void;
 }
 
-export const useGridParams = create<GridParams>()(
+export const useGridStore = create<GridParams>()(
   persist((set) => ({
     user: '',
     sort: 'playcount',
     autofill: false,
     rows: 5,
     columns: 5,
+    initialized: false,
+    setInitialized: (initialized: boolean) => set({ initialized }),
     setRows: (rows: number) => set({ rows }),
     setColumns: (columns: number) => set({ columns }),
     setAutofill: (autofill: boolean) => set({ autofill }),

@@ -5,10 +5,10 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { createPortal } from "react-dom";
 import AlbumCover from "../album/album-cover";
 import { cn } from "@/lib/util";
-import { useGrid } from "@/hooks/grid";
+import { useAlbumsStore } from "@/lib/albums-store";
 
 export default function Overlay() {
-  const { activeAlbum } = useGrid();
+  const activeAlbum = useAlbumsStore((state) => state.activeAlbum);
 
   if (typeof document === "undefined") {
     return null;

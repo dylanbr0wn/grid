@@ -21,7 +21,9 @@ import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
 import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
-import { useContainer, useGrid } from "@/hooks/grid";
+import { useContainer } from "@/hooks/grid";
+import { useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/session-store";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -47,7 +49,9 @@ export const CustomAlbum = memo(function CustomAlbum({
   const [open, setOpen] = useState(false);
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
 
-  const { addCustomAlbum, setTextBackground, setTextColor } = useGrid();
+  const addCustomAlbum = useAlbumsStore((state) => state.addCustomAlbum);
+  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
+  const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
   function handleAddCustomAlbum(_album: CustomAlbumType) {
     addCustomAlbum({
@@ -175,7 +179,9 @@ const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
 
 export default function CustomPallete() {
   const { container } = useContainer(CUSTOM_CONTAINER_KEY);
-  const { setAlbums, sort, setSort } = useGrid();
+  const setSort = useGridStore((state) => state.setSort);
+  const sort = useGridStore((state) => state.sort);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
   function updateSort(newSort: SortType) {
     setSort(newSort);

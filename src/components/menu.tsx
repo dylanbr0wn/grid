@@ -5,11 +5,17 @@ import NumberInput from "@/components/number-input";
 import { cn } from "@/lib/util";
 import { IconDownload, IconLayoutGridAdd, IconX } from "@tabler/icons-react";
 import Image from "next/image";
-import { useGrid } from "@/hooks/grid";
-import { CustomAlbum, LastFmAlbum, newPlaceholderAlbum, PlaceholderAlbum } from "@/lib/albums";
+import {
+  CustomAlbum,
+  LastFmAlbum,
+  newPlaceholderAlbum,
+  PlaceholderAlbum,
+} from "@/lib/albums";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { gridToJpeg, gridToPng } from "@/lib/export";
+import { useAlbumsStore } from "@/lib/albums-store";
+import { useGridStore } from "@/lib/session-store";
 
 async function downloadGrid(
   columns: number,
@@ -54,7 +60,12 @@ async function downloadGrid(
 export default function Menu() {
   const [loading, setLoading] = useState(false);
 
-  const { setAlbums, albums, rows, columns, setColumns, setRows } = useGrid();
+  const albums = useAlbumsStore((state) => state.albums);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
+  const columns = useGridStore((state) => state.columns);
+  const setColumns = useGridStore((state) => state.setColumns);
+  const rows = useGridStore((state) => state.rows);
+  const setRows = useGridStore((state) => state.setRows);
 
   async function download(type: "jpeg" | "png" = "jpeg") {
     if (!columns || !rows) return;

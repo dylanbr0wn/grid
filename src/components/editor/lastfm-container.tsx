@@ -25,8 +25,10 @@ import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
 import { ContextMenu } from "@base-ui/react";
 import AlbumCover from "../album/album-cover";
-import { useContainer, useGrid } from "@/hooks/grid";
+import { useContainer } from "@/hooks/grid";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
+import { useGridStore } from "@/lib/session-store";
+import { useAlbumsStore } from "@/lib/albums-store";
 
 const Select = dynamic(() => import("../select"), {
   ssr: false,
@@ -47,16 +49,15 @@ const sortOptions: SortOptions = {
 
 type LastFMPalleteProps = {
   children?: React.ReactNode;
-  user?: string;
-  sort: SortType;
 };
 
 export default function LastFMPallete({
   children,
-  user,
 }: LastFMPalleteProps) {
   const { container } = useContainer(LAST_FM_CONTAINER_KEY);
-  const { setAlbums,  sort, setSort } = useGrid();
+  const sort = useGridStore((state) => state.sort);
+  const setSort = useGridStore((state) => state.setSort);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
   function updateSort(newSort: SortType) {
     setSort(newSort);
@@ -77,7 +78,7 @@ export default function LastFMPallete({
       length={container.albums.length}
       header={
         <>
-          <UserButton user={user} />
+          <UserButton />
           <div className="grow" />
           {sort && (
             <Select
@@ -95,10 +96,6 @@ export default function LastFMPallete({
     </AlbumPallete>
   );
 }
-
-type LastFMAlbumProps = {
-  initialAlbumsPromise: Promise<LastFmAlbumType[]>;
-};
 
 export function LastFMAlbums() {
   const { container } = useContainer(LAST_FM_CONTAINER_KEY);
@@ -128,8 +125,11 @@ export function LastFMAlbums() {
   );
 }
 
-function UserButton({ user }: { user: string | undefined }) {
-  const { setAlbums, setUser } = useGrid();
+function UserButton() {
+  const user = useGridStore((state) => state.user);
+  const setUser = useGridStore((state) => state.setUser);
+  const setAlbums = useAlbumsStore((state) => state.setAlbums);
+  const initialized = useGridStore((state) => state.initialized);
 
   function logout() {
     setAlbums((prev) => {
@@ -182,7 +182,7 @@ function UserButton({ user }: { user: string | undefined }) {
           id="underline"
         />
       )}
-      <div
+      {initialized && <div
         className={cn(
           "px-4 text-neutral-300 flex gap-1 items-center",
           user && "group-hover:blur group-hover:text-[#D51007]",
@@ -190,7 +190,7 @@ function UserButton({ user }: { user: string | undefined }) {
       >
         <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
         <div>{user || "Last.fm"}</div>
-      </div>
+      </div>}
     </button>
   );
 }
@@ -205,7 +205,8 @@ export const LastFmAlbum = ({
   priority = false,
   ...props
 }: LastFmAlbumProps) => {
-  const { setTextBackground, setTextColor } = useGrid();
+  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
+  const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
   if (!album) {
     return null;

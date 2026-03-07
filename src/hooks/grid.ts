@@ -1,17 +1,17 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
 
-import { useGridParams } from "../lib/session-store";
+import { useGridStore } from "../lib/session-store";
 import { useAlbumsStore } from "../lib/albums-store";
 
 export function useGridRows() {
-  const rows = useGridParams((state) => state.rows);
-  const setRows = useGridParams((state) => state.setRows);
+  const rows = useGridStore((state) => state.rows);
+  const setRows = useGridStore((state) => state.setRows);
   return { rows, setRows };
 }
 
 export function useGridColumns() {
-  const columns = useGridParams((state) => state.columns);
-  const setColumns = useGridParams((state) => state.setColumns);
+  const columns = useGridStore((state) => state.columns);
+  const setColumns = useGridStore((state) => state.setColumns);
   return {
     columns,
     setColumns,
@@ -22,18 +22,19 @@ export function useGridColumns() {
  * Returns the full albums and params state as a flat object, matching the
  * previous GridContext shape so all consumers continue to work unchanged.
  */
-export function useGrid() {
-  const store = useAlbumsStore();
-  const rows = useGridParams((s) => s.rows);
-  const columns = useGridParams((s) => s.columns);
-  const setColumns = useGridParams((s) => s.setColumns);
-  const setRows = useGridParams((s) => s.setRows);
-  const sort = useGridParams((s) => s.sort);
-  const setSort = useGridParams((s) => s.setSort);
-  const user = useGridParams((s) => s.user);
-  const setUser = useGridParams((s) => s.setUser);
-  return { ...store, rows, columns, setColumns, setRows, sort, setSort, user, setUser };
-}
+// export function useGrid() {
+//   const store = useAlbumsStore();
+//   const rows = useGridStore((s) => s.rows);
+//   const columns = useGridStore((s) => s.columns);
+//   const setColumns = useGridStore((s) => s.setColumns);
+//   const setRows = useGridStore((s) => s.setRows);
+//   const sort = useGridStore((s) => s.sort);
+//   const setSort = useGridStore((s) => s.setSort);
+//   const user = useGridStore((s) => s.user);
+//   const setUser = useGridStore((s) => s.setUser);
+//   const initialized = useGridStore((s) => s.initialized);
+//   return { ...store, rows, columns, setColumns, setRows, sort, setSort, user, setUser, initialized };
+// }
 
 export function useContainer(id: UniqueIdentifier) {
   const container = useAlbumsStore((s) => s.albums[id]);

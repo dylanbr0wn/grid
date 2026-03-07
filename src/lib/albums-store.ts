@@ -9,7 +9,7 @@ import {
   newCustomAlbum,
   newPlaceholderAlbum,
 } from "./albums";
-import { useGridParams } from "./session-store";
+import { useGridStore } from "./session-store";
 import { LAST_FM_CONTAINER_KEY } from "./util";
 
 export type AlbumsState = {
@@ -183,14 +183,14 @@ export const useAlbumsStore = create<AlbumsState>()(
         }),
 
       setRows: (rows) => {
-        useGridParams.getState().setRows(rows);
-        const columns = useGridParams.getState().columns;
+        useGridStore.getState().setRows(rows);
+        const columns = useGridStore.getState().columns;
         get().updateDimensions(rows, columns);
       },
 
       setColumns: (columns) => {
-        useGridParams.getState().setColumns(columns);
-        const rows = useGridParams.getState().rows;
+        useGridStore.getState().setColumns(columns);
+        const rows = useGridStore.getState().rows;
         get().updateDimensions(rows, columns);
       },
     }),
