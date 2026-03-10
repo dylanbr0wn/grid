@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import {
+  CustomAddAlbum,
   CustomAlbum,
   LastFmAlbum,
   newPlaceholderAlbum,
@@ -117,7 +118,7 @@ export default function Menu() {
   function handleAutoLoad() {
     setAlbums((albums) => {
       const totalCount = rows * columns;
-      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum)[] = albums[
+      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum | CustomAddAlbum)[] = albums[
         "grid"
       ].albums.filter((a) => a.type !== "placeholder");
       const toAdd = totalCount - current.length;
