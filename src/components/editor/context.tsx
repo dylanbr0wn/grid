@@ -229,12 +229,10 @@ export function EditorContext({
       }
 
       if (overContainer === CUSTOM_CONTAINER_KEY) {
-        console.log("here")
         // make sure the custom add album stays at the end
         const customAddIndex = newAlbums.findIndex((a) =>
           isCustomAddId(a.id)
         );
-        console.log(customAddIndex, newAlbums.length - 1, newAlbums )
         if (customAddIndex !== -1 && customAddIndex !== newAlbums.length - 1) {
           const placeholder = newAlbums[customAddIndex];
           newAlbums.splice(customAddIndex, 1);

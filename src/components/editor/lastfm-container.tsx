@@ -1,6 +1,5 @@
 "use client";
 import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
-import AlbumPallete from "../pallette";
 import { newPlaceholderAlbum } from "@/lib/albums";
 import {
   IconLoader2,
@@ -9,9 +8,11 @@ import {
 
 import * as motion from "motion/react-client";
 import {
+  calcHeight,
   cn,
   getBrightnessStyle,
   getImageBrightness,
+  HEADER_HEIGHT,
   LAST_FM_CONTAINER_KEY,
 } from "@/lib/util";
 
@@ -24,15 +25,17 @@ import { useAlbumsStore } from "@/lib/albums-store";
 import { Sortable } from "../sortable";
 import LastFmContextMenu from "./lastfm-contextmenu";
 import { useState } from "react";
+import { ScrollArea } from "@base-ui/react";
+import Select from "../select";
 
-const Select = dynamic(() => import("../select"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full px-3 flex items-center justify-center">
-      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    </div>
-  ),
-});
+// const Select = dynamic(() => import("../select"), {
+//   ssr: false,
+//   loading: () => (
+//     <div className="h-full px-3 flex items-center justify-center">
+//       <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+//     </div>
+//   ),
+// });
 
 const sortOptions: SortOptions = {
   playcount: "Plays",
@@ -49,9 +52,6 @@ type LastFMPalleteProps = {
 export default function LastFMPallete({ children }: LastFMPalleteProps) {
   const albums = useAlbumsStore(
     (state) => state.albums[LAST_FM_CONTAINER_KEY].albums,
-  );
-  const title = useAlbumsStore(
-    (state) => state.albums[LAST_FM_CONTAINER_KEY].title,
   );
   const sort = useAlbumsStore(
     (state) => state.albums[LAST_FM_CONTAINER_KEY].sort,
@@ -73,12 +73,14 @@ export default function LastFMPallete({ children }: LastFMPalleteProps) {
     });
   }
   return (
-    <AlbumPallete
-      title={title}
-      length={albums.length}
-      header={
-        <>
-          <UserButton />
+     <div
+      className={cn(
+        "min-h-42 w-96 relative flex flex-col max-h-full h-full overflow-hidden grow",
+      )}
+      style={{ height: calcHeight(albums.length) }}
+    >
+      <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
+         <UserButton />
           <div className="grow" />
           {sort && (
             <Select
@@ -89,11 +91,19 @@ export default function LastFMPallete({ children }: LastFMPalleteProps) {
               icon={<div className="text-neutral-500">sort by</div>}
             />
           )}
-        </>
-      }
-    >
-      {children}
-    </AlbumPallete>
+      </div>
+      <ScrollArea.Root
+        // style={{ height: calcHeight(albums.length) - HEADER_HEIGHT }}
+        className="relative w-full h-full overflow-hidden"
+      >
+        <ScrollArea.Viewport className="w-full h-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden">
+          {children}
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar className="absolute right-0 top-0 flex w-1 justify-center bg-neutral-900/70 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
+          <ScrollArea.Thumb className="w-full bg-neutral-500" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    </div>
   );
 }
 
@@ -124,6 +134,7 @@ function UserButton() {
     });
     setUser(undefined);
   }
+
   return (
     <button
       onClick={logout}
@@ -131,7 +142,7 @@ function UserButton() {
     >
       {!!user && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors group-hover/button:bg-neutral-900">
-          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-[#D51007] group-hover/button:scale-100 scale-80">
+          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-lastfm group-hover/button:scale-100 scale-80">
             <IconX className="size-4  " />
             <div>Clear</div>
           </div>
@@ -148,7 +159,7 @@ function UserButton() {
           }}
           className={cn(
             "bg-neutral-400",
-            !!user && "group-hover/button:bg-[#D51007] ",
+            !!user && "group-hover/button:bg-lastfm ",
           )}
           layoutId="underline"
           id="underline"

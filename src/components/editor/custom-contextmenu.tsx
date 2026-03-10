@@ -77,6 +77,15 @@ export default function CustomContextMenu({
               </ContextMenu.CheckboxItemIndicator>
               <span className="col-start-2">Toggle text background</span>
             </ContextMenu.CheckboxItem>
+            <ContextMenu.Separator className="my-1 h-px bg-neutral-800" />
+            {/* <ContextMenu.Item
+              className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-[highlighted=true]:relative data-[highlighted=true]:z-0 data-[highlighted=true]:text-neutral-50 data-[highlighted=true]:before:absolute data-[highlighted=true]:before:inset-x-1 data-[highlighted=true]:before:inset-y-0 data-[highlighted=true]:before:z-[-1] data-[highlighted=true]:before:bg-neutral-900"
+              onMouseUp={() =>
+                setTextBackground?.(album.id, !album.textBackground)
+              }
+            >
+              <span className="col-start-2">Toggle text background</span>
+            </ContextMenu.Item> */}
           </ContextMenu.Popup>
         </ContextMenu.Positioner>
       </ContextMenu.Portal>

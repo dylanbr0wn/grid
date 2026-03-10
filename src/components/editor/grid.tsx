@@ -143,7 +143,7 @@ export function SortableAlbum({
         sortData={{
           album,
         }}
-        className="pointer-events-none"
+        className="pointer-events-none select-none outline-none focus-visible:ring-0"
       >
         <div className="w-32 h-32 bg-transparent" />
       </Sortable>

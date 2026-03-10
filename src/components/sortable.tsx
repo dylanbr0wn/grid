@@ -47,8 +47,10 @@ export function Sortable({
           transform: CSS.Transform.toString(transform),
           transition,
         }}
+        className="focus-visible:outline-none"
         {...props}
         {...attributes}
+        tabIndex={-1}
       >
         {children}
       </div>

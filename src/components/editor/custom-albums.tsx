@@ -2,23 +2,12 @@
 
 import { useAlbumsStore } from "@/lib/albums-store";
 import { SortOptions, SortType, sortAlbums } from "@/lib/sort";
-import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
+import { calcHeight, cn, CUSTOM_CONTAINER_KEY, HEADER_HEIGHT } from "@/lib/util";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import AlbumPallete from "../pallette";
-import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
-import dynamic from "next/dynamic";
-import { IconLoader2 } from "@tabler/icons-react";
-import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
-
-const Select = dynamic(() => import("../select"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full px-3 flex items-center justify-center">
-      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    </div>
-  ),
-});
+import { CustomAlbum as CustomAlbumType, isCustomAddId } from "@/lib/albums";
+import { ScrollArea } from "@base-ui/react";
+import Select from "../select";
 
 const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
   random: "Random",
@@ -39,7 +28,8 @@ export default function CustomPallete() {
     (state) => state.albums[CUSTOM_CONTAINER_KEY].title,
   );
 
-  function updateSort(newSort: SortType) {
+  function updateSort(newSort: SortType | null) {
+    if (!newSort) return;
     setSort(CUSTOM_CONTAINER_KEY, newSort);
     setAlbums((prev) => {
       const container = prev[CUSTOM_CONTAINER_KEY];
@@ -58,46 +48,52 @@ export default function CustomPallete() {
     });
   }
   return (
-    <AlbumPallete
-      title={title}
-      length={albums.length}
-      header={
-        <>
-          <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
-            {title}
-          </h5>
-          <div className="grow" />
-          {sort && (
-            <Select
-              value={sort}
-              items={sortOptions}
-              disabled={albums.length <= 2}
-              onChange={(v) => v && updateSort(v as SortType)}
-              icon={<div className="text-neutral-500">sort by</div>}
-            />
-          )}
-        </>
-      }
+    <div
+      className={cn(
+        "min-h-42 w-96 relative flex flex-col max-h-1/2 h-min shrink-0",
+      )}
     >
-      <SortableContext
-        id={CUSTOM_CONTAINER_KEY}
-        items={albums}
-        strategy={rectSortingStrategy}
-      >
-        {(albums as CustomAlbumType[]).map((album, index) => (
-          <CustomAlbum
-            key={album.id}
-            disabled={{
-              draggable: album.type === "custom" && !album.mbid,
-              droppable: albums.length >= 1,
-            }}
-            album={album}
-            data-index={index}
-            data-id={album.id}
-            priority={true}
+      <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
+        <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
+          {title}
+        </h5>
+        <div className="grow" />
+        {sort && (
+          <Select
+            value={sort}
+            items={sortOptions}
+            disabled={albums.length <= 2}
+            onChange={(v) => updateSort(v as SortType)}
+            icon={<div className="text-neutral-500">sort by</div>}
           />
-        ))}
-      </SortableContext>
-    </AlbumPallete>
+        )}
+      </div>
+      <ScrollArea.Root
+        style={{ height: calcHeight(albums.length) - HEADER_HEIGHT }}
+        className="relative w-full h-full overflow-hidden"
+      >
+        <ScrollArea.Viewport className="w-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden">
+          <SortableContext
+            id={CUSTOM_CONTAINER_KEY}
+            items={albums}
+            strategy={rectSortingStrategy}
+          >
+            {(albums as CustomAlbumType[]).map((album, index) => (
+              <CustomAlbum
+                key={album.id}
+                disabled={isCustomAddId(album.id)}
+                album={album}
+                data-index={index}
+                data-id={album.id}
+                priority={true}
+              />
+            ))}
+          </SortableContext>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar className="absolute right-0 top-0 flex w-1 justify-center bg-neutral-900/70 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
+          <ScrollArea.Thumb className="w-full bg-neutral-500" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    </div>
   );
 }

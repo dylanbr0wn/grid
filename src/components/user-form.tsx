@@ -61,7 +61,6 @@ export default function UserForm() {
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const setUser = useGridStore((state) => state.setUser);
   const autofill = useGridStore((state) => state.autofill);
-  const setInitialized = useGridStore((state) => state.setInitialized);
   const initialized = useGridStore((state) => state.initialized);
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -116,57 +115,6 @@ export default function UserForm() {
     }
   }
 
-  useEffect(() => {
-    const user = useGridStore.getState().user;
-    const sort = useAlbumsStore.getState().albums[LAST_FM_CONTAINER_KEY].sort;
-    const autofill = useGridStore.getState().autofill;
-    if (!user) {
-      setInitialized(true);
-      return;
-    }
-    if (!sort) {
-      console.warn("No sort type set, defaulting to 'playcount'");
-    }
-    setLoading(true);
-    fetchLastFmAlbums(user, sort || "playcount")
-      .then((albums) => {
-        setAlbums((prev) => {
-          if (autofill) {
-            const remaining = [...albums];
-            const newGridAlbums = prev.grid.albums.map((a) => {
-              if (a.type === "placeholder" && remaining.length > 0) {
-                return remaining.shift()!;
-              }
-              return a;
-            });
-            return {
-              ...prev,
-              [LAST_FM_CONTAINER_KEY]: {
-                ...prev[LAST_FM_CONTAINER_KEY],
-                albums: remaining,
-              },
-              grid: { ...prev.grid, albums: newGridAlbums },
-            };
-          }
-          return {
-            ...prev,
-            [LAST_FM_CONTAINER_KEY]: {
-              ...prev[LAST_FM_CONTAINER_KEY],
-              albums,
-            },
-          };
-        });
-      })
-      .catch((err) => {
-        console.error("Error fetching albums:", err);
-        setUser(undefined);
-      })
-      .finally(() => {
-        setLoading(false);
-        setInitialized(true);
-      });
-  }, [setAlbums, setInitialized, setUser]);
-
   if (!initialized) {
     return (
       <div className="p-4 text-sm text-neutral-500 col-span-3">
@@ -176,7 +124,7 @@ export default function UserForm() {
   }
 
   return (
-    <div className="shrink-0 h-full flex flex-col items-center justify-center p-4 text-sm text-neutral-500 w-full col-span-3 gap-5">
+    <div className="shrink-0 flex flex-col items-center justify-start p-4 text-sm text-neutral-500 w-full col-span-3 gap-5">
       <div>Import your lastfm scrobbles.</div>
       <form
         ref={formRef}
@@ -184,6 +132,7 @@ export default function UserForm() {
         className="text-white flex w-full items-start z-10"
       >
         <Field.Root
+          disabled={loading}
           invalid={!!error}
           name="lastfm-username"
           className="flex flex-col items-start gap-2 w-full"
@@ -192,6 +141,7 @@ export default function UserForm() {
             <div className="hover:bg-neutral-900 focus-within:z-1 focus-within:bg-neutral-900 text-neutral-300 pl-2 relative">
               <Field.Control
                 required
+                disabled={loading}
                 placeholder="Last.fm Username"
                 className={cn(
                   "h-10 flex outline-0 relative peer items-center w-full",

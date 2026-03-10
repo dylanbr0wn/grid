@@ -79,3 +79,22 @@ export function getImageBrightness(
 export function generateId() {
   return Math.random().toString(36).substring(2, 9);
 }
+
+export const HEADER_HEIGHT = 40;
+export const ALBUM_SIZE = 128;
+
+export function calcHeight(albumCount: number) {
+  const rows = Math.ceil(albumCount / 3);
+
+  const albumHeight = rows * ALBUM_SIZE;
+  const totalHeight =  albumHeight + HEADER_HEIGHT;
+
+  // minimum height to show 2 rows of albums
+  if (totalHeight < ALBUM_SIZE) {
+    return (ALBUM_SIZE * 2) + HEADER_HEIGHT;
+  }
+
+
+
+  return totalHeight;
+}
