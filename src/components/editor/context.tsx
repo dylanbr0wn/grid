@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isCustomAddId, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
+import { AlbumTypes, CustomAddAlbum, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isCustomAddId, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
 import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
 import { useGridStore } from "@/lib/grid-store";
 import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
@@ -52,7 +52,7 @@ export function EditorContext({
   const rows = useGridStore((s) => s.rows);
   const columns = useGridStore((s) => s.columns);
   const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
-  const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
+  const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | CustomAddAlbum |  null>(
     null
   );
 

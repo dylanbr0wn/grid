@@ -4,6 +4,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { UniqueIdentifier } from "@dnd-kit/core";
 import {
   AlbumTypes,
+  CustomAddAlbum,
   CustomAlbum,
   LastFmAlbum,
   newCustomAddAlbum,
@@ -16,7 +17,7 @@ import { sortAlbums, SortType } from "./sort";
 
 export type Container = {
   title: string;
-  albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum)[];
+  albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum | CustomAddAlbum)[];
   allowedTypes: AlbumTypes[];
   maxLength?: number;
   minLength?: number;
@@ -31,7 +32,8 @@ export type SetAlbumFunc = (
     | LastFmAlbum
     | CustomAlbum
     | PlaceholderAlbum
-    | ((album: LastFmAlbum | CustomAlbum | PlaceholderAlbum) => LastFmAlbum | CustomAlbum | PlaceholderAlbum)
+    | CustomAddAlbum
+    | ((album: LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum) => LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum)
 ) => void;
 
 
@@ -70,7 +72,7 @@ function initialContainerMap(): ContainerMap {
     },
     [CUSTOM_CONTAINER_KEY]: {
       title: "Custom Albums",
-      allowedTypes: ["custom"],
+      allowedTypes: ["custom", "custom_add"],
       albums: [newCustomAddAlbum()],
       sort: "name",
     },

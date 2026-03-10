@@ -61,14 +61,14 @@ export default function LastFMAlbums() {
             <div>Clear</div>
           </div>
           <motion.div
-                className={cn(
-                  "absolute right-0 left-0 bottom-0 h-px transition-colors group-focus/button:h-0.75 bg-red-800  peer-focus:bg-red-800",
-                )}
-                layout
-                transition={{
-                  duration: 0.15,
-                }}
-              />
+            className={cn(
+              "absolute right-0 left-0 bottom-0 h-px transition-colors group-focus/button:h-0.75 bg-red-800  peer-focus:bg-red-800",
+            )}
+            layout
+            transition={{
+              duration: 0.15,
+            }}
+          />
         </button>
       </div>
     );

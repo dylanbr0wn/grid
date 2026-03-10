@@ -7,7 +7,7 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { isPlaceholderId } from "@/lib/albums";
+import { CustomAddAlbum, isPlaceholderId } from "@/lib/albums";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
 import { LastFmAlbum, LastFmAlbumProps } from "./lastfm-container";
@@ -114,7 +114,7 @@ export default function Grid() {
 
 type SortableAlbumProps = {
   disabled?: boolean;
-  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType;
+  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType | CustomAddAlbum;
   index: number;
 } & Pick<LastFmAlbumProps, "priority">;
 

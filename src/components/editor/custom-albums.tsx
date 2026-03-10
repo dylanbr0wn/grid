@@ -53,7 +53,7 @@ export default function CustomPallete() {
         "min-h-42 w-96 relative flex flex-col max-h-1/2 h-min shrink-0",
       )}
     >
-      <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
+      <div className="w-full h-10 border-b border-neutral-800 flex items-center shrink-0 gap-1">
         <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
           {title}
         </h5>
@@ -72,7 +72,7 @@ export default function CustomPallete() {
         style={{ height: calcHeight(albums.length) - HEADER_HEIGHT }}
         className="relative w-full h-full overflow-hidden"
       >
-        <ScrollArea.Viewport className="w-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden">
+        <ScrollArea.Viewport className="w-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden grid-pattern">
           <SortableContext
             id={CUSTOM_CONTAINER_KEY}
             items={albums}

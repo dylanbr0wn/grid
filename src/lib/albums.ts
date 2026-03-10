@@ -1,7 +1,7 @@
 import { type } from "arktype";
 import { generateId } from "./util";
 
-export type AlbumTypes = "lastfm" | "placeholder" | "custom" ;
+export type AlbumTypes = "lastfm" | "placeholder" | "custom" | "custom_add" ;
 
 export type BaseAlbum = {
   id: UniqueIdentifier;
@@ -23,6 +23,13 @@ export const customAlbum = type({
 })
 
 export type CustomAlbum = type.infer<typeof customAlbum>;
+
+export const customAddAlbum = type({
+  "type": "'custom_add'",
+  "id": "string",
+})
+
+export type CustomAddAlbum = type.infer<typeof customAddAlbum>;
 
 export const placeholderAlbum = type({
   "type": "'placeholder'",
@@ -71,9 +78,9 @@ export function isCustomAddId(id: string | number): boolean {
   return typeof id === "string" && id.startsWith(CUSTOM_ADD_PREFIX);
 }
 
-export function newCustomAddAlbum(): CustomAlbum {
+export function newCustomAddAlbum(): CustomAddAlbum {
   return {
     id: `${CUSTOM_ADD_PREFIX}_${generateId()}`,
-    type: "custom",
+    type: "custom_add",
   };
 }

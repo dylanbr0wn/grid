@@ -53,7 +53,7 @@ export function CustomAlbum({
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
   if (isCustomAddId(album.id)) {
-    return <CustomAddButton id={album.id} />;
+    return <CustomAddButton id={album.id} disabled={disabled} />;
   }
 
   return (
@@ -132,16 +132,14 @@ function CustomAlbumAddDialog() {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         className={cn(
-          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50",
+          "flex grow items-center justify-center box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-950 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-900 outline-1 outline-neutral-800 data-[state=open]:bg-neutral-800",
         )}
       >
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors">
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 items-center group-hover:translate-y-0 transition-all translate-y-4 text-green-700 group-hover:scale-100 scale-80 group-active:text-green-500 ">
+        <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center transition-colors gap-2 hover:text-green-700 group-active:text-green-500 group-active:hover:text-green-500 duration-150">
+           <IconPlus className="size-6" />
+          <div className="flex gap-1 items-center">
             <div>Add Album</div>
           </div>
-        </div>
-        <div className={cn("group-hover:blur")}>
-          <IconPlus className="size-4" />
         </div>
       </Dialog.Trigger>
       <Dialog.Portal>

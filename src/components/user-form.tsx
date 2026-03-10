@@ -160,7 +160,7 @@ export default function UserForm() {
             </div>
             <button
               disabled={loading}
-              className="block p-2 w-32 text-base text-neutral-300 text-center bg-neutral-950 hover:bg-neutral-900 relative group disabled:cursor-not-allowed disabled:opacity-50"
+              className="block p-2 w-32 text-base text-neutral-300 text-center  hover:bg-neutral-900 relative group disabled:cursor-not-allowed disabled:opacity-50"
               type="submit"
             >
               Import

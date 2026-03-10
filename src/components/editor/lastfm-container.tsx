@@ -96,7 +96,7 @@ export default function LastFMPallete({ children }: LastFMPalleteProps) {
         // style={{ height: calcHeight(albums.length) - HEADER_HEIGHT }}
         className="relative w-full h-full overflow-hidden"
       >
-        <ScrollArea.Viewport className="w-full h-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden">
+        <ScrollArea.Viewport className="w-full h-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden grid-pattern">
           {children}
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className="absolute right-0 top-0 flex w-1 justify-center bg-neutral-900/70 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
@@ -169,10 +169,10 @@ function UserButton() {
         <div
           className={cn(
             "px-4 text-neutral-300 flex gap-1 items-center",
-            user && "group-hover:blur group-hover:text-[#D51007]",
+            user && "group-hover:blur group-hover:text-lastfm",
           )}
         >
-          <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
+          <LastFMIcon className="size-5 mr-2 fill fill-lastfm" />
           <div>{user || "Last.fm"}</div>
         </div>
       )}
