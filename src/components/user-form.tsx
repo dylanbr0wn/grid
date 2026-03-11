@@ -68,6 +68,7 @@ export default function UserForm() {
     try {
       e.preventDefault();
       setLoading(true);
+      setError(null);
       const formData = new FormData(e.currentTarget);
       const username = formData.get("lastfm-username")?.toString().trim();
       const sort = useAlbumsStore.getState().albums[LAST_FM_CONTAINER_KEY].sort;
