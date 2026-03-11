@@ -1,6 +1,6 @@
 "use client";
 import { cn, LAST_FM_CONTAINER_KEY, LAST_FM_SORT_KEY, LAST_FM_USER_KEY } from "@/lib/util";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
 import { Field } from "@base-ui/react";
