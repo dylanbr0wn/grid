@@ -152,4 +152,5 @@ export function SortableAlbum({
       />
     );
   }
+  return null;
 }
