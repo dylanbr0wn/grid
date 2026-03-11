@@ -49,7 +49,10 @@ export function Sortable({
           transition,
           ...style,
         }}
-        className="focus-visible:outline-none"
+        className={cn(
+          "focus-visible:outline-none",
+          className,
+        )}
         {...props}
         {...attributes}
         tabIndex={-1}
