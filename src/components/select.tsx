@@ -51,7 +51,7 @@ export default function Select({
 					</BSelect.Icon>
 					<motion.div
 						className={cn(
-							'absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 data transition-colors',
+							'absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 transition-colors',
 							open && ' bg-white'
 						)}
 						layout

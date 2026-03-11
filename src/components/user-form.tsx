@@ -146,15 +146,11 @@ export default function UserForm() {
                   "h-10 flex outline-0 relative peer items-center w-full",
                 )}
               />
-              <motion.div
+              <div
                 className={cn(
-                  "absolute right-0 left-0 bottom-0 h-px bg-neutral-400  transition-colors peer-focus:bg-white peer-focus:h-0.75",
+                  "absolute right-0 left-0 bottom-0 h-px bg-neutral-400  transition-all duration-150 peer-focus:bg-white peer-focus:h-0.75",
                   !!error && !loading && "bg-red-800  peer-focus:bg-red-800",
                 )}
-                layout
-                transition={{
-                  duration: 0.15,
-                }}
               />
             </div>
             <button
@@ -163,15 +159,11 @@ export default function UserForm() {
               type="submit"
             >
               Import
-              <motion.div
+              <div
                 className={cn(
-                  "absolute right-0 left-0 bottom-0 h-px bg-neutral-400 group-focus-within:h-0.5 group-focus-within:z-1 transition-colors group-focus:bg-white group-focus:h-0.75",
-                  !!error && !loading && "bg-red-800 group-focus:bg-red-800",
+                  "absolute right-0 left-0 bottom-0 h-px group-active:h-0.75 bg-neutral-400  group-focus-within:z-1 transition-all group-active:bg-white duration-150",
+                  !!error && !loading && "bg-red-800 group-active:bg-red-800",
                 )}
-                layout
-                transition={{
-                  duration: 0.15,
-                }}
               />
             </button>
           </div>

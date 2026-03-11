@@ -135,27 +135,17 @@ function UserButton() {
         </div>
       )}
       {user && (
-        <motion.div
-          style={{
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 1,
-            position: "absolute",
-          }}
+        <div
           className={cn(
-            "bg-neutral-400",
+            "bg-neutral-400 absolute bottom-0 left-0 right-0 h-px group-active/button:h-0.75 transition-all ",
             !!user && "group-hover/button:bg-lastfm ",
           )}
-          layoutId="underline"
-          id="underline"
         />
       )}
       {initialized && (
         <div
           className={cn(
-            "px-4 text-neutral-300 flex gap-1 items-center",
-            user && "group-hover:blur group-hover:text-lastfm",
+            "px-4 text-neutral-300 flex gap-1 items-center transition-all",
           )}
         >
           <LastFMIcon className="size-5 mr-2 fill fill-lastfm" />
