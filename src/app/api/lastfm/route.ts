@@ -6,6 +6,11 @@ import { LAST_FM_SORT_KEY, LAST_FM_USER_KEY, PLACEHOLDER_IMG } from "@/lib/util"
 import { type } from "arktype";
 import { NextRequest } from "next/server";
 
+/**
+ * Transforms raw Last.fm API album data into internal `LastFmAlbum` objects.
+ * Resolves cover art using a priority cascade:
+ * large → Cover Art Archive → small → fallback → placeholder.
+ */
 function parseAlbums(albums: (typeof albumInfo.infer)[]): LastFmAlbum[] {
   return albums.map((a) => {
     const large =
@@ -47,6 +52,11 @@ function parseAlbums(albums: (typeof albumInfo.infer)[]): LastFmAlbum[] {
 
 const userParam = type("string < 255")
 
+/**
+ * GET /api/lastfm — Fetches a user's top 100 albums from the past 7 days.
+ * Query params: `lastfm-user` (username), `lastfm-sort` (sort mode).
+ * Returns a sorted JSON array of `LastFmAlbum` objects.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl

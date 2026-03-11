@@ -7,6 +7,11 @@ import { Disabled } from "@dnd-kit/sortable/dist/types";
 import { CSS } from "@dnd-kit/utilities";
 import { JSX, PropsWithChildren } from "react";
 
+/**
+ * Props for the generic drag-and-drop wrapper.
+ * `sortData` is passed to dnd-kit's `data` field and made available in drag event handlers.
+ * `disabled` can be a boolean or a dnd-kit `Disabled` object to independently control drag/drop.
+ */
 type SortableProps = PropsWithChildren & {
   id: UniqueIdentifier;
   disabled?: boolean | Disabled;

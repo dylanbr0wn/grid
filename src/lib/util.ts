@@ -12,6 +12,16 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
+/**
+ * Maps a brightness value (0–255) to text color and background styling
+ * for readable text overlays on album art.
+ *
+ * Thresholds:
+ * - \> 200: black text, no background (very bright image)
+ * - \> 160: black text, with background
+ * - \> 60:  white text, with background
+ * - ≤ 60:  white text, no background (very dark image)
+ */
 export function getBrightnessStyle(brightness: number) {
   if (brightness > 200) {
     return {
@@ -36,6 +46,11 @@ export function getBrightnessStyle(brightness: number) {
   }
 }
 
+/**
+ * Analyzes the **bottom 25%** of an image to compute average brightness (0–255).
+ * Uses an off-screen canvas to extract pixel data. Returns -1 if the canvas
+ * context is unavailable.
+ */
 export function getImageBrightness(
 	img: HTMLImageElement
 ): number{
@@ -76,13 +91,16 @@ export function getImageBrightness(
 }
 
 
+/** Generates a 7-character random alphanumeric ID. */
 export function generateId() {
   return Math.random().toString(36).substring(2, 9);
 }
 
 export const HEADER_HEIGHT = 40;
+/** Album tile size in pixels (128×128). */
 export const ALBUM_SIZE = 128;
 
+/** Calculates the pixel height of a container given an album count (3 columns assumed). */
 export function calcHeight(albumCount: number) {
   const rows = Math.ceil(albumCount / 3);
 

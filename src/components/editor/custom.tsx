@@ -19,6 +19,7 @@ import { CustomAlbum as CustomAlbumType, isCustomAddId } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
 import CustomContextMenu from "./custom-contextmenu";
 
+/** Debounces a value by `delay` ms. Used to throttle search API calls. */
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   const handle = useRef<ReturnType<typeof setTimeout>>(undefined);

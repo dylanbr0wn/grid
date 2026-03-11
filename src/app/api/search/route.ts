@@ -5,6 +5,11 @@ import { NextRequest } from "next/server";
 const parseLimit = type("string.numeric.parse").to("1 < number.integer < 100");
 const parseOffset = type("string.numeric.parse").to("number.integer >= 0");
 
+/**
+ * GET /api/search — Searches MusicBrainz for album release groups.
+ * Query params: `query` (search term), `limit` (1-100, default 25), `offset` (≥0, default 0).
+ * Returns a JSON array of `CustomAlbum` objects.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl

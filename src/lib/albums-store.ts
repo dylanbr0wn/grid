@@ -15,15 +15,25 @@ import { CUSTOM_CONTAINER_KEY, LAST_FM_CONTAINER_KEY } from "./util";
 import { sortAlbums, SortType } from "./sort";
 import { fetchLastFmAlbums } from "@/components/user-form";
 
+/**
+ * A container holds an ordered list of albums with drag-and-drop constraints.
+ * Three containers exist: "grid" (the NxM grid), "custom" (user-added albums),
+ * and "lastfm" (albums fetched from Last.fm).
+ */
 export type Container = {
   title: string;
   albums: (PlaceholderAlbum | LastFmAlbum | CustomAlbum | CustomAddAlbum)[];
+  /** Which album types can be dropped into this container. */
   allowedTypes: AlbumTypes[];
+  /** Max number of albums (enforced during drag). Only set on the grid container. */
   maxLength?: number;
+  /** Min number of albums — placeholders are added to maintain this. Only set on the grid container. */
   minLength?: number;
+  /** Current sort mode, or undefined for no sorting. */
   sort: SortType | undefined;
 };
 
+/** Map of container IDs to their container state. Keys: "grid", "custom", "lastfm". */
 export type ContainerMap = Record<UniqueIdentifier, Container>;
 
 export type SetAlbumFunc = (
@@ -37,8 +47,14 @@ export type SetAlbumFunc = (
 ) => void;
 
 
+/**
+ * The complete application state. Managed by a Zustand store with localStorage persistence.
+ * Only custom albums, sort preferences, dimensions, and username are persisted —
+ * Last.fm albums are re-fetched on rehydration.
+ */
 export type AlbumsState = {
   albums: ContainerMap;
+  /** The album currently being dragged or inspected, shown in the details panel. */
   activeAlbum: LastFmAlbum | CustomAlbum | null;
 
   user: string | undefined;
@@ -99,6 +115,13 @@ function initialContainerMap(): ContainerMap {
   };
 }
 
+/**
+ * Recalculates the grid container when rows/columns change.
+ * - Growing: adds placeholder albums to fill new slots.
+ * - Shrinking: removes albums from the end. Non-placeholder albums are returned
+ *   to their source container (Last.fm or custom) and that container's sort is
+ *   set to "custom" to preserve the insertion order.
+ */
 function updateGridDimensions(state: AlbumsState, rows: number, columns: number): ContainerMap {
   const grid = state.albums.grid;
   const lastfm = state.albums[LAST_FM_CONTAINER_KEY];
@@ -154,6 +177,11 @@ function updateGridDimensions(state: AlbumsState, rows: number, columns: number)
   }
 }
 
+/**
+ * The main Zustand store for all application state.
+ * Persisted to localStorage under the key "grid-albums-storage".
+ * On rehydration, Last.fm albums are re-fetched if a username is saved.
+ */
 export const useAlbumsStore = create<AlbumsState>()(
   persist(
     (set, get) => ({

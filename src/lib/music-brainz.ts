@@ -7,6 +7,7 @@ import { customAlbum, CustomAlbum } from "./albums";
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";
 
+/** Generic fetch helper for the MusicBrainz JSON API. Sets required User-Agent header. */
 async function request(path: string, params?: Record<string, string | number>) {
   const url = new URL(BASE_PATH + path);
   const p = params ?? {};
@@ -27,6 +28,7 @@ async function request(path: string, params?: Record<string, string | number>) {
   return (await res.json())
 }
 
+/** ArkType schema for the MusicBrainz release-group search response. */
 export const ReleaseGroupResponse = type({
   created: "string",
   count: "number",
@@ -53,6 +55,11 @@ export const ReleaseGroupResponse = type({
 
 
 
+/**
+ * Searches MusicBrainz for release groups matching `query`.
+ * Returns an array of `CustomAlbum` objects with cover art URLs from the Cover Art Archive.
+ * Returns an empty array if the query is empty.
+ */
 export async function searchReleases(query: string, limit = 25, offset = 0){
   if (query.length === 0) {
     return []
@@ -87,6 +94,11 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
   return customAlbum.array().assert(albums);
 }
 
+/**
+ * Builds a Cover Art Archive URL for a release group.
+ * @param size `'small'` = 250px, `'large'` = 500px (default)
+ * @returns The URL string, or `undefined` if `releaseGroupId` is falsy.
+ */
 export function getCoverArtUrl(releaseGroupId: string, size: 'small' | 'large' = 'large') {
   if (!releaseGroupId) return undefined;
   const sizeParam = size === 'small' ? '250' : '500';

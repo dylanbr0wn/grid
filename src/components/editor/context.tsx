@@ -31,6 +31,7 @@ const screenReaderInstructions: ScreenReaderInstructions = {
   `,
 };
 
+/** Finds which container holds the item with the given ID, or the container ID itself. */
 function findContainer(id: UniqueIdentifier, containers: ContainerMap) {
   if (id in containers) {
     return id;
@@ -51,6 +52,10 @@ export function EditorContext({
   const rows = useAlbumsStore((s) => s.rows);
   const columns = useAlbumsStore((s) => s.columns);
   const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
+  /**
+   * Tracks an item displaced from the grid during a drag when the grid is at maxLength.
+   * If space opens up before the drag ends, this item is restored.
+   */
   const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | CustomAddAlbum |  null>(
     null
   );
@@ -63,6 +68,11 @@ export function EditorContext({
     })
   );
 
+  /**
+   * Handles real-time reordering while dragging over containers.
+   * Enforces allowedTypes, maxLength (displaces items via overflowItem ref),
+   * and minLength (adds placeholders) constraints.
+   */
   const onDragOver = useCallback(({ active, over }: DragOverEvent) => {
     const overId = over?.id;
 
@@ -177,6 +187,11 @@ export function EditorContext({
     });
   }, [setAlbums]);
 
+  /**
+   * Finalizes album placement on drop. Uses arrayMove for normal reordering
+   * and arraySwap when dropping onto a placeholder. Ensures the custom_add
+   * button stays at the end of the custom container.
+   */
   const onDragEnd = useCallback(({ active, over }: DragEndEvent) => {
     overflowItem.current = null;
     setActiveAlbum(null);
