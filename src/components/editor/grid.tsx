@@ -91,11 +91,10 @@ export default function Grid() {
               items={albums["grid"].albums}
               strategy={gridSortingStrategy}
             >
-              {albums["grid"].albums.map((album, index) => (
+              {albums["grid"].albums.map((album) => (
                 <SortableAlbum
                   key={album.id}
                   album={album}
-                  index={index}
                   disabled={isPlaceholderId(album.id)}
                   priority={true}
                 />
@@ -114,20 +113,16 @@ export default function Grid() {
 type SortableAlbumProps = {
   disabled?: boolean;
   album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType | CustomAddAlbum;
-  index: number;
 } & Pick<LastFmAlbumProps, "priority">;
 
 export function SortableAlbum({
   album,
-  index,
   priority = false,
 }: SortableAlbumProps) {
   if (album.type === "custom") {
     return (
       <CustomAlbum
         album={album}
-        data-index={index}
-        data-id={album.id}
         priority={priority}
         disabled={!album.mbid}
       />
@@ -153,8 +148,6 @@ export function SortableAlbum({
     return (
       <LastFmAlbum
         album={album}
-        data-id={album.id}
-        data-index={index}
         priority={priority}
       />
     );

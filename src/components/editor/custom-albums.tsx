@@ -1,7 +1,7 @@
 "use client";
 
 import { useAlbumsStore } from "@/lib/albums-store";
-import { SortOptions, SortType, sortAlbums } from "@/lib/sort";
+import { SortOptions, SortType } from "@/lib/sort";
 import { calcHeight, cn, CUSTOM_CONTAINER_KEY, HEADER_HEIGHT } from "@/lib/util";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CustomAlbum } from "./custom";
@@ -20,7 +20,6 @@ export default function CustomPallete() {
   const sort = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].sort,
   );
-  // const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const albums = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].albums,
   );
@@ -31,21 +30,6 @@ export default function CustomPallete() {
   function updateSort(newSort: SortType | null) {
     if (!newSort) return;
     setSort(CUSTOM_CONTAINER_KEY, newSort);
-    // setAlbums((prev) => {
-    //   const container = prev[CUSTOM_CONTAINER_KEY];
-    //   const albumsToSort = [...container.albums.slice(0, -1)];
-
-    //   return {
-    //     ...prev,
-    //     [CUSTOM_CONTAINER_KEY]: {
-    //       ...prev[CUSTOM_CONTAINER_KEY],
-    //       albums: [
-    //         ...sortAlbums(albumsToSort as CustomAlbumType[], newSort),
-    //         container.albums[container.albums.length - 1],
-    //       ],
-    //     },
-    //   };
-    // });
   }
   return (
     <div
@@ -83,8 +67,6 @@ export default function CustomPallete() {
                 key={album.id}
                 disabled={isCustomAddId(album.id) ? { draggable: true } : false}
                 album={album}
-                data-index={index}
-                data-id={album.id}
                 priority={true}
               />
             ))}

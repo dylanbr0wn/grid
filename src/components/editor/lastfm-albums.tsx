@@ -80,10 +80,8 @@ export default function LastFMAlbums() {
       items={albums}
       strategy={rectSortingStrategy}
     >
-      {(albums as LastFmAlbumType[]).map((album, index) => (
+      {(albums as LastFmAlbumType[]).map((album) => (
         <LastFmAlbum
-          data-id={album.id}
-          data-index={index}
           key={album.id}
           album={album}
         />
