@@ -52,7 +52,7 @@ export function CustomAlbum({
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
-  if (isCustomAddId(album.id)) {
+  if (isCustomAddId(album.id) || !album.mbid) {
     return <CustomAddButton id={album.id} disabled={disabled} />;
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ContextMenu } from "@base-ui/react";
+import { ContextMenu, ContextMenuRootChangeEventDetails } from "@base-ui/react";
 import { IconCheck, IconChevronRight, IconTrash } from "@tabler/icons-react";
 import { CustomAlbum as CustomAlbumType, newPlaceholderAlbum } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
@@ -61,8 +61,15 @@ export default function CustomContextMenu({
     });
   }
 
+  function handleOpenChange(open: boolean, event: ContextMenuRootChangeEventDetails) {
+    if (!open) {
+      event.event.preventDefault();
+    }
+    setOpen(open);
+  }
+
   return (
-    <ContextMenu.Root key={album.id} open={open} onOpenChange={setOpen}>
+    <ContextMenu.Root key={album.id} open={open} onOpenChange={handleOpenChange}>
       <ContextMenu.Trigger>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Positioner className="outline-none">
@@ -108,8 +115,8 @@ export default function CustomContextMenu({
             <ContextMenu.CheckboxItem
               checked={!!album.textBackground}
               className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-px data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-900"
-              onMouseUp={() =>
-                setTextBackground?.(album.id, !album.textBackground)
+              onCheckedChange={(checked) =>
+                setTextBackground?.(album.id, checked)
               }
             >
               <ContextMenu.CheckboxItemIndicator className="col-start-1">
@@ -120,9 +127,7 @@ export default function CustomContextMenu({
             <ContextMenu.Separator className="h-px bg-neutral-700" />
             <ContextMenu.Item
               className="grid grid-cols-[0.75rem_1fr] text-red-800 cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-red-700 data-highlighted:before:absolute data-highlighted:before:inset-x-px data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-red-950/30"
-              onMouseUp={() =>
-                removeAlbum()
-              }
+              onClick={removeAlbum}
             >
               <IconTrash className="size-4" />
               <span className="col-start-2">Remove Album</span>
