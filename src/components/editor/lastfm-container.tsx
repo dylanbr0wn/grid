@@ -2,7 +2,6 @@
 import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
 import { newPlaceholderAlbum } from "@/lib/albums";
 import {
-  IconLoader2,
   IconX,
 } from "@tabler/icons-react";
 
@@ -12,30 +11,18 @@ import {
   cn,
   getBrightnessStyle,
   getImageBrightness,
-  HEADER_HEIGHT,
   LAST_FM_CONTAINER_KEY,
 } from "@/lib/util";
 
 import LastFMIcon from "../lastfm-icon";
-import dynamic from "next/dynamic";
 import AlbumCover from "../album/album-cover";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
-import { useGridStore } from "@/lib/grid-store";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { Sortable } from "../sortable";
 import LastFmContextMenu from "./lastfm-contextmenu";
 import { useState } from "react";
 import { ScrollArea } from "@base-ui/react";
 import Select from "../select";
-
-// const Select = dynamic(() => import("../select"), {
-//   ssr: false,
-//   loading: () => (
-//     <div className="h-full px-3 flex items-center justify-center">
-//       <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-//     </div>
-//   ),
-// });
 
 const sortOptions: SortOptions = {
   playcount: "Plays",
@@ -93,8 +80,7 @@ export default function LastFMPallete({ children }: LastFMPalleteProps) {
           )}
       </div>
       <ScrollArea.Root
-        // style={{ height: calcHeight(albums.length) - HEADER_HEIGHT }}
-        className="relative w-full h-full overflow-hidden"
+        className="relative w-full flex-1 min-h-0 overflow-hidden"
       >
         <ScrollArea.Viewport className="w-full h-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden grid-pattern">
           {children}
@@ -108,10 +94,10 @@ export default function LastFMPallete({ children }: LastFMPalleteProps) {
 }
 
 function UserButton() {
-  const user = useGridStore((state) => state.user);
-  const setUser = useGridStore((state) => state.setUser);
+  const user = useAlbumsStore((state) => state.user);
+  const setUser = useAlbumsStore((state) => state.setUser);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
-  const initialized = useGridStore((state) => state.initialized);
+  const initialized = useAlbumsStore((state) => state.initialized);
 
   function logout() {
     setAlbums((prev) => {

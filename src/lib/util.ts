@@ -89,12 +89,5 @@ export function calcHeight(albumCount: number) {
   const albumHeight = rows * ALBUM_SIZE;
   const totalHeight =  albumHeight + HEADER_HEIGHT;
 
-  // minimum height to show 2 rows of albums
-  if (totalHeight < ALBUM_SIZE) {
-    return (ALBUM_SIZE * 2) + HEADER_HEIGHT;
-  }
-
-
-
-  return totalHeight;
+  return Math.max(totalHeight, ALBUM_SIZE + HEADER_HEIGHT);
 }

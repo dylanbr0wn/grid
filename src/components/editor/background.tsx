@@ -2,11 +2,11 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 
 import { cn } from "@/lib/util";
-import { useGridStore } from "@/lib/grid-store";
+import { useAlbumsStore } from "@/lib/albums-store";
 
 export default function Background() {
-  const rows = useGridStore((state) => state.rows);
-  const columns = useGridStore((state) => state.columns);
+  const rows = useAlbumsStore((state) => state.rows);
+  const columns = useAlbumsStore((state) => state.columns);
   return (
     <AnimatePresence>
       <motion.div

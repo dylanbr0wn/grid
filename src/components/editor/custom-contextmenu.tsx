@@ -6,7 +6,7 @@ import { CustomAlbum as CustomAlbumType, newPlaceholderAlbum } from "@/lib/album
 import { useAlbumsStore } from "@/lib/albums-store";
 import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
 
-type LastFmContextMenuProps = {
+type CustomContextMenuProps = {
   children: React.ReactNode;
   album: CustomAlbumType;
   open: boolean;
@@ -18,7 +18,7 @@ export default function CustomContextMenu({
   album,
   open,
   setOpen,
-}: LastFmContextMenuProps) {
+}: CustomContextMenuProps) {
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
@@ -84,7 +84,7 @@ export default function CustomContextMenu({
                   alignOffset={-4}
                   sideOffset={-4}
                 >
-                  <ContextMenu.Popup className="origin-(--transform-origin) bg-neutral-950 py-px text-neutral-300 shadow-lg shadow-neutral-200 outline-1 outline-neutral-200 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
+                  <ContextMenu.Popup className="origin-(--transform-origin) bg-neutral-950 py-px text-neutral-300 shadow-lg shadow-neutral-200 outline outline-neutral-500 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-700">
                     <ContextMenu.RadioGroup
                       value={album.textColor}
                       onValueChange={(value) => setTextColor?.(album.id, value)}

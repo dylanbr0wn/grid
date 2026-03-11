@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
 import { Field } from "@base-ui/react";
-import { useGridStore } from "@/lib/grid-store";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { type } from "arktype";
 import { lastFmAlbum } from "@/lib/albums";
@@ -59,9 +58,9 @@ export default function UserForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
-  const setUser = useGridStore((state) => state.setUser);
-  const autofill = useGridStore((state) => state.autofill);
-  const initialized = useGridStore((state) => state.initialized);
+  const setUser = useAlbumsStore((state) => state.setUser);
+  const autofill = useAlbumsStore((state) => state.autofill);
+  const initialized = useAlbumsStore((state) => state.initialized);
 
   const formRef = useRef<HTMLFormElement>(null);
 

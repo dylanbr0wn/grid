@@ -9,14 +9,14 @@ import {
   newPlaceholderAlbum,
 } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
 import { IconAlertCircle, IconX } from "@tabler/icons-react";
 
 export default function LastFMAlbums() {
   const albums = useAlbumsStore((s) => s.albums[LAST_FM_CONTAINER_KEY].albums);
-  const user = useGridStore((s) => s.user);
+  const user = useAlbumsStore((s) => s.user);
   const setAlbums = useAlbumsStore((s) => s.setAlbums);
-  const setUser = useGridStore((s) => s.setUser);
+  const setUser = useAlbumsStore((s) => s.setUser);
+  const initialized = useAlbumsStore((s) => s.initialized);
 
   function logout() {
     setAlbums((prev) => {
@@ -40,11 +40,11 @@ export default function LastFMAlbums() {
     setUser(undefined);
   }
 
-  if (!user || !albums) {
+  if (!user || !albums || !initialized) {
     return null;
   }
 
-  if (albums.length === 0) {
+  if (initialized && albums.length === 0) {
     return (
       <div className="w-full h-full text-sm px-5 pt-4 col-span-3 mb-auto text-red-700 items-center justify-center gap-2 flex flex-col">
         <IconAlertCircle className="size-8 inline-block mr-2" />

@@ -18,7 +18,6 @@ import {
 } from "@/lib/albums";
 import dynamic from "next/dynamic";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
 
 const Background = dynamic(() => import("./background"), {
   ssr: false,
@@ -30,8 +29,8 @@ const Background = dynamic(() => import("./background"), {
 
 export default function Grid() {
   const albums = useAlbumsStore((state) => state.albums);
-  const columns = useGridStore((state) => state.columns);
-  const rows = useGridStore((state) => state.rows);
+  const columns = useAlbumsStore((state) => state.columns);
+  const rows = useAlbumsStore((state) => state.rows);
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {

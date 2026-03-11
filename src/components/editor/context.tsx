@@ -21,7 +21,6 @@ import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { AlbumTypes, CustomAddAlbum, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isCustomAddId, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
 import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
 import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
@@ -49,8 +48,8 @@ export function EditorContext({
   children: React.ReactNode;
 }) {
   const id = useId();
-  const rows = useGridStore((s) => s.rows);
-  const columns = useGridStore((s) => s.columns);
+  const rows = useAlbumsStore((s) => s.rows);
+  const columns = useAlbumsStore((s) => s.columns);
   const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
   const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | CustomAddAlbum |  null>(
     null

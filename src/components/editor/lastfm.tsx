@@ -1,11 +1,11 @@
 "use client";
 import LastFMPallete from "./lastfm-container";
 import UserForm from "../user-form";
-import { useGridStore } from "@/lib/grid-store";
 import LastFMAlbums from "./lastfm-albums";
+import { useAlbumsStore } from "@/lib/albums-store";
 
 export default function LastFM() {
-  const user = useGridStore((state) => state.user);
+  const user = useAlbumsStore((state) => state.user);
   return (
     <LastFMPallete>
       {!user && (

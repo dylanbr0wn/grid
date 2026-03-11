@@ -21,7 +21,7 @@ import CustomContextMenu from "./custom-contextmenu";
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  const handle = useRef<NodeJS.Timeout>(undefined);
+  const handle = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     clearTimeout(handle.current);
@@ -101,16 +101,25 @@ type CustomAddButtonProps = {
   disabled?: boolean | Disabled;
 };
 
+function isDisabled(disabled?: boolean | Disabled | undefined): boolean {
+  return typeof disabled === "boolean" ? disabled : disabled?.droppable ?? false;
+}
+
 function CustomAddButton({ id, disabled }: CustomAddButtonProps) {
   const albums = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].albums,
   );
-  if (disabled || albums.length > 1) {
+
+
+  if (isDisabled(disabled) || albums.length > 1) {
     return <CustomAlbumAddDialog />;
   }
 
   return (
-    <Sortable key={id} id={id} sortData={{}} disabled={disabled}>
+    <Sortable key={id} id={id} sortData={{}} disabled={{
+      draggable: true,
+      droppable: isDisabled(disabled),
+    }}>
       <CustomAlbumAddDialog />
     </Sortable>
   );

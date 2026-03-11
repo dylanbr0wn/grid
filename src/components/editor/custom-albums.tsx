@@ -20,7 +20,7 @@ export default function CustomPallete() {
   const sort = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].sort,
   );
-  const setAlbums = useAlbumsStore((state) => state.setAlbums);
+  // const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const albums = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].albums,
   );
@@ -31,21 +31,21 @@ export default function CustomPallete() {
   function updateSort(newSort: SortType | null) {
     if (!newSort) return;
     setSort(CUSTOM_CONTAINER_KEY, newSort);
-    setAlbums((prev) => {
-      const container = prev[CUSTOM_CONTAINER_KEY];
-      const sortedAlbums = [...container.albums.slice(0, -1)];
+    // setAlbums((prev) => {
+    //   const container = prev[CUSTOM_CONTAINER_KEY];
+    //   const albumsToSort = [...container.albums.slice(0, -1)];
 
-      return {
-        ...prev,
-        [CUSTOM_CONTAINER_KEY]: {
-          ...prev[CUSTOM_CONTAINER_KEY],
-          albums: [
-            ...sortAlbums(sortedAlbums as CustomAlbumType[], newSort),
-            container.albums[container.albums.length - 1],
-          ],
-        },
-      };
-    });
+    //   return {
+    //     ...prev,
+    //     [CUSTOM_CONTAINER_KEY]: {
+    //       ...prev[CUSTOM_CONTAINER_KEY],
+    //       albums: [
+    //         ...sortAlbums(albumsToSort as CustomAlbumType[], newSort),
+    //         container.albums[container.albums.length - 1],
+    //       ],
+    //     },
+    //   };
+    // });
   }
   return (
     <div
@@ -81,7 +81,7 @@ export default function CustomPallete() {
             {(albums as CustomAlbumType[]).map((album, index) => (
               <CustomAlbum
                 key={album.id}
-                disabled={isCustomAddId(album.id)}
+                disabled={isCustomAddId(album.id) ? { draggable: true } : false}
                 album={album}
                 data-index={index}
                 data-id={album.id}

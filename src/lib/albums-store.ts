@@ -11,9 +11,9 @@ import {
   newPlaceholderAlbum,
   PlaceholderAlbum,
 } from "./albums";
-import { useGridStore } from "./grid-store";
 import { CUSTOM_CONTAINER_KEY, LAST_FM_CONTAINER_KEY } from "./util";
 import { sortAlbums, SortType } from "./sort";
+import { fetchLastFmAlbums } from "@/components/user-form";
 
 export type Container = {
   title: string;
@@ -40,6 +40,20 @@ export type SetAlbumFunc = (
 export type AlbumsState = {
   albums: ContainerMap;
   activeAlbum: LastFmAlbum | CustomAlbum | null;
+
+  user: string | undefined;
+  setUser: (user: string | undefined) => void;
+
+  autofill: boolean;
+  setAutofill: (autofill: boolean) => void;
+
+  columns: number;
+
+  rows: number;
+
+  initialized: boolean;
+  setInitialized: (initialized: boolean) => void;
+
   setAlbums: (
     updater: ContainerMap | ((prev: ContainerMap) => ContainerMap)
   ) => void;
@@ -145,7 +159,14 @@ export const useAlbumsStore = create<AlbumsState>()(
     (set, get) => ({
       albums: initialContainerMap(),
       activeAlbum: null,
-
+      user: undefined,
+      autofill: false,
+      rows: 5,
+      columns: 5,
+      initialized: false,
+      setInitialized: (initialized: boolean) => set({ initialized }),
+      setAutofill: (autofill: boolean) => set({ autofill }),
+      setUser: (user: string | undefined) => set({ user }),
       setAlbums: (updater) =>
         set((state) => ({
           albums:
@@ -255,24 +276,44 @@ export const useAlbumsStore = create<AlbumsState>()(
         }),
 
       setRows: (rows) => set((state) => {
-        useGridStore.getState().setRows(rows);
-        const columns = useGridStore.getState().columns;
         return {
-          albums: updateGridDimensions(state, rows, columns),
+          albums: updateGridDimensions(state, rows, state.columns),
+          rows,
         };
       }),
 
       setColumns: (columns) => set((state) => {
-        useGridStore.getState().setColumns(columns);
-        const rows = useGridStore.getState().rows;
         return {
-          albums: updateGridDimensions(state, rows, columns),
+          albums: updateGridDimensions(state, state.rows, columns),
+          columns,
         };
       }),
       setSort: (containerId, sort) =>
         set((state) => {
           const container = state.albums[containerId];
           if (!container) return state;
+
+          if (containerId === CUSTOM_CONTAINER_KEY) {
+            // make sure the custom add album stays at the end
+            const customAddIndex = container.albums.findIndex((a) =>
+              a.type === "custom_add"
+            );
+            if (customAddIndex !== -1 && customAddIndex !== container.albums.length - 1) {
+              const albums = [...container.albums];
+              const customAddAlbum = albums.splice(customAddIndex, 1)[0];
+              albums.push(customAddAlbum);
+              return {
+                albums: {
+                  ...state.albums,
+                  [containerId]: {
+                    ...container,
+                    albums: sortAlbums(albums as CustomAlbum[], sort),
+                    sort,
+                  },
+                },
+              };
+            }
+          }
 
           const sortableAlbums = container.albums.filter(
             (a) => a.type !== "placeholder"
@@ -301,6 +342,10 @@ export const useAlbumsStore = create<AlbumsState>()(
             sort: state.albums.lastfm.sort,
           }
         },
+        autofill: state.autofill,
+        columns: state.columns,
+        rows: state.rows,
+        user: state.user,
       }),
       // Custom merge so that the lastfm container (not in persisted data)
       // is always restored from the initial state rather than being dropped
@@ -308,13 +353,74 @@ export const useAlbumsStore = create<AlbumsState>()(
         const persisted = persistedState as Partial<AlbumsState>;
         return {
           ...currentState,
+          ...persisted,
           albums: {
             ...currentState.albums,
             ...(persisted.albums ?? {}),
-            [LAST_FM_CONTAINER_KEY]: currentState.albums[LAST_FM_CONTAINER_KEY],
+            [LAST_FM_CONTAINER_KEY]: {
+              ...currentState.albums[LAST_FM_CONTAINER_KEY],
+              ...(persisted.albums?.[LAST_FM_CONTAINER_KEY] ?? {}),
+              albums: [], // always reset lastfm albums on merge, they will be re-fetched in onRehydrateStorage
+            },
           },
         };
       },
+      onRehydrateStorage: () => (state, error) => {
+        if (!state) {
+          console.error("Failed to rehydrate albums store", error);
+          return;
+        }
+        console.log("Albums store rehydrated", state);
+        const user = state.user;
+        const sort = state.albums[LAST_FM_CONTAINER_KEY].sort;
+        const autofill = state.autofill;
+        if (!user) {
+          state.setInitialized(true);
+          return;
+        }
+        if (!sort) {
+          console.warn("No sort type set, defaulting to 'playcount'");
+        }
+        fetchLastFmAlbums(user, sort || "playcount")
+          .then((albums) => {
+            state.setAlbums((prev) => {
+
+              const sortedAlbums = sortAlbums(albums, sort || "playcount");
+              console.log("fetched and sorted albums on rehydration", sortedAlbums);
+              if (autofill) {
+                const remaining = [...sortedAlbums];
+                const newGridAlbums = prev.grid.albums.map((a) => {
+                  if (a.type === "placeholder" && remaining.length > 0) {
+                    return remaining.shift()!;
+                  }
+                  return a;
+                });
+                return {
+                  ...prev,
+                  [LAST_FM_CONTAINER_KEY]: {
+                    ...prev[LAST_FM_CONTAINER_KEY],
+                    albums: remaining,
+                  },
+                  grid: { ...prev.grid, albums: newGridAlbums },
+                };
+              }
+              return {
+                ...prev,
+                [LAST_FM_CONTAINER_KEY]: {
+                  ...prev[LAST_FM_CONTAINER_KEY],
+                  albums: sortedAlbums,
+                },
+              };
+            });
+          })
+          .catch((err) => {
+            console.error("Error fetching albums:", err);
+            state.setUser(undefined);
+          })
+          .finally(() => {
+            state.setInitialized(true);
+          });
+      }
     }
   )
 );
