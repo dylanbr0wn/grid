@@ -351,6 +351,9 @@ export const useAlbumsStore = create<AlbumsState>()(
       // is always restored from the initial state rather than being dropped
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<AlbumsState>;
+        if (!persisted) {
+          return currentState;
+        }
         return {
           ...currentState,
           ...persisted,

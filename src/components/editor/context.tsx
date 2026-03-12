@@ -126,6 +126,7 @@ export function EditorContext({
           newOverAlbums = newOverAlbums.filter((a) => a.id !== placeholder.id);
         } else {
           // Move the last item from grid to extras
+          // TODO: Fix the case where the user is moving an item from lastfm to grid, but the grid has a custom album at the end, so we end up moving the custom album to lastfm instead of a lastfm album
           const itemToMove = newOverAlbums[overItems.albums.length - 1];
 
           overflowItem.current = itemToMove;
