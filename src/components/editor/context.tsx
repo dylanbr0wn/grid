@@ -19,9 +19,9 @@ import {
 } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useId, useRef } from "react";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { AlbumTypes, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
+import { AlbumTypes, CustomAddAlbum, CustomAlbum, LastFmAlbum, PlaceholderAlbum, isCustomAddId, isPlaceholderId, newPlaceholderAlbum } from "@/lib/albums";
 import { ContainerMap, useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
+import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
 
 const screenReaderInstructions: ScreenReaderInstructions = {
   draggable: `
@@ -48,10 +48,10 @@ export function EditorContext({
   children: React.ReactNode;
 }) {
   const id = useId();
-  const rows = useGridStore((s) => s.rows);
-  const columns = useGridStore((s) => s.columns);
+  const rows = useAlbumsStore((s) => s.rows);
+  const columns = useAlbumsStore((s) => s.columns);
   const { setAlbums, setActiveAlbum, updateDimensions } = useAlbumsStore();
-  const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | null>(
+  const overflowItem = useRef<LastFmAlbum | PlaceholderAlbum | CustomAlbum | CustomAddAlbum |  null>(
     null
   );
 
@@ -126,6 +126,7 @@ export function EditorContext({
           newOverAlbums = newOverAlbums.filter((a) => a.id !== placeholder.id);
         } else {
           // Move the last item from grid to extras
+          // TODO: Fix the case where the user is moving an item from lastfm to grid, but the grid has a custom album at the end, so we end up moving the custom album to lastfm instead of a lastfm album
           const itemToMove = newOverAlbums[overItems.albums.length - 1];
 
           overflowItem.current = itemToMove;
@@ -225,6 +226,19 @@ export function EditorContext({
           activeIndex,
           overIndex
         );
+      }
+
+      if (overContainer === CUSTOM_CONTAINER_KEY) {
+        // make sure the custom add album stays at the end
+        const customAddIndex = newAlbums.findIndex((a) =>
+          isCustomAddId(a.id)
+        );
+        if (customAddIndex !== -1 && customAddIndex !== newAlbums.length - 1) {
+          const placeholder = newAlbums[customAddIndex];
+          newAlbums.splice(customAddIndex, 1);
+          newAlbums.push(placeholder);
+
+        }
       }
 
       return {

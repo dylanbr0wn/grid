@@ -1,7 +1,7 @@
 import { type } from "arktype";
 import { generateId } from "./util";
 
-export type AlbumTypes = "lastfm" | "placeholder" | "custom" ;
+export type AlbumTypes = "lastfm" | "placeholder" | "custom" | "custom_add" ;
 
 export type BaseAlbum = {
   id: UniqueIdentifier;
@@ -23,6 +23,13 @@ export const customAlbum = type({
 })
 
 export type CustomAlbum = type.infer<typeof customAlbum>;
+
+export const customAddAlbum = type({
+  "type": "'custom_add'",
+  "id": "string",
+})
+
+export type CustomAddAlbum = type.infer<typeof customAddAlbum>;
 
 export const placeholderAlbum = type({
   "type": "'placeholder'",
@@ -54,6 +61,7 @@ type UniqueIdentifier = type.infer<typeof uniqueIdentifier>;
 export type LastFmAlbum = type.infer<typeof lastFmAlbum>;
 
 const PLACEHOLDER_PREFIX = "placeholder";
+const CUSTOM_ADD_PREFIX = "custom_add";
 
 export function isPlaceholderId(id: string | number): boolean {
   return typeof id === "string" && id.startsWith(PLACEHOLDER_PREFIX);
@@ -66,9 +74,13 @@ export function newPlaceholderAlbum(): PlaceholderAlbum {
   };
 }
 
-export function newCustomAlbum(): CustomAlbum {
+export function isCustomAddId(id: string | number): boolean {
+  return typeof id === "string" && id.startsWith(CUSTOM_ADD_PREFIX);
+}
+
+export function newCustomAddAlbum(): CustomAddAlbum {
   return {
-    id: `custom_${generateId()}`,
-    type: "custom",
+    id: `${CUSTOM_ADD_PREFIX}_${generateId()}`,
+    type: "custom_add",
   };
 }

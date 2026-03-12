@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import {
+  CustomAddAlbum,
   CustomAlbum,
   LastFmAlbum,
   newPlaceholderAlbum,
@@ -20,7 +21,6 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { gridToBlob, gridToJpeg, gridToPng } from "@/lib/export";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
 
 async function downloadGrid(
   columns: number,
@@ -71,9 +71,9 @@ export default function Menu() {
 
   const albums = useAlbumsStore((state) => state.albums);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
-  const columns = useGridStore((state) => state.columns);
+  const columns = useAlbumsStore((state) => state.columns);
   const setColumns = useAlbumsStore((state) => state.setColumns);
-  const rows = useGridStore((state) => state.rows);
+  const rows = useAlbumsStore((state) => state.rows);
   const setRows = useAlbumsStore((state) => state.setRows);
 
   async function download(type: "jpeg" | "png" = "jpeg") {
@@ -117,7 +117,7 @@ export default function Menu() {
   function handleAutoLoad() {
     setAlbums((albums) => {
       const totalCount = rows * columns;
-      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum)[] = albums[
+      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum | CustomAddAlbum)[] = albums[
         "grid"
       ].albums.filter((a) => a.type !== "placeholder");
       const toAdd = totalCount - current.length;

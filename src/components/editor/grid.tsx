@@ -7,38 +7,35 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { isPlaceholderId } from "@/lib/albums";
+import { CustomAddAlbum, isPlaceholderId } from "@/lib/albums";
 import { Sortable } from "../sortable";
 import { CustomAlbum } from "./custom";
+import { LastFmAlbum, LastFmAlbumProps } from "./lastfm-container";
 import {
-  LastFmAlbum,
-  LastFmAlbumProps,
-} from "./lastfm-container";
-import { CustomAlbum as CustomAlbumType, LastFmAlbum as LastFmAlbumType, PlaceholderAlbum as PlaceholderAlbumType } from "@/lib/albums";
+  CustomAlbum as CustomAlbumType,
+  LastFmAlbum as LastFmAlbumType,
+  PlaceholderAlbum as PlaceholderAlbumType,
+} from "@/lib/albums";
 import dynamic from "next/dynamic";
 import { useAlbumsStore } from "@/lib/albums-store";
-import { useGridStore } from "@/lib/grid-store";
-
 
 const Background = dynamic(() => import("./background"), {
   ssr: false,
-  loading: () => (
-    null
-    // <div className="h-full px-3 flex items-center justify-center">
-    //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    // </div>
-  ),
+  loading: () => null,
+  // <div className="h-full px-3 flex items-center justify-center">
+  //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
+  // </div>
 });
 
 export default function Grid() {
   const albums = useAlbumsStore((state) => state.albums);
-  const columns = useGridStore((state) => state.columns);
-  const rows = useGridStore((state) => state.rows);
+  const columns = useAlbumsStore((state) => state.columns);
+  const rows = useAlbumsStore((state) => state.rows);
 
   const gridSortingStrategy = useCallback<SortingStrategy>(
     ({ rects, activeIndex, overIndex, index }) => {
       const overItem = albums["grid"].albums[overIndex];
-       if (overIndex < 0 || !overItem) {
+      if (overIndex < 0 || !overItem) {
         return null;
       }
 
@@ -94,11 +91,10 @@ export default function Grid() {
               items={albums["grid"].albums}
               strategy={gridSortingStrategy}
             >
-              {albums["grid"].albums.map((album, index) => (
+              {albums["grid"].albums.map((album) => (
                 <SortableAlbum
                   key={album.id}
                   album={album}
-                  index={index}
                   disabled={isPlaceholderId(album.id)}
                   priority={true}
                 />
@@ -114,35 +110,22 @@ export default function Grid() {
   );
 }
 
-
-
 type SortableAlbumProps = {
   disabled?: boolean;
-  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType;
-  index: number;
+  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType | CustomAddAlbum;
 } & Pick<LastFmAlbumProps, "priority">;
 
 export function SortableAlbum({
   album,
-  index,
   priority = false,
 }: SortableAlbumProps) {
   if (album.type === "custom") {
     return (
-      <Sortable
-        id={album.id}
-        sortData={{
-          album,
-        }}
+      <CustomAlbum
+        album={album}
+        priority={priority}
         disabled={!album.mbid}
-      >
-        <CustomAlbum
-          album={album}
-          data-index={index}
-          data-id={album.id}
-          priority={priority}
-        />
-      </Sortable>
+      />
     );
   }
 
@@ -154,7 +137,7 @@ export function SortableAlbum({
         sortData={{
           album,
         }}
-        className="pointer-events-none"
+        className="pointer-events-none select-none outline-none focus-visible:ring-0"
       >
         <div className="w-32 h-32 bg-transparent" />
       </Sortable>
@@ -163,19 +146,11 @@ export function SortableAlbum({
 
   if (album.type === "lastfm") {
     return (
-      <Sortable
-        id={album.id}
-        sortData={{
-          album,
-        }}
-      >
-        <LastFmAlbum
-          album={album}
-          data-index={index}
-          data-id={album.id}
-          priority={priority}
-        />
-      </Sortable>
+      <LastFmAlbum
+        album={album}
+        priority={priority}
+      />
     );
   }
+  return null;
 }

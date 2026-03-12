@@ -14,7 +14,7 @@ export type AlbumCoverProps = {
   textColor?: string;
   textBackground?: boolean;
   src?: string | StaticImport;
-} & Omit<ImageWithFallbackProps, "src" | "alt">;
+} & Omit<ImageWithFallbackProps, "src" | "alt" | "ref">;
 
 export default function AlbumCover({
   priority,

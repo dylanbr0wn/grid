@@ -20,6 +20,7 @@ export function Sortable({
   disabled,
   sortData,
   className,
+  style,
   ...props
 }: SortableProps) {
   const {
@@ -46,9 +47,15 @@ export function Sortable({
         style={{
           transform: CSS.Transform.toString(transform),
           transition,
+          ...style,
         }}
+        className={cn(
+          "focus-visible:outline-none",
+          className,
+        )}
         {...props}
         {...attributes}
+        tabIndex={-1}
       >
         {children}
       </div>
@@ -67,6 +74,7 @@ export function Sortable({
         {
           transition,
           transform: CSS.Transform.toString(transform),
+          ...style,
         } as React.CSSProperties
       }
       {...listeners}

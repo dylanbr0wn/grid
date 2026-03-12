@@ -1,16 +1,12 @@
 "use client";
 import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
-import AlbumPallete from "../pallette";
 import { newPlaceholderAlbum } from "@/lib/albums";
 import {
-  IconCheck,
-  IconChevronRight,
-  IconLoader2,
   IconX,
 } from "@tabler/icons-react";
 
-import * as motion from "motion/react-client";
 import {
+  calcHeight,
   cn,
   getBrightnessStyle,
   getImageBrightness,
@@ -18,21 +14,14 @@ import {
 } from "@/lib/util";
 
 import LastFMIcon from "../lastfm-icon";
-import dynamic from "next/dynamic";
-import { ContextMenu } from "@base-ui/react";
 import AlbumCover from "../album/album-cover";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
-import { useGridStore } from "@/lib/grid-store";
 import { useAlbumsStore } from "@/lib/albums-store";
-
-const Select = dynamic(() => import("../select"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full px-3 flex items-center justify-center">
-      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    </div>
-  ),
-});
+import { Sortable } from "../sortable";
+import LastFmContextMenu from "./lastfm-contextmenu";
+import { useState } from "react";
+import { ScrollArea } from "@base-ui/react";
+import Select from "../select";
 
 const sortOptions: SortOptions = {
   playcount: "Plays",
@@ -46,12 +35,13 @@ type LastFMPalleteProps = {
   children?: React.ReactNode;
 };
 
-export default function LastFMPallete({
-  children,
-}: LastFMPalleteProps) {
-  const albums = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].albums);
-  const title = useAlbumsStore(state => state.albums[LAST_FM_CONTAINER_KEY].title);
-  const sort = useAlbumsStore((state) => state.albums[LAST_FM_CONTAINER_KEY].sort);
+export default function LastFMPallete({ children }: LastFMPalleteProps) {
+  const albums = useAlbumsStore(
+    (state) => state.albums[LAST_FM_CONTAINER_KEY].albums,
+  );
+  const sort = useAlbumsStore(
+    (state) => state.albums[LAST_FM_CONTAINER_KEY].sort,
+  );
   const setSort = useAlbumsStore((state) => state.setSort);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
@@ -69,12 +59,14 @@ export default function LastFMPallete({
     });
   }
   return (
-    <AlbumPallete
-      title={title}
-      length={albums.length}
-      header={
-        <>
-          <UserButton />
+     <div
+      className={cn(
+        "min-h-42 w-96 relative flex flex-col max-h-full h-full overflow-hidden grow",
+      )}
+      style={{ height: calcHeight(albums.length) }}
+    >
+      <div className="w-full h-9.75 border-b border-neutral-800 flex items-center shrink-0 gap-1">
+         <UserButton />
           <div className="grow" />
           {sort && (
             <Select
@@ -85,21 +77,26 @@ export default function LastFMPallete({
               icon={<div className="text-neutral-500">sort by</div>}
             />
           )}
-        </>
-      }
-    >
-      {children}
-    </AlbumPallete>
+      </div>
+      <ScrollArea.Root
+        className="relative w-full flex-1 min-h-0 overflow-hidden"
+      >
+        <ScrollArea.Viewport className="w-full h-full max-h-full grid grid-cols-3 relative overscroll-contain overflow-x-hidden grid-pattern">
+          {children}
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar className="absolute right-0 top-0 flex w-1 justify-center bg-neutral-900/70 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-75 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-75">
+          <ScrollArea.Thumb className="w-full bg-neutral-500" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    </div>
   );
 }
 
-
-
 function UserButton() {
-  const user = useGridStore((state) => state.user);
-  const setUser = useGridStore((state) => state.setUser);
+  const user = useAlbumsStore((state) => state.user);
+  const setUser = useAlbumsStore((state) => state.setUser);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
-  const initialized = useGridStore((state) => state.initialized);
+  const initialized = useAlbumsStore((state) => state.initialized);
 
   function logout() {
     setAlbums((prev) => {
@@ -122,6 +119,7 @@ function UserButton() {
     });
     setUser(undefined);
   }
+
   return (
     <button
       onClick={logout}
@@ -129,38 +127,30 @@ function UserButton() {
     >
       {!!user && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors group-hover/button:bg-neutral-900">
-          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-[#D51007] group-hover/button:scale-100 scale-80">
+          <div className="flex gap-1  opacity-0 group-hover/button:opacity-100 items-center group-hover/button:translate-y-0 transition-all translate-y-4 text-lastfm group-hover/button:scale-100 scale-80">
             <IconX className="size-4  " />
             <div>Clear</div>
           </div>
         </div>
       )}
       {user && (
-        <motion.div
-          style={{
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 1,
-            position: "absolute",
-          }}
+        <div
           className={cn(
-            "bg-neutral-400",
-            !!user && "group-hover/button:bg-[#D51007] ",
+            "bg-neutral-400 absolute bottom-0 left-0 right-0 h-px group-active/button:h-0.75 transition-all ",
+            !!user && "group-hover/button:bg-lastfm ",
           )}
-          layoutId="underline"
-          id="underline"
         />
       )}
-      {initialized && <div
-        className={cn(
-          "px-4 text-neutral-300 flex gap-1 items-center",
-          user && "group-hover:blur group-hover:text-[#D51007]",
-        )}
-      >
-        <LastFMIcon className="size-5 mr-2 fill fill-[#D51007]" />
-        <div>{user || "Last.fm"}</div>
-      </div>}
+      {initialized && (
+        <div
+          className={cn(
+            "px-4 text-neutral-300 flex gap-1 items-center transition-all",
+          )}
+        >
+          <LastFMIcon className="size-5 mr-2 fill fill-lastfm" />
+          <div>{user || "Last.fm"}</div>
+        </div>
+      )}
     </button>
   );
 }
@@ -173,8 +163,8 @@ export type LastFmAlbumProps = {
 export const LastFmAlbum = ({
   album,
   priority = false,
-  ...props
 }: LastFmAlbumProps) => {
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
@@ -183,8 +173,19 @@ export const LastFmAlbum = ({
   }
 
   return (
-    <ContextMenu.Root>
-      <ContextMenu.Trigger>
+    <Sortable
+      key={album.id}
+      id={album.id}
+      disabled={contextMenuOpen}
+      sortData={{
+        album,
+      }}
+    >
+      <LastFmContextMenu
+        open={contextMenuOpen}
+        setOpen={setContextMenuOpen}
+        album={album}
+      >
         <AlbumCover
           src={album.img}
           imgs={album.imgs}
@@ -193,6 +194,7 @@ export const LastFmAlbum = ({
           width={128}
           height={128}
           id={`${album.id}-image`}
+          data-id={album.id}
           priority={priority}
           textBackground={album.textBackground}
           textColor={album.textColor}
@@ -204,65 +206,8 @@ export const LastFmAlbum = ({
             setTextBackground?.(album.id, textBackground);
             setTextColor?.(album.id, textColor);
           }}
-          {...props}
         />
-      </ContextMenu.Trigger>
-      <ContextMenu.Portal>
-        <ContextMenu.Positioner className="outline-none">
-          <ContextMenu.Popup className="origin-(--transform-origin)  bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-gray-200 outline outline-gray-200 dark:shadow-none dark:-outline-offset-1 dark:outline-gray-300 z-50">
-            <ContextMenu.SubmenuRoot>
-              <ContextMenu.SubmenuTrigger className="flex cursor-default items-center justify-between gap-4 py-2 pr-4 pl-4 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:rounded-sm data-highlighted:before:bg-neutral-900 data-popup-open:relative data-popup-open:z-0 data-popup-open:before:absolute data-popup-open:before:inset-x-1 data-popup-open:before:inset-y-0 data-popup-open:before:z-[-1]  data-popup-open:before:bg-neutral-900 data-highlighted:data-popup-open:before:bg-neutral-900">
-                Text color <IconChevronRight className="size-3" />
-              </ContextMenu.SubmenuTrigger>
-              <ContextMenu.Portal>
-                <ContextMenu.Positioner
-                  className="outline-none"
-                  alignOffset={-4}
-                  sideOffset={-4}
-                >
-                  <ContextMenu.Popup className="origin-(--transform-origin) bg-neutral-950 py-1 text-neutral-300 shadow-lg shadow-neutral-200 outline-1 outline-neutral-200 dark:shadow-none dark:-outline-offset-1 dark:outline-neutral-300">
-                    <ContextMenu.RadioGroup
-                      value={album.textColor}
-                      onValueChange={(value) => setTextColor?.(album.id, value)}
-                    >
-                      <ContextMenu.RadioItem
-                        value="white"
-                        className="grid cursor-default gap-2 py-2 pr-4 pl-2.5 grid-cols-[0.75rem_1fr] text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-900"
-                      >
-                        <ContextMenu.RadioItemIndicator className="col-start-1">
-                          <IconCheck className="size-3" />
-                        </ContextMenu.RadioItemIndicator>
-                        <span className="col-start-2">White</span>
-                      </ContextMenu.RadioItem>
-                      <ContextMenu.RadioItem
-                        value="black"
-                        className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-900"
-                      >
-                        <ContextMenu.RadioItemIndicator className="col-start-1">
-                          <IconCheck className="size-3" />
-                        </ContextMenu.RadioItemIndicator>
-                        <span className="col-start-2">Black</span>
-                      </ContextMenu.RadioItem>
-                    </ContextMenu.RadioGroup>
-                  </ContextMenu.Popup>
-                </ContextMenu.Positioner>
-              </ContextMenu.Portal>
-            </ContextMenu.SubmenuRoot>
-            <ContextMenu.CheckboxItem
-              checked={!!album.textBackground}
-              className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-[highlighted=true]:relative data-[highlighted=true]:z-0 data-[highlighted=true]:text-neutral-50 data-[highlighted=true]:before:absolute data-[highlighted=true]:before:inset-x-1 data-[highlighted=true]:before:inset-y-0 data-[highlighted=true]:before:z-[-1] data-[highlighted=true]:before:bg-neutral-900"
-              onMouseUp={() =>
-                setTextBackground?.(album.id, !album.textBackground)
-              }
-            >
-              <ContextMenu.CheckboxItemIndicator className="col-start-1">
-                <IconCheck className="size-3" />
-              </ContextMenu.CheckboxItemIndicator>
-              <span className="col-start-2">Toggle text background</span>
-            </ContextMenu.CheckboxItem>
-          </ContextMenu.Popup>
-        </ContextMenu.Positioner>
-      </ContextMenu.Portal>
-    </ContextMenu.Root>
+      </LastFmContextMenu>
+    </Sortable>
   );
 };

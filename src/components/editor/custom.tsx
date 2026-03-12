@@ -1,7 +1,5 @@
 "use client";
-import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
-import AlbumPallete from "../pallette";
-import { memo, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   cn,
   CUSTOM_CONTAINER_KEY,
@@ -10,95 +8,147 @@ import {
   PLACEHOLDER_IMG,
 } from "@/lib/util";
 import { Dialog, Field } from "@base-ui/react";
-import { IconLoader2, IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { SearchResults } from "../result";
-
+import { Disabled } from "@dnd-kit/sortable/dist/types";
 import * as motion from "motion/react-client";
 import AlbumCover from "../album/album-cover";
 
-import { sortAlbums, SortOptions, SortType } from "@/lib/sort";
-import dynamic from "next/dynamic";
 import { Sortable } from "../sortable";
-import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
+import { CustomAlbum as CustomAlbumType, isCustomAddId } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
+import CustomContextMenu from "./custom-contextmenu";
 
-const Select = dynamic(() => import("../select"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full px-3 flex items-center justify-center">
-      <IconLoader2 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-    </div>
-  ),
-});
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  const handle = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    clearTimeout(handle.current);
+    handle.current = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handle.current);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 type CustomAlbumProps = {
   album: CustomAlbumType;
   priority?: boolean;
+  disabled?: boolean | Disabled;
 };
 
-export const CustomAlbum = memo(function CustomAlbum({
+export function CustomAlbum({
   album,
+  disabled,
   priority = false,
 }: CustomAlbumProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
+  const setTextColor = useAlbumsStore((state) => state.setTextColor);
 
+  if (isCustomAddId(album.id) || !album.mbid) {
+    return <CustomAddButton id={album.id} disabled={disabled} />;
+  }
+
+  return (
+    <Sortable
+      key={album.id}
+      id={album.id}
+      sortData={{
+        album,
+      }}
+      disabled={contextMenuOpen || disabled}
+    >
+      <CustomContextMenu
+        open={contextMenuOpen}
+        setOpen={setContextMenuOpen}
+        album={album}
+      >
+        <AlbumCover
+          src={album.img || PLACEHOLDER_IMG}
+          imgs={album.imgs}
+          name={album.album || "Unknown Album"}
+          artist={album.artist || "Unknown Artist"}
+          width={128}
+          height={128}
+          id={`${album.id}-custom-album`}
+          priority={priority}
+          data-id={album.id}
+          textBackground={album.textBackground}
+          textColor={album.textColor}
+          onLoad={(ev: React.SyntheticEvent<HTMLImageElement, Event>) => {
+            const img = ev.currentTarget;
+            const { textColor, textBackground } = getBrightnessStyle(
+              getImageBrightness(img),
+            );
+            setTextBackground?.(album.id, textBackground);
+            setTextColor?.(album.id, textColor);
+          }}
+        />
+      </CustomContextMenu>
+    </Sortable>
+  );
+}
+
+type CustomAddButtonProps = {
+  id: string;
+  disabled?: boolean | Disabled;
+};
+
+function isDisabled(disabled?: boolean | Disabled | undefined): boolean {
+  return typeof disabled === "boolean" ? disabled : disabled?.droppable ?? false;
+}
+
+function CustomAddButton({ id, disabled }: CustomAddButtonProps) {
+  const albums = useAlbumsStore(
+    (state) => state.albums[CUSTOM_CONTAINER_KEY].albums,
+  );
+
+
+  if (isDisabled(disabled) || albums.length > 1) {
+    return <CustomAlbumAddDialog />;
+  }
+
+  return (
+    <Sortable key={id} id={id} sortData={{}} disabled={{
+      draggable: true,
+      droppable: isDisabled(disabled),
+    }}>
+      <CustomAlbumAddDialog />
+    </Sortable>
+  );
+}
+
+function CustomAlbumAddDialog() {
+  const [searchQuery, setSearchQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [open, setOpen] = useState(false);
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
 
   const addCustomAlbum = useAlbumsStore((state) => state.addCustomAlbum);
-  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
-  const setTextColor = useAlbumsStore((state) => state.setTextColor);
-
   function handleAddCustomAlbum(_album: CustomAlbumType) {
-    addCustomAlbum({
-      ...album,
-      ..._album,
-    });
+    addCustomAlbum(_album);
     setSearchQuery("");
     setOpen(false);
   }
-
-  if (album.mbid && album.img && album.album && album.artist) {
-    return (
-      <AlbumCover
-        src={album.img || PLACEHOLDER_IMG}
-        imgs={album.imgs}
-        name={album.album}
-        artist={album.artist}
-        width={128}
-        height={128}
-        id={`${album.id}-custom-album`}
-        priority={priority}
-        data-id={album.id}
-        textBackground={album.textBackground}
-        textColor={album.textColor}
-        onLoad={(ev: React.SyntheticEvent<HTMLImageElement, Event>) => {
-          const img = ev.currentTarget;
-          const { textColor, textBackground } = getBrightnessStyle(
-            getImageBrightness(img),
-          );
-          setTextBackground?.(album.id, textBackground);
-          setTextColor?.(album.id, textColor);
-        }}
-      />
-    );
-  }
-
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         className={cn(
-          "flex grow items-center justify-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-900 border border-neutral-800 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-950/50 z-20",
+          "flex grow items-center justify-center box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square bg-neutral-950 text-neutral-500 font-code relative group cursor-pointer active:bg-neutral-900 hover:bg-neutral-900 outline-1 outline-neutral-800 data-[state=open]:bg-neutral-800",
         )}
       >
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-colors">
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 items-center group-hover:translate-y-0 transition-all translate-y-4 text-green-700 group-hover:scale-100 scale-80 group-active:text-green-500 ">
+        <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center transition-colors gap-2 hover:text-green-700 group-active:text-green-500 group-active:hover:text-green-500 duration-150">
+           <IconPlus className="size-6" />
+          <div className="flex gap-1 items-center">
             <div>Add Album</div>
           </div>
-        </div>
-        <div className={cn("group-hover:blur")}>
-          <IconPlus className="size-4" />
         </div>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -149,104 +199,5 @@ export const CustomAlbum = memo(function CustomAlbum({
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
-  );
-});
-
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
-  random: "Random",
-  name: "Name",
-  artist: "Artist",
-};
-
-export default function CustomPallete() {
-  const setSort = useAlbumsStore((state) => state.setSort);
-  const sort = useAlbumsStore((state) => state.albums[CUSTOM_CONTAINER_KEY].sort);
-  const setAlbums = useAlbumsStore((state) => state.setAlbums);
-  const albums = useAlbumsStore(state => state.albums[CUSTOM_CONTAINER_KEY].albums);
-  const title = useAlbumsStore(state => state.albums[CUSTOM_CONTAINER_KEY].title);
-
-  function updateSort(newSort: SortType) {
-    setSort(CUSTOM_CONTAINER_KEY, newSort);
-    setAlbums((prev) => {
-      const container = prev[CUSTOM_CONTAINER_KEY];
-      const sortedAlbums = [...container.albums.slice(0, -1)];
-
-      return {
-        ...prev,
-        [CUSTOM_CONTAINER_KEY]: {
-          ...prev[CUSTOM_CONTAINER_KEY],
-          albums: [
-            ...sortAlbums(sortedAlbums as CustomAlbumType[], newSort),
-            container.albums[container.albums.length - 1],
-          ],
-        },
-      };
-    });
-  }
-  return (
-    <AlbumPallete
-      title={title}
-      length={albums.length}
-      header={
-        <>
-          <h5 className="text-neutral-300 text-sm mx-3 mb-0 font-code">
-            {title}
-          </h5>
-          <div className="grow" />
-          {sort && (
-            <Select
-              value={sort}
-              items={sortOptions}
-              disabled={albums.length <= 2}
-              onChange={(v) => v && updateSort(v as SortType)}
-              icon={<div className="text-neutral-500">sort by</div>}
-            />
-          )}
-        </>
-      }
-    >
-      <SortableContext
-        id={CUSTOM_CONTAINER_KEY}
-        items={albums}
-        strategy={rectSortingStrategy}
-      >
-        {(albums as CustomAlbumType[]).map((album, index) => (
-          <Sortable
-            key={album.id}
-            id={album.id}
-            sortData={{
-              album,
-            }}
-            disabled={{
-              draggable: album.type === "custom" && !album.mbid,
-              droppable: album.mbid ? false : albums.length >= 2,
-            }}
-          >
-            <CustomAlbum
-              album={album}
-              data-index={index}
-              data-id={album.id}
-              priority={true}
-            />
-          </Sortable>
-        ))}
-      </SortableContext>
-    </AlbumPallete>
   );
 }
