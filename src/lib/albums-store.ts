@@ -301,13 +301,14 @@ export const useAlbumsStore = create<AlbumsState>()(
             if (customAddIndex !== -1 && customAddIndex !== container.albums.length - 1) {
               const albums = [...container.albums];
               const customAddAlbum = albums.splice(customAddIndex, 1)[0];
+              const sortedAlbums = sortAlbums(albums.filter(a => a.type === "custom") as CustomAlbum[], sort);
               albums.push(customAddAlbum);
               return {
                 albums: {
                   ...state.albums,
                   [containerId]: {
                     ...container,
-                    albums: sortAlbums(albums as CustomAlbum[], sort),
+                    albums: sortedAlbums,
                     sort,
                   },
                 },

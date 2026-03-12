@@ -67,6 +67,9 @@ export default function UserForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     try {
       e.preventDefault();
+      if (!initialized) {
+        return;
+      }
       setLoading(true);
       setError(null);
       const formData = new FormData(e.currentTarget);
