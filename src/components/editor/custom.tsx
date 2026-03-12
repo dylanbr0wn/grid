@@ -73,8 +73,8 @@ export function CustomAlbum({
         <AlbumCover
           src={album.img || PLACEHOLDER_IMG}
           imgs={album.imgs}
-          name={album.album!}
-          artist={album.artist!}
+          name={album.album || "Unknown Album"}
+          artist={album.artist || "Unknown Artist"}
           width={128}
           height={128}
           id={`${album.id}-custom-album`}

@@ -158,13 +158,11 @@ function UserButton() {
 export type LastFmAlbumProps = {
   priority?: boolean;
   album: LastFmAlbumType;
-  ref?: React.Ref<HTMLDivElement>;
 };
 
 export const LastFmAlbum = ({
   album,
   priority = false,
-  ...props
 }: LastFmAlbumProps) => {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
@@ -208,7 +206,6 @@ export const LastFmAlbum = ({
             setTextBackground?.(album.id, textBackground);
             setTextColor?.(album.id, textColor);
           }}
-          {...props}
         />
       </LastFmContextMenu>
     </Sortable>
