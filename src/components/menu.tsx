@@ -4,8 +4,10 @@ import { useState } from "react";
 import NumberInput from "@/components/number-input";
 import { cn } from "@/lib/util";
 import {
+  IconBrandGithub,
   IconCopy,
   IconDownload,
+  IconInfoCircle,
   IconLayoutGridAdd,
   IconX,
 } from "@tabler/icons-react";
@@ -69,6 +71,7 @@ export default function Menu() {
     copy: false,
   });
 
+  const setHasSeenWelcome = useAlbumsStore((state) => state.setHasSeenWelcome);
   const albums = useAlbumsStore((state) => state.albums);
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const columns = useAlbumsStore((state) => state.columns);
@@ -117,9 +120,12 @@ export default function Menu() {
   function handleAutoLoad() {
     setAlbums((albums) => {
       const totalCount = rows * columns;
-      let current: (CustomAlbum | LastFmAlbum | PlaceholderAlbum | CustomAddAlbum)[] = albums[
-        "grid"
-      ].albums.filter((a) => a.type !== "placeholder");
+      let current: (
+        | CustomAlbum
+        | LastFmAlbum
+        | PlaceholderAlbum
+        | CustomAddAlbum
+      )[] = albums["grid"].albums.filter((a) => a.type !== "placeholder");
       const toAdd = totalCount - current.length;
 
       if (toAdd <= 0) {
@@ -354,6 +360,29 @@ export default function Menu() {
               <IconCopy className="size-4" />
               <span>{loading.copy ? "Loading..." : "Copy to Clipboard"}</span>
             </button>
+          </div>
+          <div className="mt-auto">
+            <div className="p-1 mt-3 text-neutral-500 border-b border-neutral-800 text-sm lowercase">
+              Links
+            </div>
+            <div className="flex items-center gap-1 py-1">
+              <a
+                href="https://github.com/dylanbr0wn/grid"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 text-neutral-500 hover:text-white transition-colors"
+                aria-label="GitHub"
+              >
+                <IconBrandGithub className="size-4" />
+              </a>
+              <button
+                onClick={() => setHasSeenWelcome(false)}
+                className="p-1 text-neutral-500 hover:text-white transition-colors"
+                aria-label="About"
+              >
+                <IconInfoCircle className="size-4" />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
