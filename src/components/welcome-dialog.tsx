@@ -10,7 +10,7 @@ const steps: React.ReactNode[] = [
       href="https://www.last.fm/join"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-[--color-lastfm] underline hover:text-lastfm"
+      className="text-[--color-lastfm] underline hover:text-lastfm focus:outline-none"
     >
       Last.fm
     </a>{" "}
@@ -22,7 +22,7 @@ const steps: React.ReactNode[] = [
       href="https://www.last.fm/about/trackmymusic"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-[--color-lastfm] underline hover:text-lastfm"
+      className="text-[--color-lastfm] underline hover:text-lastfm focus:outline-none"
     >
       supported streaming service
     </a>{" "}
