@@ -4,7 +4,7 @@ import { useAlbumsStore } from "@/lib/albums-store";
 import { SortOptions, SortType } from "@/lib/sort";
 import { calcHeight, cn, CUSTOM_CONTAINER_KEY, HEADER_HEIGHT } from "@/lib/util";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { CustomAlbum } from "./custom";
+import CustomAlbum from "./custom-album";
 import { CustomAlbum as CustomAlbumType, isCustomAddId } from "@/lib/albums";
 import { ScrollArea } from "@base-ui/react";
 import Select from "../select";
@@ -15,7 +15,7 @@ const sortOptions: Pick<SortOptions, "random" | "name" | "artist"> = {
   artist: "Artist",
 };
 
-export default function CustomPallete() {
+export default function CustomAlbums() {
   const setSort = useAlbumsStore((state) => state.setSort);
   const sort = useAlbumsStore(
     (state) => state.albums[CUSTOM_CONTAINER_KEY].sort,
@@ -62,7 +62,7 @@ export default function CustomPallete() {
             items={albums}
             strategy={rectSortingStrategy}
           >
-            {(albums as CustomAlbumType[]).map((album, index) => (
+            {(albums as CustomAlbumType[]).map((album) => (
               <CustomAlbum
                 key={album.id}
                 disabled={isCustomAddId(album.id) ? { draggable: true } : false}

@@ -1,23 +1,13 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import {
-  cn,
-  CUSTOM_CONTAINER_KEY,
-  getBrightnessStyle,
-  getImageBrightness,
-  PLACEHOLDER_IMG,
-} from "@/lib/util";
+import { useAlbumsStore } from "@/lib/albums-store";
+import { cn } from "@/lib/util";
 import { Dialog, Field } from "@base-ui/react";
 import { IconPlus, IconSearch } from "@tabler/icons-react";
-import { SearchResults } from "../result";
-import { Disabled } from "@dnd-kit/sortable/dist/types";
-import * as motion from "motion/react-client";
-import AlbumCover from "../album/album-cover";
+import { useEffect, useRef, useState } from "react";
 
-import { Sortable } from "../sortable";
-import { CustomAlbum as CustomAlbumType, isCustomAddId } from "@/lib/albums";
-import { useAlbumsStore } from "@/lib/albums-store";
-import CustomContextMenu from "./custom-contextmenu";
+import { CustomAlbum as CustomAlbumType } from "@/lib/albums";
+
+import * as motion from "motion/react-client";
+import { SearchResults } from "../result";
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -37,95 +27,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-type CustomAlbumProps = {
-  album: CustomAlbumType;
-  priority?: boolean;
-  disabled?: boolean | Disabled;
-};
-
-export function CustomAlbum({
-  album,
-  disabled,
-  priority = false,
-}: CustomAlbumProps) {
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
-  const setTextColor = useAlbumsStore((state) => state.setTextColor);
-
-  if (isCustomAddId(album.id) || !album.mbid) {
-    return <CustomAddButton id={album.id} disabled={disabled} />;
-  }
-
-  return (
-    <Sortable
-      key={album.id}
-      id={album.id}
-      sortData={{
-        album,
-      }}
-      disabled={contextMenuOpen || disabled}
-    >
-      <CustomContextMenu
-        open={contextMenuOpen}
-        setOpen={setContextMenuOpen}
-        album={album}
-      >
-        <AlbumCover
-          src={album.img || PLACEHOLDER_IMG}
-          imgs={album.imgs}
-          name={album.album || "Unknown Album"}
-          artist={album.artist || "Unknown Artist"}
-          width={128}
-          height={128}
-          id={`${album.id}-custom-album`}
-          priority={priority}
-          data-id={album.id}
-          textBackground={album.textBackground}
-          textColor={album.textColor}
-          onLoad={(ev: React.SyntheticEvent<HTMLImageElement, Event>) => {
-            const img = ev.currentTarget;
-            const { textColor, textBackground } = getBrightnessStyle(
-              getImageBrightness(img),
-            );
-            setTextBackground?.(album.id, textBackground);
-            setTextColor?.(album.id, textColor);
-          }}
-        />
-      </CustomContextMenu>
-    </Sortable>
-  );
-}
-
-type CustomAddButtonProps = {
-  id: string;
-  disabled?: boolean | Disabled;
-};
-
-function isDisabled(disabled?: boolean | Disabled | undefined): boolean {
-  return typeof disabled === "boolean" ? disabled : disabled?.droppable ?? false;
-}
-
-function CustomAddButton({ id, disabled }: CustomAddButtonProps) {
-  const albums = useAlbumsStore(
-    (state) => state.albums[CUSTOM_CONTAINER_KEY].albums,
-  );
-
-
-  if (isDisabled(disabled) || albums.length > 1) {
-    return <CustomAlbumAddDialog />;
-  }
-
-  return (
-    <Sortable key={id} id={id} sortData={{}} disabled={{
-      draggable: true,
-      droppable: isDisabled(disabled),
-    }}>
-      <CustomAlbumAddDialog />
-    </Sortable>
-  );
-}
-
-function CustomAlbumAddDialog() {
+export default function CustomAlbumAddDialog() {
   const [searchQuery, setSearchQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [open, setOpen] = useState(false);
@@ -145,7 +47,7 @@ function CustomAlbumAddDialog() {
         )}
       >
         <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center transition-colors gap-2 hover:text-green-700 group-active:text-green-500 group-active:hover:text-green-500 duration-150">
-           <IconPlus className="size-6" />
+          <IconPlus className="size-6" />
           <div className="flex gap-1 items-center">
             <div>Add Album</div>
           </div>

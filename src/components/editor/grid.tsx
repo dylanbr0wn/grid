@@ -7,24 +7,14 @@ import {
   SortableContext,
   SortingStrategy,
 } from "@dnd-kit/sortable";
-import { CustomAddAlbum, isPlaceholderId } from "@/lib/albums";
-import { Sortable } from "../sortable";
-import { CustomAlbum } from "./custom";
-import { LastFmAlbum, LastFmAlbumProps } from "./lastfm-container";
-import {
-  CustomAlbum as CustomAlbumType,
-  LastFmAlbum as LastFmAlbumType,
-  PlaceholderAlbum as PlaceholderAlbumType,
-} from "@/lib/albums";
+import { isPlaceholderId } from "@/lib/albums";
 import dynamic from "next/dynamic";
 import { useAlbumsStore } from "@/lib/albums-store";
+import GridAlbum from "./grid-album";
 
-const Background = dynamic(() => import("./background"), {
+const Background = dynamic(() => import("./grid-background"), {
   ssr: false,
   loading: () => null,
-  // <div className="h-full px-3 flex items-center justify-center">
-  //   <IconLoader3 className="size-4 text-neutral-500 mx-auto my-4 animate-spin" />
-  // </div>
 });
 
 export default function Grid() {
@@ -92,7 +82,7 @@ export default function Grid() {
               strategy={gridSortingStrategy}
             >
               {albums["grid"].albums.map((album) => (
-                <SortableAlbum
+                <GridAlbum
                   key={album.id}
                   album={album}
                   disabled={isPlaceholderId(album.id)}
@@ -108,49 +98,4 @@ export default function Grid() {
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>
   );
-}
-
-type SortableAlbumProps = {
-  disabled?: boolean;
-  album: LastFmAlbumType | PlaceholderAlbumType | CustomAlbumType | CustomAddAlbum;
-} & Pick<LastFmAlbumProps, "priority">;
-
-export function SortableAlbum({
-  album,
-  priority = false,
-}: SortableAlbumProps) {
-  if (album.type === "custom") {
-    return (
-      <CustomAlbum
-        album={album}
-        priority={priority}
-        disabled={!album.mbid}
-      />
-    );
-  }
-
-  if (album.type === "placeholder") {
-    return (
-      <Sortable
-        id={album.id}
-        disabled
-        sortData={{
-          album,
-        }}
-        className="pointer-events-none select-none outline-none focus-visible:ring-0"
-      >
-        <div className="w-32 h-32 bg-transparent" />
-      </Sortable>
-    );
-  }
-
-  if (album.type === "lastfm") {
-    return (
-      <LastFmAlbum
-        album={album}
-        priority={priority}
-      />
-    );
-  }
-  return null;
 }

@@ -1,3 +1,4 @@
+import { type UniqueIdentifier } from '@dnd-kit/core'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -75,6 +76,16 @@ export function getImageBrightness(
 	return brightness
 }
 
+
+export function findContainer(
+  id: UniqueIdentifier,
+  containers: Record<UniqueIdentifier, { albums: { id: UniqueIdentifier }[] }>
+): UniqueIdentifier | undefined {
+  if (id in containers) return id;
+  return Object.keys(containers).find((key) =>
+    containers[key].albums.some((a) => a.id === id)
+  );
+}
 
 export function generateId() {
   return Math.random().toString(36).substring(2, 9);

@@ -1,17 +1,20 @@
 "use client";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { UniqueIdentifier } from "@dnd-kit/core";
+import { type DragEndEvent, type DragOverEvent, UniqueIdentifier } from "@dnd-kit/core";
+import { arrayMove, arraySwap } from "@dnd-kit/sortable";
 import {
   AlbumTypes,
   CustomAddAlbum,
   CustomAlbum,
+  isCustomAddId,
+  isPlaceholderId,
   LastFmAlbum,
   newCustomAddAlbum,
   newPlaceholderAlbum,
   PlaceholderAlbum,
 } from "./albums";
-import { CUSTOM_CONTAINER_KEY, LAST_FM_CONTAINER_KEY } from "./util";
+import { CUSTOM_CONTAINER_KEY, findContainer, LAST_FM_CONTAINER_KEY } from "./util";
 import { sortAlbums, SortType } from "./sort";
 import { fetchLastFmAlbums } from "@/components/user-form";
 
@@ -40,6 +43,7 @@ export type SetAlbumFunc = (
 export type AlbumsState = {
   albums: ContainerMap;
   activeAlbum: LastFmAlbum | CustomAlbum | null;
+  overflowItem: LastFmAlbum | PlaceholderAlbum | CustomAlbum | CustomAddAlbum | null;
 
   user: string | undefined;
   setUser: (user: string | undefined) => void;
@@ -54,6 +58,9 @@ export type AlbumsState = {
   initialized: boolean;
   setInitialized: (initialized: boolean) => void;
 
+  hasSeenWelcome: boolean;
+  setHasSeenWelcome: (hasSeenWelcome: boolean) => void;
+
   setAlbums: (
     updater: ContainerMap | ((prev: ContainerMap) => ContainerMap)
   ) => void;
@@ -66,6 +73,8 @@ export type AlbumsState = {
   setRows: (rows: number) => void;
   setColumns: (columns: number) => void;
   setSort: (containerId: UniqueIdentifier, sort: SortType | undefined) => void;
+  handleDragOver: (event: DragOverEvent) => void;
+  handleDragEnd: (event: DragEndEvent) => void;
 };
 
 const DEFAULT_ROWS = 5;
@@ -159,12 +168,15 @@ export const useAlbumsStore = create<AlbumsState>()(
     (set, get) => ({
       albums: initialContainerMap(),
       activeAlbum: null,
+      overflowItem: null,
       user: undefined,
       autofill: false,
       rows: 5,
       columns: 5,
       initialized: false,
       setInitialized: (initialized: boolean) => set({ initialized }),
+      hasSeenWelcome: false,
+      setHasSeenWelcome: (hasSeenWelcome: boolean) => set({ hasSeenWelcome }),
       setAutofill: (autofill: boolean) => set({ autofill }),
       setUser: (user: string | undefined) => set({ user }),
       setAlbums: (updater) =>
@@ -331,6 +343,161 @@ export const useAlbumsStore = create<AlbumsState>()(
             },
           };
         }),
+
+      handleDragOver: ({ active, over }) => {
+        const overId = over?.id;
+        if (overId == null) return;
+
+        set((state) => {
+          const { albums, overflowItem } = state;
+          const overContainer = findContainer(overId, albums);
+          const activeContainer = findContainer(active.id, albums);
+
+          if (!activeContainer || !overContainer || activeContainer === overContainer) {
+            return state;
+          }
+
+          const activeItems = albums[activeContainer];
+          const overItems = albums[overContainer];
+          const overIndex = overItems.albums.findIndex((a) => a.id === overId);
+          const activeIndex = activeItems.albums.findIndex((a) => a.id === active.id);
+
+          if (
+            active.data.current?.album?.type &&
+            !overItems.allowedTypes.includes(active.data.current.album.type as AlbumTypes)
+          ) {
+            return state;
+          }
+
+          const isBelowOverItem =
+            over &&
+            active.rect.current.translated &&
+            active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+          const modifier = isBelowOverItem ? 1 : 0;
+          const newIndex = overIndex >= 0 ? overIndex + modifier : overItems.albums.length - 1;
+
+          let newActiveAlbums = activeItems.albums.filter((item) => item.id !== active.id);
+          let newOverAlbums = overItems.albums;
+          let newOverflowItem = overflowItem;
+
+          const overMaxLength = albums[overContainer].maxLength;
+
+          if (overMaxLength && overItems.albums.length >= overMaxLength) {
+            const placeholder = newOverAlbums
+              .slice(newIndex, newOverAlbums.length - 1)
+              .find((a) => isPlaceholderId(a.id));
+
+            if (placeholder) {
+              newOverflowItem = placeholder;
+              newOverAlbums = newOverAlbums.filter((a) => a.id !== placeholder.id);
+            } else {
+              const itemToMove = newOverAlbums[overItems.albums.length - 1];
+              newOverflowItem = itemToMove;
+              if (!isPlaceholderId(itemToMove.id)) {
+                newActiveAlbums = [itemToMove, ...newActiveAlbums];
+              }
+            }
+          } else {
+            if (overflowItem) {
+              const itemToReturn = overflowItem;
+              newOverflowItem = null;
+              newActiveAlbums = [
+                ...newActiveAlbums.slice(0, activeIndex),
+                itemToReturn,
+                ...newActiveAlbums.slice(activeIndex),
+              ];
+              newOverAlbums = newOverAlbums.filter((item) => item.id !== itemToReturn.id);
+            }
+            if (
+              albums[activeContainer].minLength &&
+              newActiveAlbums.length < albums[activeContainer].minLength!
+            ) {
+              newActiveAlbums.push(newPlaceholderAlbum());
+            }
+          }
+
+          return {
+            ...state,
+            overflowItem: newOverflowItem,
+            albums: {
+              ...albums,
+              [activeContainer]: {
+                ...albums[activeContainer],
+                albums: newActiveAlbums,
+              },
+              [overContainer]: {
+                ...overItems,
+                albums: [
+                  ...newOverAlbums.slice(0, newIndex),
+                  albums[activeContainer].albums[activeIndex],
+                  ...newOverAlbums.slice(
+                    newIndex,
+                    overItems.maxLength ? overItems.maxLength - 1 : undefined
+                  ),
+                ],
+              },
+            },
+          };
+        });
+      },
+
+      handleDragEnd: ({ active, over }) => {
+        set((state) => {
+          const { albums } = state;
+          const overId = over?.id;
+          const base = { overflowItem: null as null, activeAlbum: null as null };
+
+          if (overId == null) return { ...state, ...base };
+
+          const activeContainer = findContainer(active.id, albums);
+          const overContainer = findContainer(overId, albums);
+
+          if (!activeContainer || !overContainer) return { ...state, ...base };
+
+          if (
+            !albums[overContainer].allowedTypes.includes(
+              active.data.current?.album.type as AlbumTypes
+            )
+          ) {
+            return { ...state, ...base };
+          }
+
+          const activeIndex = albums[activeContainer].albums.findIndex(
+            (a) => active.id === a.id
+          );
+          const overIndex = albums[overContainer].albums.findIndex(
+            (a) => overId === a.id
+          );
+
+          if (activeIndex === overIndex) return { ...state, ...base };
+
+          let newAlbums = arrayMove(albums[overContainer].albums, activeIndex, overIndex);
+          if (isPlaceholderId(overId)) {
+            newAlbums = arraySwap(albums[overContainer].albums, activeIndex, overIndex);
+          }
+
+          if (overContainer === CUSTOM_CONTAINER_KEY) {
+            const customAddIndex = newAlbums.findIndex((a) => isCustomAddId(a.id));
+            if (customAddIndex !== -1 && customAddIndex !== newAlbums.length - 1) {
+              const [customAddAlbum] = newAlbums.splice(customAddIndex, 1);
+              newAlbums.push(customAddAlbum);
+            }
+          }
+
+          return {
+            ...state,
+            ...base,
+            albums: {
+              ...albums,
+              [overContainer]: {
+                ...albums[overContainer],
+                albums: newAlbums,
+              },
+            },
+          };
+        });
+      },
     }),
     {
       name: "grid-albums-storage",
@@ -347,6 +514,7 @@ export const useAlbumsStore = create<AlbumsState>()(
         columns: state.columns,
         rows: state.rows,
         user: state.user,
+        hasSeenWelcome: state.hasSeenWelcome,
       }),
       // Custom merge so that the lastfm container (not in persisted data)
       // is always restored from the initial state rather than being dropped

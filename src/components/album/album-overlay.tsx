@@ -3,7 +3,7 @@
 import { DragOverlay } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { createPortal } from "react-dom";
-import AlbumCover from "../album/album-cover";
+import AlbumCover from "./album-cover";
 import { cn } from "@/lib/util";
 import { useAlbumsStore } from "@/lib/albums-store";
 
