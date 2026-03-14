@@ -24,11 +24,20 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://grid.dylanbrown.xyz"),
   title: "GRID",
   description: "A Last.fm album grid generator",
+  keywords: ["Last.fm", "album grid", "music", "chart", "collage", "topster"],
+  alternates: {
+    canonical: "https://grid.dylanbrown.xyz",
+  },
   openGraph: {
     title: "GRID",
     type: "website",
     url: "https://grid.dylanbrown.xyz",
     siteName: "GRID",
+    description: "A Last.fm album grid generator",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GRID",
     description: "A Last.fm album grid generator",
   },
 };
