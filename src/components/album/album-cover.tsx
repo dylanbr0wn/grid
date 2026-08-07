@@ -49,6 +49,10 @@ export default function AlbumCover({
   }
 
   const color = textColor || _color;
+  const imageKey = useMemo(
+    () => [src, ...(imgs ?? [])].filter(Boolean).join("|"),
+    [src, imgs],
+  );
   const backgroundColor = useMemo(() => {
     if (textBackground !== undefined) {
       return textBackground
@@ -70,6 +74,7 @@ export default function AlbumCover({
     >
       {src ? (
         <ImageWithFallback
+          key={imageKey}
           src={src}
           className="object-cover overflow-hidden w-32 h-32"
           imgs={imgs}

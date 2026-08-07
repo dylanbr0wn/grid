@@ -1,6 +1,6 @@
 import { LastFmAlbum, lastFmAlbum } from "@/lib/albums";
+import { getCoverArtUrl } from "@/lib/cover-art";
 import { albumInfo, apiURL, weeklyAlbumChart } from "@/lib/lastfm";
-import { getCoverArtUrl } from "@/lib/music-brainz";
 import { sortType } from "@/lib/sort";
 import { LAST_FM_SORT_KEY, LAST_FM_USER_KEY, PLACEHOLDER_IMG } from "@/lib/util";
 import { type } from "arktype";

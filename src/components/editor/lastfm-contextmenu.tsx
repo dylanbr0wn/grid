@@ -1,8 +1,9 @@
 "use client";
 
 import { ContextMenu, ContextMenuRootChangeEventDetails } from "@base-ui/react";
-import { IconCheck, IconChevronRight } from "@tabler/icons-react";
+import { IconCheck, IconChevronRight, IconRefresh } from "@tabler/icons-react";
 import { LastFmAlbum as LastFmAlbumType } from "@/lib/albums";
+import { refreshAlbumImages } from "@/lib/album-images";
 import { useAlbumsStore } from "@/lib/albums-store";
 
 type LastFmContextMenuProps = {
@@ -20,6 +21,7 @@ export default function LastFmContextMenu({
 }: LastFmContextMenuProps) {
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
+  const setAlbum = useAlbumsStore((state) => state.setAlbum);
 
   function handleOpenChange(
     open: boolean,
@@ -91,6 +93,18 @@ export default function LastFmContextMenu({
               </ContextMenu.CheckboxItemIndicator>
               <span className="col-start-2">Toggle text background</span>
             </ContextMenu.CheckboxItem>
+            <ContextMenu.Separator className="h-px bg-neutral-700" />
+            <ContextMenu.Item
+              className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-px data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-900"
+              onClick={() =>
+                setAlbum(album.id, (item) =>
+                  item.type === "lastfm" ? refreshAlbumImages(item) : item,
+                )
+              }
+            >
+              <IconRefresh className="size-4" />
+              <span className="col-start-2">Refresh image</span>
+            </ContextMenu.Item>
           </ContextMenu.Popup>
         </ContextMenu.Positioner>
       </ContextMenu.Portal>

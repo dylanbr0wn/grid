@@ -36,9 +36,10 @@ export type SetAlbumFunc = (
     | CustomAlbum
     | PlaceholderAlbum
     | CustomAddAlbum
-    | ((album: LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum) => LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum)
+    | ((
+        album: LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum,
+      ) => LastFmAlbum | CustomAlbum | PlaceholderAlbum | CustomAddAlbum),
 ) => void;
-
 
 export type AlbumsState = {
   albums: ContainerMap;
@@ -61,9 +62,7 @@ export type AlbumsState = {
   hasSeenWelcome: boolean;
   setHasSeenWelcome: (hasSeenWelcome: boolean) => void;
 
-  setAlbums: (
-    updater: ContainerMap | ((prev: ContainerMap) => ContainerMap)
-  ) => void;
+  setAlbums: (updater: ContainerMap | ((prev: ContainerMap) => ContainerMap)) => void;
   setAlbum: SetAlbumFunc;
   setTextColor: (id: UniqueIdentifier, color: string) => void;
   setTextBackground: (id: UniqueIdentifier, enabled: boolean) => void;
@@ -87,10 +86,7 @@ function initialContainerMap(): ContainerMap {
       allowedTypes: ["placeholder", "lastfm", "custom"],
       maxLength: DEFAULT_ROWS * DEFAULT_COLUMNS,
       minLength: DEFAULT_ROWS * DEFAULT_COLUMNS,
-      albums: Array.from(
-        { length: DEFAULT_ROWS * DEFAULT_COLUMNS },
-        newPlaceholderAlbum
-      ),
+      albums: Array.from({ length: DEFAULT_ROWS * DEFAULT_COLUMNS }, newPlaceholderAlbum),
       sort: undefined,
     },
     [CUSTOM_CONTAINER_KEY]: {
@@ -121,12 +117,7 @@ function updateGridDimensions(state: AlbumsState, rows: number, columns: number)
   let customSort = custom.sort || "name";
 
   if (targetLength > newGridAlbums.length) {
-    newGridAlbums.push(
-      ...Array.from(
-        { length: targetLength - newGridAlbums.length },
-        newPlaceholderAlbum
-      )
-    );
+    newGridAlbums.push(...Array.from({ length: targetLength - newGridAlbums.length }, newPlaceholderAlbum));
   } else if (targetLength < newGridAlbums.length) {
     const removed = newGridAlbums.splice(targetLength);
     const removedLastFm = removed.filter((a) => a.type === "lastfm") as LastFmAlbum[];
@@ -134,11 +125,11 @@ function updateGridDimensions(state: AlbumsState, rows: number, columns: number)
 
     if (removedLastFm.length > 0) {
       lastFmAlbums = [...lastFmAlbums, ...removedLastFm];
-      lastFmSort = "custom"
+      lastFmSort = "custom";
     }
     if (removedCustom.length > 0) {
       customAlbums = [...customAlbums, ...removedCustom];
-      customSort = "custom"
+      customSort = "custom";
     }
   }
 
@@ -160,12 +151,12 @@ function updateGridDimensions(state: AlbumsState, rows: number, columns: number)
       maxLength: targetLength,
       minLength: targetLength,
     },
-  }
+  };
 }
 
 export const useAlbumsStore = create<AlbumsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       albums: initialContainerMap(),
       activeAlbum: null,
       overflowItem: null,
@@ -181,15 +172,12 @@ export const useAlbumsStore = create<AlbumsState>()(
       setUser: (user: string | undefined) => set({ user }),
       setAlbums: (updater) =>
         set((state) => ({
-          albums:
-            typeof updater === "function" ? updater(state.albums) : updater,
+          albums: typeof updater === "function" ? updater(state.albums) : updater,
         })),
 
       setAlbum: (id, album) =>
         set((state) => {
-          const container = Object.keys(state.albums).find((key) =>
-            state.albums[key].albums.some((a) => a.id === id)
-          );
+          const container = Object.keys(state.albums).find((key) => state.albums[key].albums.some((a) => a.id === id));
           if (!container) return state;
 
           return {
@@ -198,11 +186,7 @@ export const useAlbumsStore = create<AlbumsState>()(
               [container]: {
                 ...state.albums[container],
                 albums: state.albums[container].albums.map((item) =>
-                  item.id === id
-                    ? typeof album === "function"
-                      ? album(item)
-                      : album
-                    : item
+                  item.id === id ? (typeof album === "function" ? album(item) : album) : item,
                 ),
               },
             },
@@ -211,9 +195,7 @@ export const useAlbumsStore = create<AlbumsState>()(
 
       setTextColor: (id, color) =>
         set((state) => {
-          const container = Object.keys(state.albums).find((key) =>
-            state.albums[key].albums.some((a) => a.id === id)
-          );
+          const container = Object.keys(state.albums).find((key) => state.albums[key].albums.some((a) => a.id === id));
           if (!container) return state;
 
           return {
@@ -222,7 +204,7 @@ export const useAlbumsStore = create<AlbumsState>()(
               [container]: {
                 ...state.albums[container],
                 albums: state.albums[container].albums.map((item) =>
-                  item.id === id ? { ...item, textColor: color } : item
+                  item.id === id ? { ...item, textColor: color } : item,
                 ),
               },
             },
@@ -231,9 +213,7 @@ export const useAlbumsStore = create<AlbumsState>()(
 
       setTextBackground: (id, enabled) =>
         set((state) => {
-          const container = Object.keys(state.albums).find((key) =>
-            state.albums[key].albums.some((a) => a.id === id)
-          );
+          const container = Object.keys(state.albums).find((key) => state.albums[key].albums.some((a) => a.id === id));
           if (!container) return state;
 
           return {
@@ -242,7 +222,7 @@ export const useAlbumsStore = create<AlbumsState>()(
               [container]: {
                 ...state.albums[container],
                 albums: state.albums[container].albums.map((item) =>
-                  item.id === id ? { ...item, textBackground: enabled } : item
+                  item.id === id ? { ...item, textBackground: enabled } : item,
                 ),
               },
             },
@@ -287,19 +267,21 @@ export const useAlbumsStore = create<AlbumsState>()(
           };
         }),
 
-      setRows: (rows) => set((state) => {
-        return {
-          albums: updateGridDimensions(state, rows, state.columns),
-          rows,
-        };
-      }),
+      setRows: (rows) =>
+        set((state) => {
+          return {
+            albums: updateGridDimensions(state, rows, state.columns),
+            rows,
+          };
+        }),
 
-      setColumns: (columns) => set((state) => {
-        return {
-          albums: updateGridDimensions(state, state.rows, columns),
-          columns,
-        };
-      }),
+      setColumns: (columns) =>
+        set((state) => {
+          return {
+            albums: updateGridDimensions(state, state.rows, columns),
+            columns,
+          };
+        }),
       setSort: (containerId, sort) =>
         set((state) => {
           const container = state.albums[containerId];
@@ -307,13 +289,11 @@ export const useAlbumsStore = create<AlbumsState>()(
 
           if (containerId === CUSTOM_CONTAINER_KEY) {
             // make sure the custom add album stays at the end
-            const customAddIndex = container.albums.findIndex((a) =>
-              a.type === "custom_add"
-            );
+            const customAddIndex = container.albums.findIndex((a) => a.type === "custom_add");
             if (customAddIndex !== -1 && customAddIndex !== container.albums.length - 1) {
               const albums = [...container.albums];
               const customAddAlbum = albums.splice(customAddIndex, 1)[0];
-              const sortedAlbums = sortAlbums(albums.filter(a => a.type === "custom") as CustomAlbum[], sort);
+              const sortedAlbums = sortAlbums(albums.filter((a) => a.type === "custom") as CustomAlbum[], sort);
               albums.push(customAddAlbum);
               return {
                 albums: {
@@ -328,9 +308,10 @@ export const useAlbumsStore = create<AlbumsState>()(
             }
           }
 
-          const sortableAlbums = container.albums.filter(
-            (a) => a.type !== "placeholder"
-          ) as (LastFmAlbum | CustomAlbum)[];
+          const sortableAlbums = container.albums.filter((a) => a.type !== "placeholder") as (
+            | LastFmAlbum
+            | CustomAlbum
+          )[];
 
           return {
             albums: {
@@ -409,10 +390,7 @@ export const useAlbumsStore = create<AlbumsState>()(
               ];
               newOverAlbums = newOverAlbums.filter((item) => item.id !== itemToReturn.id);
             }
-            if (
-              albums[activeContainer].minLength &&
-              newActiveAlbums.length < albums[activeContainer].minLength!
-            ) {
+            if (albums[activeContainer].minLength && newActiveAlbums.length < albums[activeContainer].minLength!) {
               newActiveAlbums.push(newPlaceholderAlbum());
             }
           }
@@ -431,10 +409,7 @@ export const useAlbumsStore = create<AlbumsState>()(
                 albums: [
                   ...newOverAlbums.slice(0, newIndex),
                   albums[activeContainer].albums[activeIndex],
-                  ...newOverAlbums.slice(
-                    newIndex,
-                    overItems.maxLength ? overItems.maxLength - 1 : undefined
-                  ),
+                  ...newOverAlbums.slice(newIndex, overItems.maxLength ? overItems.maxLength - 1 : undefined),
                 ],
               },
             },
@@ -455,20 +430,12 @@ export const useAlbumsStore = create<AlbumsState>()(
 
           if (!activeContainer || !overContainer) return { ...state, ...base };
 
-          if (
-            !albums[overContainer].allowedTypes.includes(
-              active.data.current?.album.type as AlbumTypes
-            )
-          ) {
+          if (!albums[overContainer].allowedTypes.includes(active.data.current?.album.type as AlbumTypes)) {
             return { ...state, ...base };
           }
 
-          const activeIndex = albums[activeContainer].albums.findIndex(
-            (a) => active.id === a.id
-          );
-          const overIndex = albums[overContainer].albums.findIndex(
-            (a) => overId === a.id
-          );
+          const activeIndex = albums[activeContainer].albums.findIndex((a) => active.id === a.id);
+          const overIndex = albums[overContainer].albums.findIndex((a) => overId === a.id);
 
           if (activeIndex === overIndex) return { ...state, ...base };
 
@@ -508,7 +475,7 @@ export const useAlbumsStore = create<AlbumsState>()(
           custom: state.albums.custom,
           lastfm: {
             sort: state.albums.lastfm.sort,
-          }
+          },
         },
         autofill: state.autofill,
         columns: state.columns,
@@ -556,7 +523,6 @@ export const useAlbumsStore = create<AlbumsState>()(
         fetchLastFmAlbums(user, sort || "playcount")
           .then((albums) => {
             state.setAlbums((prev) => {
-
               const sortedAlbums = sortAlbums(albums, sort || "playcount");
               console.log("fetched and sorted albums on rehydration", sortedAlbums);
               if (autofill) {
@@ -592,7 +558,7 @@ export const useAlbumsStore = create<AlbumsState>()(
           .finally(() => {
             state.setInitialized(true);
           });
-      }
-    }
-  )
+      },
+    },
+  ),
 );

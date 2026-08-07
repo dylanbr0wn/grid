@@ -3,6 +3,7 @@
 import { type } from "arktype";
 import { generateId, PLACEHOLDER_IMG } from "./util";
 import { customAlbum, CustomAlbum } from "./albums";
+import { getCoverArtUrl } from "./cover-art";
 
 const BASE_PATH = "https://musicbrainz.org/ws/2";
 const USER_AGENT = "grid-app/0.1 ( https://grid.dylanbrown.xyz )";
@@ -85,10 +86,4 @@ export async function searchReleases(query: string, limit = 25, offset = 0){
       }
   })
   return customAlbum.array().assert(albums);
-}
-
-export function getCoverArtUrl(releaseGroupId: string, size: 'small' | 'large' = 'large') {
-  if (!releaseGroupId) return undefined;
-  const sizeParam = size === 'small' ? '250' : '500';
-  return `https://coverartarchive.org/release-group/${releaseGroupId}/front-${sizeParam}`;
 }

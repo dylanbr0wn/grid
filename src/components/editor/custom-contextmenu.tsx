@@ -1,8 +1,9 @@
 "use client";
 
 import { ContextMenu, ContextMenuRootChangeEventDetails } from "@base-ui/react";
-import { IconCheck, IconChevronRight, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconChevronRight, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { CustomAlbum as CustomAlbumType, newPlaceholderAlbum } from "@/lib/albums";
+import { refreshAlbumImages } from "@/lib/album-images";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { CUSTOM_CONTAINER_KEY } from "@/lib/util";
 
@@ -21,6 +22,7 @@ export default function CustomContextMenu({
 }: CustomContextMenuProps) {
   const setTextBackground = useAlbumsStore((state) => state.setTextBackground);
   const setTextColor = useAlbumsStore((state) => state.setTextColor);
+  const setAlbum = useAlbumsStore((state) => state.setAlbum);
 
   const setAlbums = useAlbumsStore((state) => state.setAlbums);
 
@@ -124,6 +126,18 @@ export default function CustomContextMenu({
               </ContextMenu.CheckboxItemIndicator>
               <span className="col-start-2">Toggle text background</span>
             </ContextMenu.CheckboxItem>
+            <ContextMenu.Separator className="h-px bg-neutral-700" />
+            <ContextMenu.Item
+              className="grid grid-cols-[0.75rem_1fr] cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-neutral-50 data-highlighted:before:absolute data-highlighted:before:inset-x-px data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-900"
+              onClick={() =>
+                setAlbum(album.id, (item) =>
+                  item.type === "custom" ? refreshAlbumImages(item) : item,
+                )
+              }
+            >
+              <IconRefresh className="size-4" />
+              <span className="col-start-2">Refresh image</span>
+            </ContextMenu.Item>
             <ContextMenu.Separator className="h-px bg-neutral-700" />
             <ContextMenu.Item
               className="grid grid-cols-[0.75rem_1fr] text-red-800 cursor-default gap-2 py-2 pr-4 pl-2.5 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-red-700 data-highlighted:before:absolute data-highlighted:before:inset-x-px data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-red-950/30"
