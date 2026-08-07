@@ -54,36 +54,90 @@ export const ReleaseGroupResponse = type({
 
 
 
-export async function searchReleases(query: string, limit = 25, offset = 0){
-  if (query.length === 0) {
-    return []
+export type SearchReleaseType = "all" | "album" | "ep" | "single";
+export type SearchReleaseField = "all" | "title" | "artist";
+
+export type SearchReleasesOptions = {
+  limit?: number;
+  offset?: number;
+  type?: SearchReleaseType;
+  field?: SearchReleaseField;
+};
+
+const PRIMARY_TYPE_QUERY: Record<Exclude<SearchReleaseType, "all">, string> = {
+  album: "Album",
+  ep: "EP",
+  single: "Single",
+};
+
+/** Escape Lucene special chars inside a quoted phrase. */
+function escapeLucenePhrase(term: string): string {
+  return term.replace(/[+\-&|!(){}\[\]^"~*?:\\/]/g, "\\$&");
+}
+
+export function buildReleaseGroupQuery(
+  query: string,
+  options: Pick<SearchReleasesOptions, "type" | "field"> = {},
+): string {
+  const field = options.field ?? "all";
+  const releaseType = options.type ?? "all";
+
+  let lucene =
+    field === "title"
+      ? `releasegroup:"${escapeLucenePhrase(query)}"`
+      : field === "artist"
+        ? `artist:"${escapeLucenePhrase(query)}"`
+        : query;
+
+  if (releaseType !== "all") {
+    lucene = `${lucene} AND primarytype:${PRIMARY_TYPE_QUERY[releaseType]}`;
   }
-  const response = await request("/release-group", { query, limit, offset });
+
+  return lucene;
+}
+
+export async function searchReleases(
+  query: string,
+  options: SearchReleasesOptions = {},
+) {
+  if (query.length === 0) {
+    return [];
+  }
+
+  const limit = options.limit ?? 25;
+  const offset = options.offset ?? 0;
+  const luceneQuery = buildReleaseGroupQuery(query, options);
+
+  const response = await request("/release-group", {
+    query: luceneQuery,
+    limit,
+    offset,
+  });
   const out = ReleaseGroupResponse(response);
 
   if (out instanceof type.errors) {
     throw new Error(out.summary);
   }
 
-  const albums: CustomAlbum[] = out["release-groups"].map(rg => {
+  const albums: CustomAlbum[] = out["release-groups"].map((rg) => {
     const imgs = type("string")
       .array()
       .assert(
         [
-          getCoverArtUrl(rg.id, 'large'),
+          getCoverArtUrl(rg.id, "large"),
           PLACEHOLDER_IMG,
-        ].filter((url) => url && url.length > 0)
+        ].filter((url) => url && url.length > 0),
       );
     return {
-        id: `custom-${rg.id}-${generateId()}`,
-        type: "custom",
-        mbid: rg.id,
-        album: rg.title,
-        artist: rg["artist-credit"].map((ac) => ac.artist.name).join(", "),
-        artistMbid: rg["artist-credit"].map((ac) => ac.artist.id).join(", "),
-        img: getCoverArtUrl(rg.id, 'large') ?? PLACEHOLDER_IMG,
-        imgs,
-      }
-  })
+      id: `custom-${rg.id}-${generateId()}`,
+      type: "custom",
+      mbid: rg.id,
+      album: rg.title,
+      artist: rg["artist-credit"].map((ac) => ac.artist.name).join(", "),
+      artistMbid: rg["artist-credit"].map((ac) => ac.artist.id).join(", "),
+      img: getCoverArtUrl(rg.id, "large") ?? PLACEHOLDER_IMG,
+      imgs,
+    };
+  });
   return customAlbum.array().assert(albums);
 }
