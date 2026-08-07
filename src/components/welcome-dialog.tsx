@@ -30,7 +30,7 @@ const steps: React.ReactNode[] = [
   </>,
   "Enter your Last.fm username in the box on the left and click Import",
   "Drag albums into the grid manually, or hit Autofill to fill it automatically",
-  "Export your grid as .jpg or .png using the buttons in the export section",
+  "Export your grid as .jpg, .png, or .webp using the buttons in the export section",
 ];
 
 export function WelcomeDialog() {
