@@ -46,11 +46,5 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.10",
-      "@types/react-dom": "19.2.3"
-    }
   }
 }

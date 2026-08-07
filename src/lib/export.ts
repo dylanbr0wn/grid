@@ -57,5 +57,9 @@ export async function gridToWebp(node: HTMLElement, width: number, height: numbe
       return !(node as HTMLElement).classList?.contains("no-export");
     },
   });
-  return canvas.toDataURL("image/webp", 1);
+  const dataUrl = canvas.toDataURL("image/webp", 1);
+  if (!dataUrl.startsWith("data:image/webp")) {
+    throw new Error("WebP export is not supported by this browser");
+  }
+  return dataUrl;
 }
