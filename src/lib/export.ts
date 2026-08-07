@@ -45,3 +45,21 @@ export async function gridToBlob(node: HTMLElement, width: number, height: numbe
     }
   });
 }
+
+export async function gridToWebp(node: HTMLElement, width: number, height: number) {
+  const canvas = await htmlToImage.toCanvas(node, {
+    canvasHeight: height,
+    canvasWidth: width,
+    backgroundColor: "`#000000`",
+    imagePlaceholder: PLACEHOLDER_IMG,
+    includeQueryParams: true,
+    filter: (node) => {
+      return !(node as HTMLElement).classList?.contains("no-export");
+    },
+  });
+  const dataUrl = canvas.toDataURL("image/webp", 1);
+  if (!dataUrl.startsWith("data:image/webp")) {
+    throw new Error("WebP export is not supported by this browser");
+  }
+  return dataUrl;
+}

@@ -21,30 +21,26 @@ import {
 } from "@/lib/albums";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
-import { gridToBlob, gridToJpeg, gridToPng } from "@/lib/export";
+import { gridToBlob, gridToJpeg, gridToPng, gridToWebp } from "@/lib/export";
 import { useAlbumsStore } from "@/lib/albums-store";
 
 async function downloadGrid(
   columns: number,
   rows: number,
-  format: "jpeg" | "png" = "jpeg",
+  format: "jpeg" | "png" | "webp" = "jpeg",
 ) {
   const node = document.getElementById("fm-grid");
   const dpr = window.devicePixelRatio;
   if (!node) return;
+  const width = columns * 128 * dpr + 16;
+  const height = rows * 128 * dpr + 16;
   let dataUrl: string;
   if (format === "jpeg") {
-    dataUrl = await gridToJpeg(
-      node,
-      columns * 128 * dpr + 16,
-      rows * 128 * dpr + 16,
-    );
+    dataUrl = await gridToJpeg(node, width, height);
+  } else if (format === "webp") {
+    dataUrl = await gridToWebp(node, width, height);
   } else {
-    dataUrl = await gridToPng(
-      node,
-      columns * 128 * dpr + 16,
-      rows * 128 * dpr + 16,
-    );
+    dataUrl = await gridToPng(node, width, height);
   }
   const date = new Date();
   const link = document.createElement("a");
@@ -68,6 +64,7 @@ export default function Menu() {
   const [loading, setLoading] = useState({
     jpeg: false,
     png: false,
+    webp: false,
     copy: false,
   });
 
@@ -79,7 +76,7 @@ export default function Menu() {
   const rows = useAlbumsStore((state) => state.rows);
   const setRows = useAlbumsStore((state) => state.setRows);
 
-  async function download(type: "jpeg" | "png" = "jpeg") {
+  async function download(type: "jpeg" | "png" | "webp" = "jpeg") {
     if (!columns || !rows) return;
     setLoading((prev) => ({ ...prev, [type]: true }));
     try {
@@ -350,6 +347,15 @@ export default function Menu() {
             >
               <IconDownload className="size-4" />
               <span>{loading.png ? "Loading..." : ".PNG"}</span>
+            </button>
+            <button
+              disabled={loading.webp}
+              onClick={() => download("webp")}
+              className=" border-l border-transparent hover:border-white p-1 text-base text-neutral-300 disabled:opacity-50 hover:bg-neutral-900 data-[loading=true]:cursor-wait data-[loading=true]:bg-neutral-900 flex items-center gap-2"
+              data-loading={loading.webp}
+            >
+              <IconDownload className="size-4" />
+              <span>{loading.webp ? "Loading..." : ".WEBP"}</span>
             </button>
             <button
               disabled={loading.copy}
