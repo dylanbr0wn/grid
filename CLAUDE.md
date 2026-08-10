@@ -69,3 +69,13 @@ Only the `custom` container albums, `lastfm` sort preference, `autofill`, `colum
 - `html-to-image` — grid export to JPEG/PNG
 - `motion` — animations
 - Tailwind CSS v4 with `@tailwindcss/postcss`
+
+## Agent skills
+
+### Issue tracker
+
+Linear (MCP) — team **Dylans apps**, project **Grid**. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context (`CONTEXT.md` + `docs/adr/` at repo root). See `docs/agents/domain.md`.
