@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/web/node_modules
 /.pnp
 .pnp.*
 .pnpm-store
@@ -20,6 +21,11 @@
 
 # production
 /build
+/web/dist
+
+# go
+/bin/
+*.exe
 
 # misc
 .DS_Store
