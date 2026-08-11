@@ -1,0 +1,43 @@
+import { type } from "arktype";
+
+export type Sortable = {
+  album?: string
+  artist?: string
+  plays?: number
+}
+
+export type SortOptions = {
+  [key in SortType]: string;
+};
+
+export const sortType = type("'playcount' | 'name' | 'artist' | 'random' | 'custom'")
+
+export type SortType = type.infer<typeof sortType>
+
+export function sortAlbums<T extends Sortable>(albums: T[], sort: SortType | undefined): T[] {
+  switch (sort) {
+    case 'name':
+      return albums.toSorted((a, b) => {
+        if (!a.album || !b.album) return 0
+        return a.album.localeCompare(b.album)
+      })
+    case 'artist':
+      return albums.toSorted((a, b) => {
+        if (!a.artist || !b.artist) return 0
+        return a.artist.localeCompare(b.artist)
+      })
+    case 'random':
+      return albums.toSorted(() => Math.random() - 0.5)
+    case 'custom':
+      // do nothing, keep the order
+      break
+    case 'playcount':
+    default:
+      // default to playcount
+      return albums.toSorted((a, b) => {
+        if (b.plays === undefined || a.plays === undefined) return 0
+        return b.plays - a.plays
+      })
+  }
+  return albums
+}
