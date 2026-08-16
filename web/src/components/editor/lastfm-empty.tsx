@@ -1,35 +1,13 @@
-import { newPlaceholderAlbum } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
 import { cn } from "@/lib/util";
 import { IconAlertCircle, IconX } from "@tabler/icons-react";
 import * as motion from "motion/react-client";
+import { useClearLastFmUser } from "@/lib/lastfm-user";
 
 export default function LastFMEmpty() {
-  const setAlbums = useAlbumsStore((s) => s.setAlbums);
-  const setUser = useAlbumsStore((s) => s.setUser);
   const user = useAlbumsStore((s) => s.user);
+  const logout = useClearLastFmUser();
 
-  function logout() {
-    setAlbums((prev) => {
-      return {
-        ...prev,
-        lastfm: {
-          ...prev.lastfm,
-          albums: [],
-        },
-        grid: {
-          ...prev.grid,
-          albums: prev.grid.albums.map((album) => {
-            if (album.type === "lastfm") {
-              return newPlaceholderAlbum();
-            }
-            return album;
-          }),
-        },
-      };
-    });
-    setUser(undefined);
-  }
   return (
     <div className="w-full h-full text-sm px-5 pt-4 col-span-3 mb-auto text-red-700 items-center justify-center gap-2 flex flex-col">
       <IconAlertCircle className="size-8 inline-block mr-2" />

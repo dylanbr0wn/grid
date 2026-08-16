@@ -1,36 +1,13 @@
 import { cn } from "@/lib/util";
 import LastFMIcon from "../lastfm-icon";
 import { IconX } from "@tabler/icons-react";
-import { newPlaceholderAlbum } from "@/lib/albums";
 import { useAlbumsStore } from "@/lib/albums-store";
+import { useClearLastFmUser } from "@/lib/lastfm-user";
 
 export default function UserButton() {
   const user = useAlbumsStore((state) => state.user);
-  const setUser = useAlbumsStore((state) => state.setUser);
-  const setAlbums = useAlbumsStore((state) => state.setAlbums);
   const initialized = useAlbumsStore((state) => state.initialized);
-
-  function logout() {
-    setAlbums((prev) => {
-      return {
-        ...prev,
-        lastfm: {
-          ...prev.lastfm,
-          albums: [],
-        },
-        grid: {
-          ...prev.grid,
-          albums: prev.grid.albums.map((album) => {
-            if (album.type === "lastfm") {
-              return newPlaceholderAlbum();
-            }
-            return album;
-          }),
-        },
-      };
-    });
-    setUser(undefined);
-  }
+  const logout = useClearLastFmUser();
 
   return (
     <button
