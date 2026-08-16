@@ -14,11 +14,11 @@ func main() {
 
 	_ = os.Getenv("LAST_FM_API_KEY")
 
-	app := fiber.New()
+	if err := requireSPA(spaDir); err != nil {
+		log.Fatal(err)
+	}
 
-	app.Get("/api/health", func(c fiber.Ctx) error {
-		return c.JSON(fiber.Map{"ok": true})
-	})
+	app := newApp(spaDir)
 
 	addr := ":8080"
 	if port := os.Getenv("PORT"); port != "" {
@@ -29,4 +29,15 @@ func main() {
 	if err := app.Listen(addr); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func newApp(dir string) *fiber.App {
+	app := fiber.New()
+
+	app.Get("/api/health", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{"ok": true})
+	})
+
+	registerSPA(app, dir)
+	return app
 }
