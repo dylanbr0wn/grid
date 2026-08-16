@@ -11,9 +11,14 @@ import (
 func main() {
 	_ = godotenv.Load()
 
+	if err := requireSPA(spaDir); err != nil {
+		log.Fatal(err)
+	}
+
 	app := server.New(server.Config{
 		LastFMAPIKey: os.Getenv("LAST_FM_API_KEY"),
 	})
+	registerSPA(app, spaDir)
 
 	addr := ":8080"
 	if port := os.Getenv("PORT"); port != "" {
