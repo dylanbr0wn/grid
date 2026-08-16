@@ -14,9 +14,9 @@ import {
   newPlaceholderAlbum,
   PlaceholderAlbum,
 } from "./albums";
-import { CUSTOM_CONTAINER_KEY, findContainer, LAST_FM_CONTAINER_KEY } from "./util";
+import { CUSTOM_CONTAINER_KEY, findContainer, LAST_FM_CONTAINER_KEY, lastFmUserFromLocation } from "./util";
 import { sortAlbums, SortType } from "./sort";
-import { fetchLastFmAlbums } from "@/components/user-form";
+import { fetchLastFmAlbums } from "@/lib/lastfm-api";
 
 export type Container = {
   title: string;
@@ -510,7 +510,11 @@ export const useAlbumsStore = create<AlbumsState>()(
           return;
         }
         console.log("Albums store rehydrated", state);
-        const user = state.user;
+        const urlUser = lastFmUserFromLocation();
+        if (urlUser && urlUser !== state.user) {
+          state.setUser(urlUser);
+        }
+        const user = urlUser ?? state.user;
         const sort = state.albums[LAST_FM_CONTAINER_KEY].sort;
         const autofill = state.autofill;
         if (!user) {

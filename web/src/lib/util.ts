@@ -8,6 +8,27 @@ export const CUSTOM_SORT_KEY = `${CUSTOM_CONTAINER_KEY}-sort`
 export const LAST_FM_CONTAINER_KEY = "lastfm";
 export const LAST_FM_USER_KEY = `${LAST_FM_CONTAINER_KEY}-user`
 export const LAST_FM_SORT_KEY = `${LAST_FM_CONTAINER_KEY}-sort`
+/** Last.fm usernames as accepted by the old `/{username}` redirect. */
+export const LAST_FM_USERNAME_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+export function isLastFmUsername(value: string): boolean {
+  return LAST_FM_USERNAME_PATTERN.test(value);
+}
+
+/** Path `/{username}` wins over `?lastfm-user=`; ignored for nested paths. */
+export function lastFmUserFromLocation(
+  url: Pick<Location, "pathname" | "search"> = window.location,
+): string | undefined {
+  const segments = url.pathname.replace(/^\//, "").split("/").filter(Boolean);
+  if (segments.length === 1 && isLastFmUsername(segments[0])) {
+    return segments[0];
+  }
+  const queryUser = new URLSearchParams(url.search).get(LAST_FM_USER_KEY)?.trim() ?? "";
+  if (queryUser && isLastFmUsername(queryUser)) {
+    return queryUser;
+  }
+  return undefined;
+}
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
