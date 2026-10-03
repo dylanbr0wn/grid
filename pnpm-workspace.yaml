@@ -3,13 +3,4 @@ packages:
   - 'web'
 
 allowBuilds:
-  '@parcel/watcher': true
-  sharp: true
-  unrs-resolver: true
-
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@tailwindcss/oxide'
-  - '@vercel/speed-insights'
-  - sharp
-  - unrs-resolver
+  '@tailwindcss/oxide': true

@@ -23,12 +23,12 @@ export default defineConfig({
     },
   },
   server: {
-    // Until Go owns the APIs, point relative /api calls at the Next app if it's up.
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:3000",
-        changeOrigin: true,
-      },
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
+    // Browser talks to Go (:8080 by default); Go proxies the HMR websocket.
+    hmr: {
+      clientPort: Number(process.env.PORT) || 8080,
     },
   },
 });

@@ -9,12 +9,12 @@ import {
   getImageBrightness,
   PLACEHOLDER_IMG,
 } from "@/lib/util";
-import { customAlbum, CustomAlbum } from "@/lib/albums";
+import { CustomAlbum } from "@/lib/albums";
 import {
+  searchReleases,
   type SearchReleaseField,
   type SearchReleaseType,
 } from "@/lib/music-brainz";
-import { type } from "arktype";
 
 export type SearchLimit = 10 | 25 | 50;
 
@@ -42,29 +42,7 @@ export const SearchResults = memo(function SearchResults({
       field,
       limit,
     ],
-    queryFn: async () => {
-      if (query.length === 0) {
-        return [];
-      }
-      const params = new URLSearchParams({
-        query,
-        type: releaseType,
-        field,
-        limit: String(limit),
-      });
-      const res = await fetch(`/api/search?${params}`);
-      if (!res.ok) {
-        throw new Error(`Search API error: ${res.status} ${res.statusText}`);
-      }
-      const parseJson = type("string.json.parse").to(customAlbum.array());
-      const out = parseJson(await res.text());
-      if (out instanceof type.errors) {
-        throw new Error(
-          `Search API response validation error: ${out.summary}`,
-        );
-      }
-      return out;
-    },
+    queryFn: () => searchReleases(query, { type: releaseType, field, limit }),
     refetchOnWindowFocus: false,
   });
 

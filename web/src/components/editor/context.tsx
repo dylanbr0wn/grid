@@ -1,6 +1,7 @@
 'use client';
 import {
   DndContext,
+  type DragStartEvent,
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
@@ -54,7 +55,7 @@ export function EditorContext({
         screenReaderInstructions,
       }}
       sensors={sensors}
-      onDragStart={({ active }) => {
+      onDragStart={({ active }: DragStartEvent) => {
         if (!active.data.current) return;
         setActiveAlbum(active.data.current.album as LastFmAlbum | CustomAlbum);
       }}

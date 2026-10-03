@@ -14,7 +14,7 @@ import {
   newPlaceholderAlbum,
   PlaceholderAlbum,
 } from "./albums";
-import { CUSTOM_CONTAINER_KEY, findContainer, LAST_FM_CONTAINER_KEY, lastFmUserFromLocation } from "./util";
+import { CUSTOM_CONTAINER_KEY, findContainer, generateId, LAST_FM_CONTAINER_KEY, lastFmUserFromLocation } from "./util";
 import { sortAlbums, SortType } from "./sort";
 import { fetchLastFmAlbums } from "@/lib/lastfm-api";
 
@@ -231,6 +231,8 @@ export const useAlbumsStore = create<AlbumsState>()(
 
       addCustomAlbum: (album) =>
         set((state) => {
+          // API IDs identify release groups; each editor copy needs its own ID.
+          album = { ...album, id: `${album.id}-${generateId()}` };
           const custom = state.albums[CUSTOM_CONTAINER_KEY];
           if (custom.albums.length === 0) {
             return {
@@ -524,7 +526,7 @@ export const useAlbumsStore = create<AlbumsState>()(
         if (!sort) {
           console.warn("No sort type set, defaulting to 'playcount'");
         }
-        fetchLastFmAlbums(user, sort || "playcount")
+        fetchLastFmAlbums(user)
           .then((albums) => {
             state.setAlbums((prev) => {
               const sortedAlbums = sortAlbums(albums, sort || "playcount");
