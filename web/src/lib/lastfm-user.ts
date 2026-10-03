@@ -10,7 +10,7 @@ export async function importLastFmUser(username: string) {
   const { albums: containers, autofill, setUser, setAlbums } =
     useAlbumsStore.getState();
   const sort = containers[LAST_FM_CONTAINER_KEY].sort || "playcount";
-  const albums = sortAlbums(await fetchLastFmAlbums(username, sort), sort);
+  const albums = sortAlbums(await fetchLastFmAlbums(username), sort);
   setUser(username);
   setAlbums((prev) => {
     if (autofill) {

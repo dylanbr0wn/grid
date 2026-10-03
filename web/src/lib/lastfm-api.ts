@@ -1,16 +1,11 @@
-import { LAST_FM_SORT_KEY, LAST_FM_USER_KEY } from "@/lib/util";
 import { type } from "arktype";
 import { lastFmAlbum } from "@/lib/albums";
-import { SortType } from "@/lib/sort";
 
-export async function fetchLastFmAlbums(user: string, sort: SortType) {
-  const url = new URL("/api/lastfm", window.location.origin);
-  if (user) {
-    url.searchParams.set(LAST_FM_USER_KEY, user);
-  }
-  if (sort) {
-    url.searchParams.set(LAST_FM_SORT_KEY, sort);
-  }
+export async function fetchLastFmAlbums(user: string) {
+  const url = new URL(
+    `/api/users/${encodeURIComponent(user)}/albums`,
+    window.location.origin,
+  );
 
   const response = await fetch(url);
 

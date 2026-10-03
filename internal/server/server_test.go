@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"io"
+	"mime"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +13,40 @@ import (
 	"github.com/dylanbr0wn/grid/internal/album"
 	"github.com/gofiber/fiber/v3"
 )
+
+func TestUnknownAPIPathsReturnJSONForEveryMethod(t *testing.T) {
+	t.Parallel()
+	app := New(Config{})
+	for _, method := range []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"} {
+		for _, path := range []string{"/api", "/api/unknown", "/api/unknown.json", "/api/health/unknown"} {
+			t.Run(method+" "+path, func(t *testing.T) {
+				resp, err := app.Test(httptest.NewRequest(method, path, nil))
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer resp.Body.Close()
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+				mediaType, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+				if resp.StatusCode != http.StatusNotFound || mediaType != "application/json" {
+					t.Fatalf("status %d type %q body %s", resp.StatusCode, mediaType, body)
+				}
+				if method == "HEAD" {
+					if len(body) != 0 {
+						t.Fatalf("HEAD returned a body: %s", body)
+					}
+					return
+				}
+				var payload map[string]string
+				if err := json.Unmarshal(body, &payload); err != nil || payload["error"] != "API route not found" {
+					t.Fatalf("invalid error envelope: %s", body)
+				}
+			})
+		}
+	}
+}
 
 func TestGetUserAlbums(t *testing.T) {
 	t.Parallel()

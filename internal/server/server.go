@@ -50,6 +50,13 @@ func New(cfg Config) *fiber.App {
 	app.Get("/api/health", s.health)
 	app.Get("/api/users/:user/albums", s.getUserAlbums)
 	app.Get("/api/release-groups", s.getReleaseGroups)
+	// Keep API misses in the JSON contract for every method and serving mode.
+	app.Use(func(c fiber.Ctx) error {
+		if c.Path() == "/api" || strings.HasPrefix(c.Path(), "/api/") {
+			return errorJSON(c, fiber.StatusNotFound, "API route not found")
+		}
+		return c.Next()
+	})
 	return app
 }
 

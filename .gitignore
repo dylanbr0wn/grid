@@ -15,10 +15,6 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
 /build
 /web/dist
@@ -40,13 +36,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-.env*.local
 
+# leftover local artifacts from the former Next.js app
+/.next/
 .vercel
-.env*.local
+next-env.d.ts

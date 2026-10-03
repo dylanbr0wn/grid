@@ -1,32 +1,9 @@
-# React + TypeScript + Vite
+# Grid frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Vite/React UI for the Go/Fiber backend. See [the root README](../README.md) for setup, development, and production commands.
 
-Currently, two official plugins are available:
+Run `pnpm --filter web dev` alongside `pnpm dev` from the root. Browse the Go origin at http://localhost:8080 so API calls and HMR share that origin.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+`pnpm --filter web build` type-checks and builds `web/dist`; `pnpm --filter web lint` runs Oxlint.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`pnpm --filter web test` runs client API/store regressions with Node's test runner and Vite's module loader. No browser or additional test framework is required.
