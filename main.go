@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -12,6 +13,7 @@ import (
 
 func main() {
 	dev := flag.Bool("dev", false, "reverse-proxy non-API traffic to the Vite dev server")
+	devHost := flag.String("dev-host", "127.0.0.1", "dev listener host (use 0.0.0.0 to allow LAN access)")
 	viteOrigin := flag.String("vite", defaultViteOrigin, "Vite origin used with -dev")
 	flag.Parse()
 
@@ -21,12 +23,14 @@ func main() {
 		LastFMAPIKey: os.Getenv("LAST_FM_API_KEY"),
 	})
 
-	addr := ":8080"
-	if port := os.Getenv("PORT"); port != "" {
-		addr = ":" + port
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	addr := ":" + port
 
 	if *dev {
+		addr = net.JoinHostPort(*devHost, port)
 		proxy, err := newViteProxy(*viteOrigin)
 		if err != nil {
 			log.Fatal(err)

@@ -26,9 +26,6 @@ func registerSPA(app *fiber.App, dir string) {
 	index := filepath.Join(dir, "index.html")
 	app.Get("/*", static.New(dir, static.Config{
 		NotFoundHandler: func(c fiber.Ctx) error {
-			if isAPIPath(c.Path()) {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "API route not found"})
-			}
 			if looksLikeStaticAsset(c.Path()) {
 				return nil
 			}

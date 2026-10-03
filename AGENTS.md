@@ -55,8 +55,8 @@ Use `isPlaceholderId()` / `isCustomAddId()` to distinguish sentinel items by ID.
 - `GET /api/users/{user}/albums` — proxies Last.fm weekly top albums, returns domain album arrays. Sorting stays in the client.
 - `GET /api/release-groups` — searches MusicBrainz release groups. Accepts `query`, `type`, `field`, `limit`, and `offset`; returns custom album arrays with stable release-group IDs.
 - Failures use `{ "error": "message" }`. The client validates payloads with arktype.
-- `main.go` loads `.env`. Production serves `web/dist` from disk with HTML fallback for client routes; `-dev` proxies non-API traffic to Vite at `127.0.0.1:5173`, including HMR.
-- TanStack Router handles `/{username}` and `?lastfm-user=`. Go owns the browser origin in both modes.
+- `main.go` loads `.env`. Production serves `web/dist` from disk with HTML fallback for client routes; `-dev` proxies non-API traffic to Vite at `127.0.0.1:5173`, including HMR. The dev listener defaults to loopback; `-dev-host 0.0.0.0` explicitly enables LAN access.
+- TanStack Router handles `/{username}` and `?lastfm-user=`. Go owns the browser origin in both modes. Vite reads the root `.env` for HMR port parity, with exported environment variables taking precedence.
 
 ### Image export (`web/src/lib/export.ts`)
 

@@ -26,9 +26,11 @@ pnpm --filter web dev
 pnpm dev
 ```
 
-Open http://localhost:8080. Go serves `/api/*` and proxies all other traffic, including HMR, to Vite at `127.0.0.1:5173`. The Vite port is strict. To change the Go port, set `PORT` in both terminals so the HMR client uses the same port.
+Open http://localhost:8080. Go serves `/api/*` and proxies all other traffic, including HMR, to Vite at `127.0.0.1:5173`. Both dev servers bind to loopback by default. The Vite port is strict. To change the Go port, set `PORT` in the root `.env` or export it in both terminals; the HMR client uses the same port.
 
 Go accepts `go run . -dev -vite http://127.0.0.1:5173` to override the proxy target.
+
+For intentional LAN access to the dev proxy, pass `-dev-host 0.0.0.0`. This makes the Vite source and HMR available to network clients that can reach the Go port.
 
 ## Local production build
 
