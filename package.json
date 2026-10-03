@@ -2,6 +2,7 @@
   "name": "grid",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.2.2",
   "scripts": {
     "dev": "go run . -dev",
     "build": "pnpm --filter web build && go build -o bin/grid .",

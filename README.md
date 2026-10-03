@@ -52,4 +52,28 @@ pnpm test
 
 `pnpm build` also checks the frontend TypeScript. Client tests use Node and Vite to check API wiring, response validation, sorting/autofill, and custom album IDs. Go tests cover API contracts, the dev proxy, and production SPA serving.
 
-Production deployment, Docker, and public-site cutover are outside this migration's local scope.
+## Railway deployment
+
+Deploy one service from the repository root. The root `Dockerfile` builds the Vite app and Go binary, then runs Go as a non-root user with the static app in `web/dist`. Railway detects this Dockerfile automatically. Node and pnpm are only needed during the build.
+
+1. Commit and push the deployment files to your GitHub deployment branch.
+2. In Railway, create a service from `dylanbr0wn/grid`, or connect that repository to your existing service. Keep the root directory at the repository root, not `/web`.
+3. Add `LAST_FM_API_KEY` in the service's Variables tab. Local `.env` files are excluded from the Docker build. The key is read by Go at runtime and is not bundled into the frontend.
+4. Clear any custom build or start commands from earlier deployments. The Dockerfile defines both.
+5. Set the healthcheck path to `/api/health` in the service's deployment settings.
+6. Deploy, then select **Settings > Networking > Public Networking > Generate Domain**. If Railway asks for a target port, use the service's `PORT` value, or 8080 when no `PORT` is set.
+
+Go listens on all interfaces and uses Railway's `PORT` environment variable. No database or volume is required; editor state is stored in each browser's localStorage. A new domain starts with fresh browser state.
+
+Check the generated domain's `/api/health` endpoint for `{"ok":true}`, then open `/` and a `/{username}` route. Confirm Last.fm imports and custom album search work.
+
+See Railway's [Dockerfile documentation](https://docs.railway.com/builds/dockerfiles), [healthchecks](https://docs.railway.com/deployments/healthchecks), and [public networking](https://docs.railway.com/networking/public-networking).
+
+To test the same container locally:
+
+```bash
+docker build -t grid .
+docker run --rm -p 8080:8080 -e PORT=8080 -e LAST_FM_API_KEY grid
+```
+
+The `-e LAST_FM_API_KEY` option forwards an exported shell variable. Export the key before running this command if you want to test Last.fm imports.
