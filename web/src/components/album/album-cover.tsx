@@ -65,7 +65,7 @@ export default function AlbumCover({
 
   return (
     <div
-      data-cover-sources={JSON.stringify(imgs?.length ? imgs : src ? [src] : [])}
+      data-cover-sources={JSON.stringify(imgs ?? (src ? [src] : []))}
       data-cover-text-color={textColor}
       data-cover-text-background={textBackground}
       className={cn(

@@ -178,10 +178,17 @@ export function freezeGridSnapshot(node: HTMLElement): FrozenGridSnapshot {
             return null;
           }
           if (allowPlaceholders) {
-            const image = await loadImage(PLACEHOLDER_IMG, controller.signal);
-            cover.image.src = pixels(image);
-            cover.image.style.opacity = "1";
-            settlePendingStyle(cover, getImageBrightness(image));
+            try {
+              const image = await loadImage(PLACEHOLDER_IMG, controller.signal);
+              cover.image.src = pixels(image);
+              cover.image.style.opacity = "1";
+              settlePendingStyle(cover, getImageBrightness(image));
+            } catch {
+              checkDisposed();
+              // Retain the image's position for retry, but render a blank cover.
+              cover.image.removeAttribute("src");
+              cover.image.style.opacity = "0";
+            }
           }
           return cover.failure;
         }));
@@ -210,10 +217,11 @@ export function freezeGridSnapshot(node: HTMLElement): FrozenGridSnapshot {
           void document.fonts.ready.then(() => finish(), () => finish(new Error("Grid fonts could not be loaded. Retry capture.")));
         });
         checkDisposed();
-        await Promise.all(covers.map((cover) => cover.image.decode()));
+        await Promise.all(covers.filter((cover) => cover.image.getAttribute("src")).map((cover) => cover.image.decode()));
         const blob = await toBlob(frozen, {
           width, height, canvasWidth: width, canvasHeight: height,
           pixelRatio: 2, skipAutoScale: true, backgroundColor: "#000000",
+          filter: (node) => !(node instanceof HTMLImageElement && !node.getAttribute("src")),
         });
         checkDisposed();
         if (!blob) throw new Error("PNG encoding failed");

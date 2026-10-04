@@ -206,3 +206,33 @@ test("stalled artwork times out without blocking the editor", async ({ page }) =
   await Promise.all(pendingRoutes.map((route) => route.abort()));
   await expect(page.getByRole("button", { name: "Clear Grid", exact: true })).toBeEnabled();
 });
+
+test("empty artwork lists preserve the editor's placeholder choice", async ({ page }) => {
+  await setGrid(page, { sources: ["red"] });
+  await page.evaluate(() => {
+    window.store.setState((state) => ({ albums: { ...state.albums, grid: { ...state.albums.grid, albums: state.albums.grid.albums.map((album, index) => index === 0 ? { ...album, imgs: [] } : album) } } }));
+  });
+  await expect(page.locator("#fm-grid img")).toHaveAttribute("src", "/img/placeholder.png");
+  await expect(page.locator("#fm-grid img")).toHaveCSS("opacity", "1");
+  await page.evaluate(() => { window.snapshot = window.freezeGridSnapshot(document.getElementById("fm-grid")); });
+  expect(await readCapture(page)).toEqual({ status: "artwork-failed", failedCovers: [{ index: 0, label: "Album 0 by Artist 0" }] });
+});
+
+test("unavailable placeholder artwork leaves a blank cover and permits retry", async ({ page }) => {
+  await page.route("**/failed-cover.png", (route) => route.abort());
+  await page.route("**/img/placeholder.png", (route) => route.abort());
+  await setGrid(page, { sources: ["/failed-cover.png"] });
+  await page.evaluate(() => { window.snapshot = window.freezeGridSnapshot(document.getElementById("fm-grid")); });
+  expect((await readCapture(page)).status).toBe("artwork-failed");
+  const result = await page.evaluate(async () => {
+    const capture = await window.snapshot.capture({ allowPlaceholders: true });
+    const bitmap = await createImageBitmap(capture.blob);
+    const canvas = document.createElement("canvas"); canvas.width = canvas.height = 512;
+    const context = canvas.getContext("2d"); context.drawImage(bitmap, 0, 0);
+    return { status: capture.status, failedCovers: capture.failedCovers, pixel: [...context.getImageData(64, 64, 1, 1).data] };
+  });
+  expect(result).toEqual({ status: "ready", failedCovers: [{ index: 0, label: "Album 0 by Artist 0" }], pixel: [0, 0, 0, 255] });
+  await page.unroute("**/failed-cover.png");
+  await page.route("**/failed-cover.png", (route) => route.fulfill({ path: "public/img/placeholder.png" }));
+  expect((await readCapture(page)).status).toBe("ready");
+});
