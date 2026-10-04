@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dylanbr0wn/grid/internal/server"
 	"github.com/joho/godotenv"
@@ -18,6 +19,22 @@ func main() {
 	flag.Parse()
 
 	_ = godotenv.Load()
+	snapshots, err := openSnapshots(os.Getenv("SNAPSHOT_DIR"), os.Getenv("SNAPSHOT_CAPACITY_BYTES"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if snapshots != nil {
+		defer snapshots.Close()
+		go func() {
+			ticker := time.NewTicker(time.Hour)
+			defer ticker.Stop()
+			for range ticker.C {
+				if err := snapshots.Cleanup(); err != nil {
+					log.Printf("snapshot cleanup failed: %v", err)
+				}
+			}
+		}()
+	}
 
 	app := server.New(server.Config{
 		LastFMAPIKey: os.Getenv("LAST_FM_API_KEY"),

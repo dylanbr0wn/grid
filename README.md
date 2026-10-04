@@ -69,6 +69,12 @@ If capture returns `status: "artwork-failed"`, `failedCovers` identifies the cov
 
 This capture foundation does not yet add the Share dialog or publication API. Existing local export functions keep their behavior.
 
+## Snapshot storage
+
+Set `SNAPSHOT_DIR` to an existing dedicated directory to enable the storage foundation. `SNAPSHOT_CAPACITY_BYTES` defaults to 250,000,000 image bytes; each PNG may use at most 10,000,000 bytes. Configured storage fails startup if it cannot open, lock, or recover that directory. Snapshots expire after 90 days, and cleanup runs at startup, before writes, and hourly. Sharing endpoints are still separate work.
+
+See [snapshot storage](docs/snapshot-storage.md) for the file schema, management credentials, capacity accounting, and restart recovery. Hosted sharing requires a persistent mount and backups, which are not configured by this change.
+
 ## Railway deployment
 
 Deploy one service from the repository root. The root `Dockerfile` builds the Vite app and Go binary, then runs Go as a non-root user with the static app in `web/dist`. Railway detects this Dockerfile automatically. Node and pnpm are only needed during the build.
@@ -80,7 +86,7 @@ Deploy one service from the repository root. The root `Dockerfile` builds the Vi
 5. Set the healthcheck path to `/api/health` in the service's deployment settings.
 6. Deploy, then select **Settings > Networking > Public Networking > Generate Domain**. If Railway asks for a target port, use the service's `PORT` value, or 8080 when no `PORT` is set.
 
-Go listens on all interfaces and uses Railway's `PORT` environment variable. No database or volume is required; editor state is stored in each browser's localStorage. A new domain starts with fresh browser state.
+Go listens on all interfaces and uses Railway's `PORT` environment variable. The editor stores state in each browser's localStorage. Snapshot storage is disabled unless `SNAPSHOT_DIR` is set; enabling hosted storage requires a persistent volume. A new domain starts with fresh browser state.
 
 Check the generated domain's `/api/health` endpoint for `{"ok":true}`, then open `/` and a `/{username}` route. Confirm Last.fm imports and custom album search work.
 
