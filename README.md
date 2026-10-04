@@ -52,6 +52,23 @@ pnpm test
 
 `pnpm build` also checks the frontend TypeScript. Client tests use Node and Vite to check API wiring, response validation, sorting/autofill, and custom album IDs. Go tests cover API contracts, the dev proxy, and production SPA serving.
 
+Browser capture checks use Playwright with Chromium at device pixel ratios 1, 2, and 3:
+
+```bash
+pnpm --filter web exec playwright install chromium
+pnpm --filter web test:browser
+```
+
+To use installed Google Chrome instead, run `PLAYWRIGHT_CHANNEL=chrome pnpm --filter web test:browser`. The tests start a Vite server on loopback port 5174 and use controlled artwork responses.
+
+## Snapshot capture
+
+`freezeGridSnapshot(document.getElementById("fm-grid"))` from `web/src/lib/export.ts` synchronously freezes the grid's composition, computed label styles, and loaded artwork pixels. Call the returned session's `capture()` to wait for pending artwork and fonts and produce a PNG Blob at fixed 2× resolution. A 10 × 10 grid produces 2560 × 2560 pixels regardless of device pixel ratio.
+
+If capture returns `status: "artwork-failed"`, `failedCovers` identifies the covers by label and index among covers. Retry `capture()` on the same session, or call `capture({ allowPlaceholders: true })` only after the creator explicitly chooses placeholders. If the placeholder asset is also unavailable, capture leaves that cover blank and still reports it in `failedCovers`; artwork retry remains possible. Successful covers remain frozen across retries. Capture errors reject with `SnapshotCaptureError`, including `code: "too-large"` for images over 10,000,000 bytes. A smaller grid requires a new session. Call `dispose()` when closing the preview to cancel pending artwork and remove temporary rendering elements.
+
+This capture foundation does not yet add the Share dialog or publication API. Existing local export functions keep their behavior.
+
 ## Railway deployment
 
 Deploy one service from the repository root. The root `Dockerfile` builds the Vite app and Go binary, then runs Go as a non-root user with the static app in `web/dist`. Railway detects this Dockerfile automatically. Node and pnpm are only needed during the build.

@@ -1,6 +1,9 @@
 import { PLACEHOLDER_IMG } from "./util";
 import * as htmlToImage from "html-to-image";
 
+export { freezeGridSnapshot, SnapshotCaptureError, SNAPSHOT_IMAGE_LIMIT } from "./snapshot-capture";
+export type { FrozenGridSnapshot, SnapshotCaptureResult, FailedCover } from "./snapshot-capture";
+
 export async function gridToJpeg(node: HTMLElement, width: number, height: number) {
   return await htmlToImage.toJpeg(node, {
     canvasHeight: height,
