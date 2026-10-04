@@ -52,14 +52,15 @@ pnpm test
 
 `pnpm build` also checks the frontend TypeScript. Client tests use Node and Vite to check API wiring, response validation, sorting/autofill, and custom album IDs. Go tests cover API contracts, the dev proxy, and production SPA serving.
 
-Browser capture checks use Playwright with Chromium at device pixel ratios 1, 2, and 3:
+Browser capture and public-viewer checks use Playwright with Chromium at device pixel ratios 1, 2, and 3:
 
 ```bash
 pnpm --filter web exec playwright install chromium
+pnpm build
 pnpm --filter web test:browser
 ```
 
-To use installed Google Chrome instead, run `PLAYWRIGHT_CHANNEL=chrome pnpm --filter web test:browser`. The tests start a Vite server on loopback port 5174 and use controlled artwork responses.
+To use installed Google Chrome instead, run `PLAYWRIGHT_CHANNEL=chrome pnpm --filter web test:browser`. The tests start Vite on loopback port 5174 and isolated Go viewer servers on ports 5175 and 5176. They use controlled artwork responses and temporary snapshot storage.
 
 ## Snapshot capture
 
@@ -71,7 +72,7 @@ This capture foundation does not yet add the Share dialog. Existing local export
 
 ## Snapshot storage
 
-Set `SNAPSHOT_DIR` to an existing dedicated directory to enable the storage foundation. `SNAPSHOT_CAPACITY_BYTES` defaults to 250,000,000 image bytes; each PNG may use at most 10,000,000 bytes. Configured storage fails startup if it cannot open, lock, or recover that directory. Snapshots expire after 90 days, and cleanup runs at startup, before writes, and hourly. The [snapshot API](docs/snapshot-api.md) supports anonymous publication, exact image reads/downloads, and authorized status/revocation. It requires a secret publication key so retries recover the same link and management access. Viewer and management pages and the publishing dialog remain separate work.
+Set `SNAPSHOT_DIR` to an existing dedicated directory to enable snapshot storage. `SNAPSHOT_CAPACITY_BYTES` defaults to 250,000,000 image bytes; each PNG may use at most 10,000,000 bytes. Configured storage fails startup if it cannot open, lock, or recover that directory. Snapshots expire after 90 days, and cleanup runs at startup, before writes, and hourly. The [snapshot API](docs/snapshot-api.md) supports anonymous publication, exact image reads/downloads, and authorized status/revocation. It requires a secret publication key so retries recover the same link and management access. The [public viewer](docs/snapshot-viewer.md) at `/s/:id` works without JavaScript and includes social metadata. Set `SNAPSHOT_PUBLIC_ORIGIN` to the public HTTPS origin behind a deployment proxy. The management page and publishing dialog remain separate work.
 
 See [snapshot storage](docs/snapshot-storage.md) for the file schema, management credentials, capacity accounting, and restart recovery. Hosted sharing requires a persistent mount and backups, which are not configured by this change.
 

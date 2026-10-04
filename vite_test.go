@@ -104,6 +104,28 @@ func TestDevHandlerViteDownIs502(t *testing.T) {
 	}
 }
 
+func TestDevHandlerKeepsSnapshotViewerOnFiber(t *testing.T) {
+	t.Parallel()
+	vite := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "vite:"+r.URL.RequestURI())
+	})
+	h := devHandler(server.New(server.Config{}), vite)
+	for _, path := range []string{"/s/unknown", "/s/", "/s/unknown/extra"} {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+		if !strings.Contains(rec.Body.String(), "Snapshot unavailable") || strings.Contains(rec.Body.String(), "vite:") || !strings.Contains(rec.Header().Get("Cache-Control"), "no-store") {
+			t.Fatalf("viewer proxied: %s", rec.Body.String())
+		}
+	}
+	for _, path := range []string{"/someuser", "/s", "/?lastfm-user=someuser"} {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+		if rec.Body.String() != "vite:"+path {
+			t.Fatalf("editor route intercepted: %s", rec.Body.String())
+		}
+	}
+}
+
 func TestNewViteProxyRejectsInvalidOrigin(t *testing.T) {
 	t.Parallel()
 

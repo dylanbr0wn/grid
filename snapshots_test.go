@@ -27,7 +27,7 @@ func TestSnapshotConfiguration(t *testing.T) {
 }
 
 func TestSnapshotHTTPConfiguration(t *testing.T) {
-	for _, name := range []string{"SNAPSHOT_UPLOADS_PER_IP", "SNAPSHOT_UPLOADS_GLOBAL", "SNAPSHOT_TRUSTED_PROXIES"} {
+	for _, name := range []string{"SNAPSHOT_UPLOADS_PER_IP", "SNAPSHOT_UPLOADS_GLOBAL", "SNAPSHOT_TRUSTED_PROXIES", "SNAPSHOT_PUBLIC_ORIGIN"} {
 		t.Setenv(name, "")
 	}
 	cfg, err := snapshotHTTPConfig()
@@ -54,6 +54,25 @@ func TestSnapshotHTTPConfiguration(t *testing.T) {
 		t.Setenv("SNAPSHOT_TRUSTED_PROXIES", value)
 		if _, err := snapshotHTTPConfig(); err == nil {
 			t.Fatal("accepted invalid proxy")
+		}
+	}
+}
+
+func TestSnapshotPublicOriginConfiguration(t *testing.T) {
+	for _, name := range []string{"SNAPSHOT_UPLOADS_PER_IP", "SNAPSHOT_UPLOADS_GLOBAL", "SNAPSHOT_TRUSTED_PROXIES"} {
+		t.Setenv(name, "")
+	}
+	for _, value := range []string{"https://grid.example", "https://grid.example/", "http://localhost:8080"} {
+		t.Setenv("SNAPSHOT_PUBLIC_ORIGIN", value)
+		cfg, err := snapshotHTTPConfig()
+		if err != nil || cfg.SnapshotPublicOrigin == "" {
+			t.Fatalf("origin %q: %v", value, err)
+		}
+	}
+	for _, value := range []string{"grid.example", "//grid.example", "javascript:alert(1)", "https://", "https://user:secret@grid.example", "https://grid.example/path", "https://grid.example?x=1", "https://grid.example?", "https://grid.example#token"} {
+		t.Setenv("SNAPSHOT_PUBLIC_ORIGIN", value)
+		if _, err := snapshotHTTPConfig(); err == nil {
+			t.Fatalf("accepted origin %q", value)
 		}
 	}
 }

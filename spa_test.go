@@ -38,6 +38,10 @@ func TestSPAServesAssetsRoutesAndKeepsAPIResponses(t *testing.T) {
 	}{
 		{"/", 200, "<div id=\"root\">Grid</div>"},
 		{"/someuser", 200, "<div id=\"root\">Grid</div>"},
+		{"/s", 200, "<div id=\"root\">Grid</div>"},
+		{"/?lastfm-user=someuser", 200, "<div id=\"root\">Grid</div>"},
+		{"/s/unknown", 503, "Snapshot unavailable"},
+		{"/s/unknown/extra", 404, "Snapshot unavailable"},
 		{"/nested/route", 200, "<div id=\"root\">Grid</div>"},
 		{"/assets/app.js", 200, "console.log('grid')"},
 		{"/assets/missing.js", 404, ""},

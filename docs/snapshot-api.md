@@ -1,6 +1,6 @@
 # Snapshot API
 
-DYL-244 connects the immutable PNG store to Go/Fiber and adds validated client helpers in `web/src/lib/snapshot-api.ts`. It adds no publishing dialog, viewer page, or management page. The returned `/s/:id` and `/manage/:id` paths reserve the routes for DYL-245 and DYL-247. All returned URLs are relative to the Go/browser origin, so request Host or forwarded-host headers never determine links.
+DYL-244 connects the immutable PNG store to Go/Fiber and adds validated client helpers in `web/src/lib/snapshot-api.ts`. DYL-245 adds the [public viewer](snapshot-viewer.md) at `/s/:id`. The publishing dialog and management page remain DYL-246 and DYL-247. All URLs returned by the API are relative to the Go/browser origin, so request Host or forwarded-host headers never determine API links. Viewer social metadata uses absolute URLs.
 
 ## Resources
 
@@ -15,7 +15,7 @@ DYL-244 connects the immutable PNG store to Go/Fiber and adds validated client h
 
 There is no listing route. Storage must be enabled through `SNAPSHOT_DIR`; otherwise these resources return 503.
 
-Creation takes `multipart/form-data` with exactly one `image` part and at most one `title` part. Omit title or send an empty string for no title. Unknown or duplicate fields, remote URLs, JSON album data, malformed multipart data, and compressed request bodies are rejected. A title must be valid UTF-8 with at most 200 Unicode characters. Titles remain literal text and Go's JSON encoder escapes HTML characters. Future viewers must also render titles as text.
+Creation takes `multipart/form-data` with exactly one `image` part and at most one `title` part. Omit title or send an empty string for no title. Unknown or duplicate fields, remote URLs, JSON album data, malformed multipart data, and compressed request bodies are rejected. A title must be valid UTF-8 with at most 200 Unicode characters. Titles remain literal text and Go's JSON encoder escapes HTML characters. The public viewer also renders titles as escaped text.
 
 The service checks the actual PNG, fully decodes it within the store, and accepts only widths and heights of 256 × an integer from 1 through 10. This matches fixed 2× capture of 128-pixel cells and does not change the editor's rows/columns contract. Images may use at most 10,000,000 bytes. The total request may use at most 10,016,384 bytes, including multipart framing and title. The native listener and net/http development adapter both enforce the request bound, including unknown-length bodies. PNG bytes are stored unchanged.
 
@@ -80,10 +80,10 @@ Every failure uses `{"error":"message"}`. Client helpers validate successful res
 | 507 | Snapshot capacity full. Show the storage-full error and retry later with the same key. |
 | 503 | Sharing disabled or storage unavailable. After recovery, reconcile an uncertain publication with the same key. |
 
-All snapshot responses, including errors and HEADs, use `Cache-Control: private, no-store, max-age=0`, `CDN-Cache-Control: no-store`, and `Surrogate-Control: no-store`. They also use `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow, noarchive`, and `X-Content-Type-Options: nosniff`. Conditional and range request headers never skip the lifecycle check or produce a 304; live image reads return the full exact PNG. Future viewer HTML must follow the same cache policy. CDN deployments must honor these headers and remove any cache-everything rule for these routes. External chat caches and copies already downloaded cannot be recalled.
+All snapshot responses, including errors and HEADs, use `Cache-Control: private, no-store, max-age=0`, `CDN-Cache-Control: no-store`, and `Surrogate-Control: no-store`. They also use `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow, noarchive`, and `X-Content-Type-Options: nosniff`. Conditional and range request headers never skip the lifecycle check or produce a 304; live image reads return the full exact PNG. Viewer HTML follows the same cache policy. CDN deployments must honor these headers and remove any cache-everything rule for these routes. External chat caches and copies already downloaded cannot be recalled.
 
 No API logger records credentials, request headers, multipart bodies, or creation response bodies. Client helpers do not log them either. If adding request tracing or proxy logs, redact `Authorization` and `Idempotency-Key` and omit creation response bodies. Never place credentials in query strings, public metadata, or preview tags.
 
 ## Verification
 
-API tests cover input validation, size limits through both serving modes, exact PNG reads/downloads, title escaping, management authorization/status, storage capacity, lifecycle, restart recovery, duplicate/conflicting retries, cache headers, and IP/global rate limits. Storage tests cover concurrent retries, exact expiry boundaries, receipt cleanup, and injected commit/revocation failures. Client tests cover request shapes, credential placement, malformed response rejection, actionable errors, and explicit retries after a lost response. Public viewer/browser UI and deployed CDN/persistence acceptance remain the later tickets.
+API tests cover input validation, size limits through both serving modes, exact PNG reads/downloads, title escaping, management authorization/status, storage capacity, lifecycle, restart recovery, duplicate/conflicting retries, cache headers, and IP/global rate limits. Storage tests cover concurrent retries, exact expiry boundaries, receipt cleanup, and injected commit/revocation failures. Client tests cover request shapes, credential placement, malformed response rejection, actionable errors, and explicit retries after a lost response. The [viewer checks](snapshot-viewer.md) cover public HTML and browser viewing/downloads. Deployed CDN/persistence acceptance remains DYL-248/DYL-249.

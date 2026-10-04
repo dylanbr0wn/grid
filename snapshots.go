@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -32,6 +33,13 @@ func openSnapshots(directory, capacity string) (*snapshot.Store, error) {
 
 func snapshotHTTPConfig() (server.Config, error) {
 	var cfg server.Config
+	if raw := os.Getenv("SNAPSHOT_PUBLIC_ORIGIN"); raw != "" {
+		u, err := url.Parse(raw)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" || u.User != nil || (u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Opaque != "" {
+			return cfg, errors.New("SNAPSHOT_PUBLIC_ORIGIN must be an http(s) origin without credentials, path, query, or fragment")
+		}
+		cfg.SnapshotPublicOrigin = u.Scheme + "://" + u.Host
+	}
 	for name, dest := range map[string]*int{
 		"SNAPSHOT_UPLOADS_PER_IP": &cfg.SnapshotUploadsPerIP,
 		"SNAPSHOT_UPLOADS_GLOBAL": &cfg.SnapshotUploadsGlobal,

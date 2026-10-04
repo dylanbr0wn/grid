@@ -31,14 +31,14 @@ func newViteProxy(target string) (*httputil.ReverseProxy, error) {
 	return proxy, nil
 }
 
-// devHandler serves Fiber API routes and reverse-proxies everything else to
+// devHandler serves Fiber API and snapshot viewer routes, and proxies the rest to
 // Vite. ReverseProxy runs on net/http (not Fiber's fasthttp proxy middleware)
 // so WebSocket upgrades for HMR can hijack. Incoming Host is left intact so
 // Vite sees the browser origin (Go).
 func devHandler(app *fiber.App, vite http.Handler) http.Handler {
 	fiberHTTP := server.HTTPHandler(app)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if isAPIPath(r.URL.Path) {
+		if isAPIPath(r.URL.Path) || strings.HasPrefix(r.URL.Path, "/s/") {
 			fiberHTTP.ServeHTTP(w, r)
 			return
 		}
