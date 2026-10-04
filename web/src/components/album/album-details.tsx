@@ -14,7 +14,7 @@ export function AlbumDetails({
   artist,
 }: AlbumDetailsProps) {
   return (
-    <div className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
+    <div data-cover-details className="absolute flex items-start flex-col justify-end top-0 left-0 text-wrap font-medium h-full pb-1 px-1 w-fit ">
       <div
         className="font-bold text-[9px]/[10px] pb-0.5"
         style={

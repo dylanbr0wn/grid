@@ -43,3 +43,5 @@ yarn-error.log*
 /.next/
 .vercel
 next-env.d.ts
+web/test-results/
+web/playwright-report/

@@ -65,6 +65,9 @@ export default function AlbumCover({
 
   return (
     <div
+      data-cover-sources={JSON.stringify(imgs?.length ? imgs : src ? [src] : [])}
+      data-cover-text-color={textColor}
+      data-cover-text-background={textBackground}
       className={cn(
         "flex grow items-center outline-none box-border origin-center font-normal whitespace-nowrap w-32 h-32 aspect-square relative font-code touch-manipulation cursor-grab select-none",
         className,
