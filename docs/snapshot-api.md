@@ -1,6 +1,6 @@
 # Snapshot API
 
-DYL-244 connects the immutable PNG store to Go/Fiber and adds validated client helpers in `web/src/lib/snapshot-api.ts`. DYL-245 adds the [public viewer](snapshot-viewer.md) at `/s/:id`. The publishing dialog and management page remain DYL-246 and DYL-247. All URLs returned by the API are relative to the Go/browser origin, so request Host or forwarded-host headers never determine API links. Viewer social metadata uses absolute URLs.
+DYL-244 connects the immutable PNG store to Go/Fiber and adds validated client helpers in `web/src/lib/snapshot-api.ts`. DYL-245 adds the [public viewer](snapshot-viewer.md) at `/s/:id`. DYL-246 adds the [publishing dialog](snapshot-publishing.md); the management page remains DYL-247. All URLs returned by the API are relative to the Go/browser origin, so request Host or forwarded-host headers never determine API links. Viewer social metadata uses absolute URLs.
 
 ## Resources
 
@@ -46,7 +46,7 @@ Missing/invalid credentials and unknown snapshots use the same 404 error. DELETE
 
 Generate a fresh secret **once for each explicit publication** with `newPublicationKey()`. The key is canonical unpadded base64url encoding of 40 bytes: an eight-byte unsigned big-endian Unix timestamp in seconds followed by 32 cryptographically random bytes. Send it only in the `Idempotency-Key` header. Keep it secret just like the management credential.
 
-Before sending, the publishing UI must retain that key, the exact finished PNG, and the exact title so it can recover after a lost response. This persistence and UI are DYL-246. The API helper requires the caller to provide the key and never retries or replaces it automatically.
+Before sending, the publishing UI must retain that key, the exact finished PNG, and the exact title so it can recover after a lost response. The publishing dialog retains them in IndexedDB before requesting creation. The API helper requires the caller to provide the key and never retries or replaces it automatically.
 
 Storage derives the public ID and management token independently with SHA-256 and separate `grid-publication-id-v1:` / `grid-management-token-v1:` prefixes over the decoded key. The first 24 ID digest bytes and all 32 token digest bytes are encoded as base64url. Knowledge of the public ID does not reveal either secret. Disk stores only the management-token hash and image hash, not the key or token.
 

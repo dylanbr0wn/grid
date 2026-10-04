@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func testKey(t *testing.T, now time.Time) string {
@@ -205,5 +206,32 @@ func TestFailedReceiptCommitFencesUntilRecovery(t *testing.T) {
 				t.Fatal("retry resurrected failed revocation")
 			}
 		})
+	}
+}
+
+// Fiber strings can reference request buffers reused after the handler returns.
+func TestRevocationRetainsOwnedRecordID(t *testing.T) {
+	s := testOpen(t, t.TempDir(), DefaultCapacity)
+	p, err := s.PutWithKey("grid", testPNG(t), testKey(t, time.Now()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	buffer := []byte(p.ID)
+	borrowedID := unsafe.String(unsafe.SliceData(buffer), len(buffer))
+	if err := s.Revoke(borrowedID, p.ManagementToken); err != nil {
+		t.Fatal(err)
+	}
+	// Reuse the request buffer before any later read or cleanup.
+	for i := range buffer {
+		buffer[i] = 'x'
+	}
+	for key, rec := range s.records {
+		if key != rec.ID {
+			t.Fatal("revocation retained a borrowed request-buffer map key")
+		}
+	}
+	meta, status, err := s.Manage(p.ID, p.ManagementToken)
+	if err != nil || status != "revoked" || meta != p.Metadata {
+		t.Fatalf("lost revocation receipt: %s %v", status, err)
 	}
 }

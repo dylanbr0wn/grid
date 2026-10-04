@@ -82,13 +82,13 @@ function validateMetadata(value: SnapshotMetadata): void {
   }
 }
 
-export async function publishSnapshot(image: Blob, title: string, key: string): Promise<SnapshotPublication> {
+export async function publishSnapshot(image: Blob, title: string, key: string, signal?: AbortSignal): Promise<SnapshotPublication> {
   if (!/^[A-Za-z0-9_-]{53}[AQgw]$/.test(key)) throw new Error("Invalid publication key");
   const body = new FormData();
   body.set("image", image, "grid.png");
   body.set("title", title);
 
-  const response = await request("/api/snapshots", { method: "POST", headers: { "Idempotency-Key": key }, body });
+  const response = await request("/api/snapshots", { method: "POST", headers: { "Idempotency-Key": key }, body, signal });
 
   const result = type("string.json.parse").to(publication)(await response.text());
   if (result instanceof type.errors) throw new Error("Snapshot data validation error");
