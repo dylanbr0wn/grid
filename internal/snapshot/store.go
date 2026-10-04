@@ -25,10 +25,15 @@ const (
 	DefaultCapacity int64 = 250_000_000
 	MaxImageBytes         = 10_000_000
 	Retention             = 90 * 24 * time.Hour
+	RetryWindow           = 24 * time.Hour
+	ClockSkew             = 5 * time.Minute
 	maxHeaderBytes        = 4096
 )
 
 var (
+	ErrKey          = errors.New("invalid publication key or clock more than five minutes ahead")
+	ErrGone         = errors.New("publication is expired, revoked, or its creation window has closed")
+	ErrConflict     = errors.New("publication key already used for different content")
 	ErrNotFound     = errors.New("snapshot not found")
 	ErrUnauthorized = errors.New("invalid management credential")
 	ErrCapacity     = errors.New("snapshot storage is full")
@@ -63,6 +68,8 @@ type record struct {
 	Metadata
 	ManagementHash string `json:"managementHash"`
 	ImageHash      string `json:"imageHash"`
+	RetryUntil     int64  `json:"retryUntil,omitempty"`
+	Revoked        bool   `json:"revoked,omitempty"`
 }
 
 type Store struct {
@@ -137,6 +144,20 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) Put(title string, image []byte) (Publication, error) {
+	return s.put(title, image, "")
+}
+
+// PutWithKey recovers the same publication and management credential on retries.
+// The key is a secret: 8 big-endian timestamp bytes followed by 32 random bytes,
+// encoded as canonical unpadded base64url. Never put it in a URL or log it.
+func (s *Store) PutWithKey(title string, image []byte, key string) (Publication, error) {
+	if key == "" {
+		return Publication{}, ErrKey
+	}
+	return s.put(title, image, key)
+}
+
+func (s *Store) put(title string, image []byte, key string) (Publication, error) {
 	if !utf8.ValidString(title) || utf8.RuneCountInString(title) > 200 {
 		return Publication{}, ErrTitle
 	}
@@ -147,6 +168,31 @@ func (s *Store) Put(title string, image []byte) (Publication, error) {
 	defer s.mu.Unlock()
 	if s.unavailable {
 		return Publication{}, ErrUnavailable
+	}
+	var id, token string
+	var retryUntil int64
+	if key != "" {
+		var err error
+		id, token, retryUntil, err = publicationIdentity(key, s.now())
+		if err != nil {
+			return Publication{}, err
+		}
+		if rec, ok := s.records[id]; ok {
+			if rec.Revoked || !s.now().Before(rec.ExpiresAt) {
+				return Publication{}, ErrGone
+			}
+			if rec.Title != title || rec.ImageHash != digest(image) {
+				return Publication{}, ErrConflict
+			}
+			stored, _, err := s.readRecord(id + ".snapshot")
+			if err != nil || stored != rec {
+				return Publication{}, s.fail(errors.Join(errors.New("snapshot record changed or unreadable"), err))
+			}
+			return Publication{Metadata: rec.Metadata, ManagementToken: token}, nil
+		}
+		if s.now().Unix() >= retryUntil {
+			return Publication{}, ErrGone
+		}
 	}
 	cfg, err := png.DecodeConfig(bytes.NewReader(image))
 	if err != nil || cfg.Width > 2560 || cfg.Height > 2560 {
@@ -161,13 +207,15 @@ func (s *Store) Put(title string, image []byte) (Publication, error) {
 	if int64(len(image)) > s.capacity-s.used {
 		return Publication{}, ErrCapacity
 	}
-	id, err := randomString(24)
-	if err != nil {
-		return Publication{}, err
-	}
-	token, err := randomString(32)
-	if err != nil {
-		return Publication{}, err
+	if key == "" {
+		id, err = randomString(24)
+		if err != nil {
+			return Publication{}, err
+		}
+		token, err = randomString(32)
+		if err != nil {
+			return Publication{}, err
+		}
 	}
 	// A collision must never overwrite an existing publication.
 	if _, err := s.root.Lstat(id + ".snapshot"); !errors.Is(err, os.ErrNotExist) {
@@ -183,14 +231,10 @@ func (s *Store) Put(title string, image []byte) (Publication, error) {
 		ManagementHash: digest([]byte(token)),
 		ImageHash:      digest(image),
 	}
-	pending := ".pending-" + id
-	if err := s.persist(pending, rec, image); err != nil {
-		return Publication{}, s.fail(err)
+	if key != "" {
+		rec.Version, rec.RetryUntil = 2, retryUntil
 	}
-	if err := s.rename(pending, id+".snapshot"); err != nil {
-		return Publication{}, s.fail(err)
-	}
-	if err := s.syncDir(); err != nil {
+	if err := s.commit(rec, image); err != nil {
 		return Publication{}, s.fail(err)
 	}
 	s.records[id] = rec
@@ -206,7 +250,7 @@ func (s *Store) Get(id string) (Metadata, []byte, error) {
 		return Metadata{}, nil, ErrUnavailable
 	}
 	rec, ok := s.records[id]
-	if !ok || !s.now().Before(rec.ExpiresAt) {
+	if !ok || rec.Revoked || !s.now().Before(rec.ExpiresAt) {
 		return Metadata{}, nil, ErrNotFound
 	}
 	stored, image, err := s.readRecord(id + ".snapshot")
@@ -231,10 +275,62 @@ func (s *Store) Revoke(id, token string) error {
 	if subtle.ConstantTimeCompare([]byte(actual), []byte(rec.ManagementHash)) != 1 {
 		return ErrUnauthorized
 	}
+	if rec.Revoked {
+		return nil
+	}
+	if rec.RetryUntil > s.now().Unix() {
+		// Replace image bytes with a small receipt so retries cannot resurrect it.
+		rec.Revoked = true
+		if err := s.commit(rec, nil); err != nil {
+			return s.fail(err)
+		}
+		s.records[id] = rec
+		s.used -= rec.ImageBytes
+		return nil
+	}
 	if err := s.delete(rec); err != nil {
 		return s.fail(err)
 	}
 	return nil
+}
+
+// Manage exposes lifecycle metadata only after checking the separate credential.
+func (s *Store) Manage(id, token string) (Metadata, string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.unavailable {
+		return Metadata{}, "", ErrUnavailable
+	}
+	rec, ok := s.records[id]
+	if !ok {
+		return Metadata{}, "", ErrNotFound
+	}
+	actual := digest([]byte(token))
+	if subtle.ConstantTimeCompare([]byte(actual), []byte(rec.ManagementHash)) != 1 {
+		return Metadata{}, "", ErrUnauthorized
+	}
+	stored, _, err := s.readRecord(id + ".snapshot")
+	if err != nil || stored != rec {
+		return Metadata{}, "", s.fail(errors.Join(errors.New("snapshot record changed or unreadable"), err))
+	}
+	status := "active"
+	if rec.Revoked {
+		status = "revoked"
+	} else if !s.now().Before(rec.ExpiresAt) {
+		status = "expired"
+	}
+	return rec.Metadata, status, nil
+}
+
+func (s *Store) commit(rec record, image []byte) error {
+	pending := ".pending-" + rec.ID
+	if err := s.persist(pending, rec, image); err != nil {
+		return err
+	}
+	if err := s.rename(pending, rec.ID+".snapshot"); err != nil {
+		return err
+	}
+	return s.syncDir()
 }
 
 func (s *Store) Cleanup() error {
@@ -252,7 +348,7 @@ func (s *Store) Cleanup() error {
 func (s *Store) cleanup() error {
 	now := s.now()
 	for _, rec := range s.records {
-		if !now.Before(rec.ExpiresAt) {
+		if !now.Before(rec.ExpiresAt) || (rec.Revoked && now.Unix() >= rec.RetryUntil) {
 			if err := s.delete(rec); err != nil {
 				return err
 			}
@@ -277,7 +373,9 @@ func (s *Store) delete(rec record) error {
 		return err
 	}
 	delete(s.records, rec.ID)
-	s.used -= rec.ImageBytes
+	if !rec.Revoked {
+		s.used -= rec.ImageBytes
+	}
 	return nil
 }
 
@@ -346,12 +444,20 @@ func (s *Store) readRecord(name string) (record, []byte, error) {
 	if err := decoder.Decode(new(any)); err != io.EOF {
 		return rec, nil, errors.New("trailing snapshot metadata")
 	}
-	if rec.Version != 1 || !validID(rec.ID) || name != rec.ID+".snapshot" ||
+	if (rec.Version != 1 && rec.Version != 2) ||
+		(rec.Version == 1 && (rec.RetryUntil != 0 || rec.Revoked)) ||
+		(rec.Version == 2 && (rec.RetryUntil <= rec.CreatedAt.Add(-ClockSkew).Unix() || rec.RetryUntil > rec.CreatedAt.Add(RetryWindow+ClockSkew).Unix())) || !validID(rec.ID) || name != rec.ID+".snapshot" ||
 		rec.ImageBytes <= 0 || rec.ImageBytes > MaxImageBytes ||
 		!validDigest(rec.ManagementHash) || !validDigest(rec.ImageHash) ||
 		rec.CreatedAt.IsZero() || !rec.ExpiresAt.Equal(rec.CreatedAt.Add(Retention)) ||
 		!utf8.ValidString(rec.Title) || utf8.RuneCountInString(rec.Title) > 200 {
 		return rec, nil, errors.New("invalid snapshot metadata")
+	}
+	if rec.Revoked {
+		if info.Size() != 4+int64(size) {
+			return rec, nil, errors.New("invalid revocation receipt")
+		}
+		return rec, nil, nil
 	}
 	if info.Size() != 4+int64(size)+rec.ImageBytes {
 		return rec, nil, errors.New("snapshot size mismatch")
@@ -399,7 +505,9 @@ func (s *Store) recover() error {
 			return fmt.Errorf("%s: %w", name, err)
 		}
 		s.records[rec.ID] = rec
-		s.used += rec.ImageBytes
+		if !rec.Revoked {
+			s.used += rec.ImageBytes
+		}
 	}
 	if err := s.syncDir(); err != nil {
 		return err
@@ -430,4 +538,18 @@ func validDigest(s string) bool {
 func validID(id string) bool {
 	b, err := base64.RawURLEncoding.DecodeString(id)
 	return err == nil && len(b) == 24 && base64.RawURLEncoding.EncodeToString(b) == id
+}
+
+func publicationIdentity(key string, now time.Time) (string, string, int64, error) {
+	b, err := base64.RawURLEncoding.DecodeString(key)
+	if err != nil || len(b) != 40 || base64.RawURLEncoding.EncodeToString(b) != key {
+		return "", "", 0, ErrKey
+	}
+	stamp := binary.BigEndian.Uint64(b[:8])
+	if stamp == 0 || stamp > uint64(now.Add(ClockSkew).Unix()) {
+		return "", "", 0, ErrKey
+	}
+	idHash := sha256.Sum256(append([]byte("grid-publication-id-v1:"), b...))
+	tokenHash := sha256.Sum256(append([]byte("grid-management-token-v1:"), b...))
+	return base64.RawURLEncoding.EncodeToString(idHash[:24]), base64.RawURLEncoding.EncodeToString(tokenHash[:]), int64(stamp) + int64(RetryWindow/time.Second), nil
 }
