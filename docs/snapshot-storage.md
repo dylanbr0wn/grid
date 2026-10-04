@@ -1,6 +1,6 @@
 # Snapshot storage
 
-DYL-243 adds `internal/snapshot`, a directory-backed store for immutable PNGs and minimal metadata. DYL-244 adds [publication and management APIs](snapshot-api.md) and durable retry recovery. Viewer pages remain DYL-245.
+DYL-243 adds `internal/snapshot`, a directory-backed store for immutable PNGs and minimal metadata. DYL-244 adds [publication and management APIs](snapshot-api.md) and durable retry recovery. DYL-245 adds the [public viewer](snapshot-viewer.md).
 
 ## Configuration and ownership
 

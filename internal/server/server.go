@@ -24,15 +24,18 @@ type Config struct {
 	Snapshots             *snapshot.Store
 	SnapshotUploadsPerIP  int
 	SnapshotUploadsGlobal int
+	// Canonical browser origin for crawler URLs behind TLS-terminating proxies.
+	SnapshotPublicOrigin string
 	// Only explicitly allowed proxies may supply a sanitized single X-Real-IP.
 	SnapshotTrustedProxies []string
 }
 
 type Server struct {
-	snapshots   *snapshot.Store
-	uploads     *uploadLimiter
-	lastfm      *lastfm.Client
-	musicbrainz *musicbrainz.Client
+	snapshots            *snapshot.Store
+	uploads              *uploadLimiter
+	snapshotPublicOrigin string
+	lastfm               *lastfm.Client
+	musicbrainz          *musicbrainz.Client
 }
 
 func New(cfg Config) *fiber.App {
@@ -42,8 +45,9 @@ func New(cfg Config) *fiber.App {
 	}
 
 	s := &Server{
-		snapshots: cfg.Snapshots,
-		uploads:   newUploadLimiter(cfg.SnapshotUploadsPerIP, cfg.SnapshotUploadsGlobal),
+		snapshots:            cfg.Snapshots,
+		uploads:              newUploadLimiter(cfg.SnapshotUploadsPerIP, cfg.SnapshotUploadsGlobal),
+		snapshotPublicOrigin: cfg.SnapshotPublicOrigin,
 		lastfm: &lastfm.Client{
 			APIKey:  cfg.LastFMAPIKey,
 			BaseURL: cfg.LastFMBaseURL,
@@ -88,6 +92,18 @@ func New(cfg Config) *fiber.App {
 	app.Get("/api/snapshots/:id/management", s.manageSnapshot)
 	app.Head("/api/snapshots/:id/management", s.manageSnapshot)
 	app.Delete("/api/snapshots/:id", s.manageSnapshot)
+	app.Get("/s/:id", s.viewSnapshot)
+	app.Head("/s/:id", s.viewSnapshot)
+	app.Use(func(c fiber.Ctx) error {
+		if strings.HasPrefix(c.Path(), "/s/") {
+			if c.Method() != "GET" && c.Method() != "HEAD" {
+				c.Set("Allow", "GET, HEAD")
+				return renderSnapshotPage(c, 405, snapshotPage{Title: "Method not allowed", Message: "Open this snapshot link in your browser."})
+			}
+			return unavailableSnapshotPage(c, 404)
+		}
+		return c.Next()
+	})
 	// Keep API misses in the JSON contract for every method and serving mode.
 	app.Use(func(c fiber.Ctx) error {
 		if c.Path() == "/api" || strings.HasPrefix(c.Path(), "/api/") {

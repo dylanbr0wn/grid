@@ -12,8 +12,11 @@ export default defineConfig({
     name: `dpr-${deviceScaleFactor}`,
     use: { browserName: "chromium", deviceScaleFactor },
   })),
-  webServer: {
+  webServer: [{
     command: "pnpm exec vite --host 127.0.0.1 --port 5174 --strictPort",
     url: "http://127.0.0.1:5174",
-  },
+  }, ...[5175, 5176].map((port, index) => ({
+    command: `node tests/browser/viewer-server.mjs ${port} ${index ? "dev" : "production"}`,
+    url: `http://127.0.0.1:${port}/api/health`,
+  }))],
 });
