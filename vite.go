@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/dylanbr0wn/grid/internal/server"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/adaptor"
 )
 
 const defaultViteOrigin = "http://127.0.0.1:5173"
@@ -36,7 +36,7 @@ func newViteProxy(target string) (*httputil.ReverseProxy, error) {
 // so WebSocket upgrades for HMR can hijack. Incoming Host is left intact so
 // Vite sees the browser origin (Go).
 func devHandler(app *fiber.App, vite http.Handler) http.Handler {
-	fiberHTTP := adaptor.FiberApp(app)
+	fiberHTTP := server.HTTPHandler(app)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if isAPIPath(r.URL.Path) {
 			fiberHTTP.ServeHTTP(w, r)

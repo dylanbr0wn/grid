@@ -11,18 +11,26 @@ import (
 
 	"github.com/dylanbr0wn/grid/internal/lastfm"
 	"github.com/dylanbr0wn/grid/internal/musicbrainz"
+	"github.com/dylanbr0wn/grid/internal/snapshot"
 	"github.com/gofiber/fiber/v3"
 )
 
 type Config struct {
-	LastFMAPIKey       string
-	LastFMBaseURL      string
-	MusicBrainzBaseURL string
-	MusicBrainzUA      string
-	HTTPClient         *http.Client
+	LastFMAPIKey          string
+	LastFMBaseURL         string
+	MusicBrainzBaseURL    string
+	MusicBrainzUA         string
+	HTTPClient            *http.Client
+	Snapshots             *snapshot.Store
+	SnapshotUploadsPerIP  int
+	SnapshotUploadsGlobal int
+	// Only explicitly allowed proxies may supply a sanitized single X-Real-IP.
+	SnapshotTrustedProxies []string
 }
 
 type Server struct {
+	snapshots   *snapshot.Store
+	uploads     *uploadLimiter
 	lastfm      *lastfm.Client
 	musicbrainz *musicbrainz.Client
 }
@@ -34,6 +42,8 @@ func New(cfg Config) *fiber.App {
 	}
 
 	s := &Server{
+		snapshots: cfg.Snapshots,
+		uploads:   newUploadLimiter(cfg.SnapshotUploadsPerIP, cfg.SnapshotUploadsGlobal),
 		lastfm: &lastfm.Client{
 			APIKey:  cfg.LastFMAPIKey,
 			BaseURL: cfg.LastFMBaseURL,
@@ -46,10 +56,38 @@ func New(cfg Config) *fiber.App {
 		},
 	}
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit:                    snapshotBodyLimit,
+		DisablePreParseMultipartForm: true,
+		TrustProxy:                   len(cfg.SnapshotTrustedProxies) > 0,
+		TrustProxyConfig:             fiber.TrustProxyConfig{Proxies: cfg.SnapshotTrustedProxies},
+		ProxyHeader:                  "X-Real-IP", EnableIPValidation: true,
+		ErrorHandler: func(c fiber.Ctx, err error) error {
+			// Native body-parser errors can lose the request path before Fiber
+			// handles them. Never allow those failures to be cached either.
+			snapshotHeaders(c)
+			code, message := 500, "Internal server error"
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code, message = e.Code, e.Message
+			}
+			return errorJSON(c, code, message)
+		},
+	})
 	app.Get("/api/health", s.health)
 	app.Get("/api/users/:user/albums", s.getUserAlbums)
 	app.Get("/api/release-groups", s.getReleaseGroups)
+	app.Use("/api/snapshots", s.snapshotGuard)
+	app.Post("/api/snapshots", s.createSnapshot)
+	app.Get("/api/snapshots/:id", s.readSnapshot)
+	app.Head("/api/snapshots/:id", s.readSnapshot)
+	app.Get("/api/snapshots/:id/image", s.readSnapshot)
+	app.Head("/api/snapshots/:id/image", s.readSnapshot)
+	app.Get("/api/snapshots/:id/download", s.readSnapshot)
+	app.Head("/api/snapshots/:id/download", s.readSnapshot)
+	app.Get("/api/snapshots/:id/management", s.manageSnapshot)
+	app.Head("/api/snapshots/:id/management", s.manageSnapshot)
+	app.Delete("/api/snapshots/:id", s.manageSnapshot)
 	// Keep API misses in the JSON contract for every method and serving mode.
 	app.Use(func(c fiber.Ctx) error {
 		if c.Path() == "/api" || strings.HasPrefix(c.Path(), "/api/") {

@@ -36,9 +36,13 @@ func main() {
 		}()
 	}
 
-	app := server.New(server.Config{
-		LastFMAPIKey: os.Getenv("LAST_FM_API_KEY"),
-	})
+	uploadConfig, err := snapshotHTTPConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	uploadConfig.Snapshots = snapshots
+	uploadConfig.LastFMAPIKey = os.Getenv("LAST_FM_API_KEY")
+	app := server.New(uploadConfig)
 
 	port := os.Getenv("PORT")
 	if port == "" {
