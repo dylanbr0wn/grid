@@ -14,11 +14,19 @@ const share = type({
 export type RememberedShare = typeof share.infer;
 export type PendingPublication = { key: string; image: Blob; title: string; retryAt: number };
 
-/** A bounded credential list, separate from grid-albums-storage. */
-export function rememberShare(result: SnapshotPublication): void {
+export function readSharedLinks(): RememberedShare[] {
   const raw = localStorage.getItem(SHARED_LINKS_KEY);
   const parsed = raw === null ? [] : type("string.json.parse").to(share.array())(raw);
-  if (parsed instanceof type.errors) throw new Error("Saved links could not be read.");
+  if (parsed instanceof type.errors || parsed.length > 50 || parsed.some((item) =>
+    !Number.isFinite(Date.parse(item.createdAt)) ||
+    Date.parse(item.expiresAt) - Date.parse(item.createdAt) !== 90 * 86400_000 ||
+    [...item.title].length > 200)) throw new Error("Saved links could not be read. Keep your browser data and use a separately saved management link.");
+  return parsed;
+}
+
+/** A bounded credential list, separate from grid-albums-storage. */
+export function rememberShare(result: SnapshotPublication): void {
+  const parsed = readSharedLinks();
   const record: RememberedShare = {
     id: result.id, title: result.title, createdAt: result.createdAt,
     expiresAt: result.expiresAt, managementToken: result.managementToken,
