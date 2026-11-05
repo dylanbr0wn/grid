@@ -63,6 +63,22 @@ type Publication struct {
 	ManagementToken string `json:"managementToken"`
 }
 
+// Usage contains aggregate operational counters, never IDs or credentials.
+type Usage struct {
+	ImageBytes    int64
+	CapacityBytes int64
+	Records       int
+}
+
+func (s *Store) Usage() (Usage, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.unavailable {
+		return Usage{}, ErrUnavailable
+	}
+	return Usage{ImageBytes: s.used, CapacityBytes: s.capacity, Records: len(s.records)}, nil
+}
+
 type record struct {
 	Version int `json:"version"`
 	Metadata

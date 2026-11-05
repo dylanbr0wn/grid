@@ -22,13 +22,15 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/grid .
 
 FROM debian:bookworm-slim
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates \
+    && apt-get install --yes --no-install-recommends ca-certificates gosu util-linux \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 COPY --from=go-build /out/grid ./bin/grid
 COPY --from=web-build /app/web/dist ./web/dist
+COPY deploy/entrypoint.sh /app/entrypoint.sh
 
 USER 65534:65534
 EXPOSE 8080
+ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["./bin/grid"]
