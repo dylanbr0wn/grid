@@ -331,7 +331,7 @@ export default function Menu() {
             <div className="p-1 mt-3 text-neutral-500 border-b border-neutral-800 text-sm lowercase">
               Export
             </div>
-            <ShareDialog />
+            {import.meta.env.VITE_ENABLE_SHARING === "true" && <ShareDialog />}
             <button
               disabled={loading.jpeg}
               onClick={() => download("jpeg")}

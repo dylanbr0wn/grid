@@ -1,5 +1,7 @@
 # Snapshot publishing
 
+Share is hidden by default. Set `VITE_ENABLE_SHARING=true` when starting Vite or building the web app to expose it. For Docker, pass `--build-arg VITE_ENABLE_SHARING=true`. This is a build-time flag: changing the running container's environment does not enable Share. Keep it off until persistent storage, backups, and creator management are ready. The flag controls the editor action; snapshot APIs remain gated by `SNAPSHOT_DIR`.
+
 The editor's Share action freezes the grid immediately, then opens a preview of its fixed 2× PNG. It waits for artwork and lists unavailable covers by cover number and label. Retry keeps the frozen composition; Preview with placeholders requires explicit consent. Missing placeholder assets produce blank covers. The optional title starts empty and permits 200 Unicode characters. Editing the source grid after opening Share cannot change the preview or upload.
 
 Only Create link sends a publication request. Cancel, Escape, and closing a preview send nothing. During upload, the dialog keeps its result reachable and disables repeat submissions and closing. Uploads time out after 30 seconds; a timeout is an unknown outcome and recovery uses the same request.

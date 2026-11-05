@@ -15,6 +15,11 @@ export default defineConfig({
   webServer: [{
     command: "pnpm exec vite --host 127.0.0.1 --port 5174 --strictPort",
     url: "http://127.0.0.1:5174",
+    env: { VITE_ENABLE_SHARING: "true" },
+  }, {
+    command: "pnpm exec vite --host 127.0.0.1 --port 5177 --strictPort",
+    url: "http://127.0.0.1:5177",
+    env: { VITE_ENABLE_SHARING: "" },
   }, ...[5175, 5176].map((port, index) => ({
     command: `node tests/browser/viewer-server.mjs ${port} ${index ? "dev" : "production"}`,
     url: `http://127.0.0.1:${port}/api/health`,
