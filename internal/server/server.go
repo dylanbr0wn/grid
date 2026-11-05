@@ -79,6 +79,10 @@ func New(cfg Config) *fiber.App {
 		},
 	})
 	app.Get("/api/health", s.health)
+	app.Use("/manage", func(c fiber.Ctx) error {
+		snapshotHeaders(c)
+		return c.Next()
+	})
 	app.Get("/api/users/:user/albums", s.getUserAlbums)
 	app.Get("/api/release-groups", s.getReleaseGroups)
 	app.Use("/api/snapshots", s.snapshotGuard)

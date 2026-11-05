@@ -33,3 +33,14 @@ test("a full or malformed list preserves existing credentials", () => {
   assert.throws(() => links.rememberShare(result), /could not be read/);
   assert.equal(data.get(links.SHARED_LINKS_KEY), "unreadable");
 });
+
+test("reading rejects unknown versions and invalid lifecycle dates without overwriting credentials", () => {
+  for (const invalid of [{ version: 2, shares: [result] }, [{ ...result, expiresAt: "bad" }], [{ ...result, expiresAt: result.createdAt }]]) {
+    const raw = JSON.stringify(invalid);
+    data.set(links.SHARED_LINKS_KEY, raw);
+    assert.throws(() => links.readSharedLinks(), /could not be read/);
+    assert.equal(data.get(links.SHARED_LINKS_KEY), raw);
+  }
+  data.set(links.SHARED_LINKS_KEY, JSON.stringify([result]));
+  assert.deepEqual(links.readSharedLinks(), [result]);
+});

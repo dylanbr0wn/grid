@@ -1,0 +1,11 @@
+# Managing shared links
+
+With `VITE_ENABLE_SHARING=true`, the editor's export menu includes **Your shared links**. It reads the separate `grid-shared-links-v1` browser list written after publication. Each record shows its title or “Untitled grid”, expiry date, public viewing link, private management link, and current authenticated server status.
+
+Opening the list checks the server. **Check status** refreshes it manually. Active snapshots can be deleted after confirmation. A confirmed deletion blocks origin viewing and downloads. Expired and revoked records remain in the list with their credentials, so stale records can be reconciled without silently losing access. Failed status requests retain the record. A failed deletion reply reports an unknown outcome and asks the creator to check status before retrying.
+
+A saved `/manage/{id}#token={credential}` link works independently of browser storage, even when the publication controls are hidden. This page loads separately from the editor and never initializes the editor store or Last.fm requests. The credential stays in the URL fragment so bookmarks and reloads work. It is sent to the API only in the Authorization header. Management responses use no-store, noindex, and no-referrer headers; public navigation uses noreferrer and public pages never link back to management. Public and management links have separate labels and copy actions. Clipboard failure leaves selectable link fields for manual copying.
+
+Clearing browser data loses the remembered list. A separately saved management link still works until expiry or revocation. External services may retain cached previews. Corrupt records, unknown record formats, invalid dates, and unavailable localStorage show a recoverable error without overwriting credentials or disabling the editor. The existing list limit remains 50 records.
+
+Validation: `pnpm build`, `pnpm lint`, `pnpm test`, and `PLAYWRIGHT_CHANNEL=chrome pnpm --filter web test:browser management.spec.mjs --project=dpr-1`. The browser suite covers local records, server reconciliation, expiry, revocation, missing credentials, clipboard/storage/network failure, fresh-browser management against the Go service, exact public-access denial after deletion, reload, and a narrow viewport. Railway persistence and deployed release acceptance belong to DYL-248 and DYL-249.

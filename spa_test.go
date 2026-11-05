@@ -38,6 +38,7 @@ func TestSPAServesAssetsRoutesAndKeepsAPIResponses(t *testing.T) {
 	}{
 		{"/", 200, "<div id=\"root\">Grid</div>"},
 		{"/someuser", 200, "<div id=\"root\">Grid</div>"},
+		{"/manage/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 200, "<div id=\"root\">Grid</div>"},
 		{"/s", 200, "<div id=\"root\">Grid</div>"},
 		{"/?lastfm-user=someuser", 200, "<div id=\"root\">Grid</div>"},
 		{"/s/unknown", 503, "Snapshot unavailable"},
@@ -59,6 +60,13 @@ func TestSPAServesAssetsRoutesAndKeepsAPIResponses(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer resp.Body.Close()
+			if strings.HasPrefix(tc.path, "/manage/") {
+				if resp.Header.Get("Referrer-Policy") != "no-referrer" ||
+					!strings.Contains(resp.Header.Get("X-Robots-Tag"), "noindex") ||
+					!strings.Contains(resp.Header.Get("Cache-Control"), "no-store") {
+					t.Fatal("management page missing privacy headers")
+				}
+			}
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err)
