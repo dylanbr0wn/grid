@@ -127,9 +127,10 @@ export default function ShareDialog() {
     running.current = true; setPhase("publishing"); setError(""); setDiscardable(false);
     let request: PendingPublication;
     try {
-      request = await retainPublication(attempt.current || { key: newPublicationKey(), image, title, retryAt: 0 });
+      const candidate = attempt.current || { key: newPublicationKey(), image, title, retryAt: 0 };
+      request = await retainPublication(candidate);
       // Another tab may have saved an attempt since this preview opened.
-      if (!attempt.current && (request.image !== image || request.title !== title)) {
+      if (request.key !== candidate.key) {
         setAttempt(request); setPhase("preview");
         setWarning("A saved publication needs recovery. Review this preview and retry to recover the same link.");
         return;

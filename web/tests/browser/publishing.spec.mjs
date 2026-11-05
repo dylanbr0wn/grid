@@ -277,3 +277,38 @@ test("another tab cannot overwrite or silently submit an unresolved publication"
   await expect(other.getByRole("heading", { name: "Link created" })).toBeVisible();
   expect((await requests(other))[0]).toEqual(original);
 });
+
+test("a stale retry must preview a replacement attempt from another tab before submitting", async ({ page, context }) => {
+  await page.route("**/api/snapshots", (route) => route.fulfill({ json: { error: "unavailable" }, status: 503 }));
+  await openPreview(page);
+  await page.getByLabel("Title (optional)").fill("First publication");
+  await page.getByRole("button", { name: "Create link", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Sharing is unavailable");
+  const original = (await requests(page))[0];
+
+  const other = await context.newPage();
+  await other.goto("/");
+  await mockSuccess(other, "First publication");
+  await other.getByRole("button", { name: "Share", exact: true }).click();
+  await other.getByRole("button", { name: "Retry publication", exact: true }).click();
+  await expect(other.getByRole("heading", { name: "Link created" })).toBeVisible();
+  await other.getByRole("button", { name: "Done" }).click();
+
+  await setGrid(other, "blue");
+  await openPreview(other);
+  await other.getByLabel("Title (optional)").fill("Replacement publication");
+  await other.route("**/api/snapshots", (route) => route.fulfill({ json: { error: "unavailable" }, status: 503 }));
+  await other.getByRole("button", { name: "Create link", exact: true }).click();
+  await expect(other.getByRole("alert")).toContainText("Sharing is unavailable");
+  const replacement = (await requests(other))[1];
+  expect(replacement.key).not.toBe(original.key);
+
+  await page.getByRole("button", { name: "Retry publication", exact: true }).click();
+  await expect(page.getByLabel("Title (optional)")).toHaveValue("Replacement publication");
+  expect(await imageHash(page)).toEqual(replacement.hash);
+  expect(await requests(page)).toHaveLength(1);
+  await mockSuccess(page, "Replacement publication");
+  await page.getByRole("button", { name: "Retry publication", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Link created" })).toBeVisible();
+  expect((await requests(page))[1]).toEqual(replacement);
+});
