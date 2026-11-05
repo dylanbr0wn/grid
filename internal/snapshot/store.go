@@ -284,7 +284,8 @@ func (s *Store) Revoke(id, token string) error {
 		if err := s.commit(rec, nil); err != nil {
 			return s.fail(err)
 		}
-		s.records[id] = rec
+		// The caller's ID may borrow a reusable HTTP request buffer.
+		s.records[rec.ID] = rec
 		s.used -= rec.ImageBytes
 		return nil
 	}

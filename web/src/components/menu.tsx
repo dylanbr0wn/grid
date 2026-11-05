@@ -23,6 +23,7 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { gridToBlob, gridToJpeg, gridToPng, gridToWebp } from "@/lib/export";
 import { useAlbumsStore } from "@/lib/albums-store";
+import ShareDialog from "@/components/share-dialog";
 
 async function downloadGrid(
   columns: number,
@@ -330,6 +331,7 @@ export default function Menu() {
             <div className="p-1 mt-3 text-neutral-500 border-b border-neutral-800 text-sm lowercase">
               Export
             </div>
+            {import.meta.env.VITE_ENABLE_SHARING === "true" && <ShareDialog />}
             <button
               disabled={loading.jpeg}
               onClick={() => download("jpeg")}

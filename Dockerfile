@@ -7,6 +7,8 @@ COPY web/package.json ./web/package.json
 RUN pnpm install --frozen-lockfile
 
 COPY web ./web
+ARG VITE_ENABLE_SHARING=false
+ENV VITE_ENABLE_SHARING=${VITE_ENABLE_SHARING}
 RUN pnpm --filter web build
 
 FROM golang:1.26.5-bookworm AS go-build
